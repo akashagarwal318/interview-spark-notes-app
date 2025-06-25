@@ -1,0 +1,748 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Interview Assistant</title>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #10b981;
+            --success-hover: #059669;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --shadow-card: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border: #475569;
+            --border-hover: #64748b;
+            --accent: #60a5fa;
+            --accent-hover: #3b82f6;
+            --success: #34d399;
+            --success-hover: #10b981;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --shadow-card: rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--border-hover);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: var(--success-hover);
+        }
+
+        .theme-toggle {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        .search-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px var(--shadow-card);
+        }
+
+        .search-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-select {
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .form-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px var(--shadow-card);
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+
+        .questions-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .question-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px var(--shadow-card);
+            transition: all 0.2s ease;
+        }
+
+        .question-card:hover {
+            border-color: var(--border-hover);
+            box-shadow: 0 4px 8px var(--shadow);
+        }
+
+        .question-header {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            transition: background-color 0.2s ease;
+        }
+
+        .question-header:hover {
+            background: var(--bg-secondary);
+        }
+
+        .question-text {
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+            margin-right: 15px;
+        }
+
+        .expand-icon {
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+            font-size: 18px;
+        }
+
+        .question-card.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .question-content {
+            border-top: 1px solid var(--border);
+            background: var(--bg-primary);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .question-card.expanded .question-content {
+            max-height: 2000px;
+        }
+
+        .question-details {
+            padding: 20px;
+        }
+
+        .answer-section,
+        .code-section {
+            margin-bottom: 20px;
+        }
+
+        .answer-section:last-child,
+        .code-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .answer-text {
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .code-block {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .copy-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .copy-btn {
+            padding: 8px 12px;
+            font-size: 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        .copy-btn.copied {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .no-results-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .title {
+                font-size: 1.5rem;
+            }
+
+            .search-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-input {
+                min-width: auto;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="container">
+        <header class="header">
+            <h1 class="title">🚀 Interview Assistant</h1>
+            <div class="controls">
+                <button class="btn btn-primary" id="addQuestionBtn">
+                    ➕ Add New Question
+                </button>
+                <button class="btn btn-secondary" id="showAllBtn">
+                    📋 All Questions
+                </button>
+                <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                    🌓
+                </button>
+            </div>
+        </header>
+
+        <section class="search-section">
+            <div class="search-controls">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search your questions...">
+                <select class="search-select" id="searchType">
+                    <option value="question">Search in Questions</option>
+                    <option value="answer">Search in Answers</option>
+                    <option value="code">Search in Code</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="form-section" id="questionForm">
+            <h3 style="margin-bottom: 20px; color: var(--text-primary);">Add New Question</h3>
+            <form id="addQuestionForm">
+                <div class="form-group">
+                    <label class="form-label" for="questionInput">Question *</label>
+                    <input type="text" class="form-input" id="questionInput" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="answerInput">Answer *</label>
+                    <textarea class="form-textarea" id="answerInput" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="codeInput">Code Snippet (optional)</label>
+                    <textarea class="form-textarea" id="codeInput" placeholder="// Your code here..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn-success">💾 Save Question</button>
+                </div>
+            </form>
+        </section>
+
+        <main class="questions-grid" id="questionsContainer">
+            <!-- Questions will be dynamically inserted here -->
+        </main>
+    </div>
+
+    <script>
+        class InterviewAssistant {
+            constructor() {
+                this.questions = [];
+                this.filteredQuestions = [];
+                this.currentTheme = 'light';
+                this.init();
+            }
+
+            init() {
+                this.loadQuestions();
+                this.loadTheme();
+                this.bindEvents();
+                this.renderQuestions();
+            }
+
+            loadQuestions() {
+                const stored = localStorage.getItem('interviewQuestions');
+                if (stored) {
+                    this.questions = JSON.parse(stored);
+                } else {
+                    // Sample data
+                    this.questions = [
+                        {
+                            id: 1,
+                            question: "What is useEffect in React?",
+                            answer: "useEffect is a React Hook that lets you perform side effects in functional components. It serves the same purpose as componentDidMount, componentDidUpdate, and componentWillUnmount combined in React class components.",
+                            code: "import React, { useEffect, useState } from 'react';\n\nfunction Example() {\n  const [count, setCount] = useState(0);\n\n  useEffect(() => {\n    document.title = `You clicked ${count} times`;\n  }, [count]); // Only re-run if count changes\n\n  return (\n    <div>\n      <p>You clicked {count} times</p>\n      <button onClick={() => setCount(count + 1)}>\n        Click me\n      </button>\n    </div>\n  );\n}"
+                        },
+                        {
+                            id: 2,
+                            question: "What is a closure in JavaScript?",
+                            answer: "A closure is a function that retains access to its lexical scope even when the function is executed outside that scope. In other words, a closure gives you access to an outer function's scope from an inner function.",
+                            code: "function outerFunction(x) {\n  // This is the outer function's scope\n  \n  function innerFunction(y) {\n    // This inner function has access to x\n    console.log(x + y);\n  }\n  \n  return innerFunction;\n}\n\nconst addFive = outerFunction(5);\naddFive(10); // Outputs: 15\n\n// Even though outerFunction has finished executing,\n// innerFunction still remembers the value of x"
+                        },
+                        {
+                            id: 3,
+                            question: "Explain the CSS Box Model",
+                            answer: "The CSS Box Model describes how the different parts of a CSS box — content, padding, border, and margin — are laid out and how they relate to each other. Every element on a web page is a rectangular box.",
+                            code: "/* Box model example */\n.box {\n  width: 200px;          /* Content width */\n  height: 100px;         /* Content height */\n  padding: 20px;         /* Space inside the border */\n  border: 5px solid #333; /* Border around padding */\n  margin: 15px;          /* Space outside the border */\n}\n\n/* Total width = width + padding + border + margin */\n/* Total width = 200 + 40 + 10 + 30 = 280px */\n\n/* Use box-sizing to include padding and border in width */\n.box-border {\n  box-sizing: border-box;\n  width: 200px; /* Now includes padding and border */\n}"
+                        }
+                    ];
+                    this.saveQuestions();
+                }
+                this.filteredQuestions = [...this.questions];
+            }
+
+            loadTheme() {
+                const savedTheme = localStorage.getItem('interviewAssistantTheme') || 'light';
+                this.setTheme(savedTheme);
+            }
+
+            setTheme(theme) {
+                this.currentTheme = theme;
+                document.body.setAttribute('data-theme', theme);
+                localStorage.setItem('interviewAssistantTheme', theme);
+            }
+
+            saveQuestions() {
+                localStorage.setItem('interviewQuestions', JSON.stringify(this.questions));
+            }
+
+            bindEvents() {
+                // Theme toggle
+                document.getElementById('themeToggle').addEventListener('click', () => {
+                    this.setTheme(this.currentTheme === 'light' ? 'dark' : 'light');
+                });
+
+                // Add question form
+                document.getElementById('addQuestionBtn').addEventListener('click', () => {
+                    this.showAddForm();
+                });
+
+                document.getElementById('cancelBtn').addEventListener('click', () => {
+                    this.hideAddForm();
+                });
+
+                document.getElementById('addQuestionForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.addQuestion();
+                });
+
+                // Search functionality
+                document.getElementById('searchInput').addEventListener('input', () => {
+                    this.performSearch();
+                });
+
+                document.getElementById('searchType').addEventListener('change', () => {
+                    this.performSearch();
+                });
+
+                // Show all questions
+                document.getElementById('showAllBtn').addEventListener('click', () => {
+                    this.showAllQuestions();
+                });
+            }
+
+            showAddForm() {
+                document.getElementById('questionForm').classList.add('active');
+                document.getElementById('questionInput').focus();
+            }
+
+            hideAddForm() {
+                document.getElementById('questionForm').classList.remove('active');
+                document.getElementById('addQuestionForm').reset();
+            }
+
+            addQuestion() {
+                const question = document.getElementById('questionInput').value.trim();
+                const answer = document.getElementById('answerInput').value.trim();
+                const code = document.getElementById('codeInput').value.trim();
+
+                if (!question || !answer) {
+                    alert('Please fill in both question and answer fields.');
+                    return;
+                }
+
+                const newQuestion = {
+                    id: Date.now(),
+                    question,
+                    answer,
+                    code: code || ''
+                };
+
+                this.questions.unshift(newQuestion);
+                this.saveQuestions();
+                this.filteredQuestions = [...this.questions];
+                this.renderQuestions();
+                this.hideAddForm();
+            }
+
+            performSearch() {
+                const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+                const searchType = document.getElementById('searchType').value;
+
+                if (!searchTerm) {
+                    this.filteredQuestions = [...this.questions];
+                } else {
+                    this.filteredQuestions = this.questions.filter(q => {
+                        switch (searchType) {
+                            case 'question':
+                                return q.question.toLowerCase().includes(searchTerm);
+                            case 'answer':
+                                return q.answer.toLowerCase().includes(searchTerm);
+                            case 'code':
+                                return q.code.toLowerCase().includes(searchTerm);
+                            default:
+                                return false;
+                        }
+                    });
+                }
+
+                this.renderQuestions();
+            }
+
+            showAllQuestions() {
+                document.getElementById('searchInput').value = '';
+                this.filteredQuestions = [...this.questions];
+                this.renderQuestions();
+            }
+
+            renderQuestions() {
+                const container = document.getElementById('questionsContainer');
+                
+                if (this.filteredQuestions.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-results">
+                            <div class="no-results-icon">🔍</div>
+                            <h3>No questions found</h3>
+                            <p>Try adjusting your search terms or add a new question.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = this.filteredQuestions.map(q => `
+                    <div class="question-card" data-id="${q.id}">
+                        <div class="question-header" onclick="app.toggleQuestion(${q.id})">
+                            <div class="question-text">${this.escapeHtml(q.question)}</div>
+                            <div class="expand-icon">▼</div>
+                        </div>
+                        <div class="question-content">
+                            <div class="question-details">
+                                <div class="answer-section">
+                                    <div class="section-label">💡 Answer</div>
+                                    <div class="answer-text">${this.escapeHtml(q.answer)}</div>
+                                </div>
+                                ${q.code ? `
+                                    <div class="code-section">
+                                        <div class="section-label">💻 Code</div>
+                                        <div class="code-block">${this.escapeHtml(q.code)}</div>
+                                    </div>
+                                ` : ''}
+                                <div class="copy-actions">
+                                    <button class="copy-btn" onclick="app.copyToClipboard('answer', ${q.id})">
+                                        📋 Copy Answer
+                                    </button>
+                                    ${q.code ? `
+                                        <button class="copy-btn" onclick="app.copyToClipboard('code', ${q.id})">
+                                            📋 Copy Code
+                                        </button>
+                                        <button class="copy-btn" onclick="app.copyToClipboard('full', ${q.id})">
+                                            📋 Copy All
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            toggleQuestion(id) {
+                const card = document.querySelector(`[data-id="${id}"]`);
+                card.classList.toggle('expanded');
+            }
+
+            async copyToClipboard(type, id) {
+                const question = this.questions.find(q => q.id === id);
+                if (!question) return;
+
+                let textToCopy = '';
+                switch (type) {
+                    case 'answer':
+                        textToCopy = question.answer;
+                        break;
+                    case 'code':
+                        textToCopy = question.code;
+                        break;
+                    case 'full':
+                        textToCopy = `Q: ${question.question}\n\nA: ${question.answer}`;
+                        if (question.code) {
+                            textToCopy += `\n\nCode:\n${question.code}`;
+                        }
+                        break;
+                }
+
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    
+                    // Visual feedback
+                    const button = event.target;
+                    const originalText = button.textContent;
+                    button.textContent = '✅ Copied!';
+                    button.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.classList.remove('copied');
+                    }, 2000);
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                    alert('Failed to copy to clipboard');
+                }
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize the app
+        const app = new InterviewAssistant();
+    </script>
+</body>
+</html>
