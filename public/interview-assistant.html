@@ -19,8 +19,15 @@
             --accent-hover: #2563eb;
             --success: #10b981;
             --success-hover: #059669;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
             --shadow: rgba(0, 0, 0, 0.1);
             --shadow-card: rgba(0, 0, 0, 0.05);
+            --code-bg: #1e293b;
+            --code-text: #e2e8f0;
+            --code-keyword: #60a5fa;
+            --code-string: #34d399;
+            --code-comment: #94a3b8;
         }
 
         [data-theme="dark"] {
@@ -36,8 +43,15 @@
             --accent-hover: #3b82f6;
             --success: #34d399;
             --success-hover: #10b981;
+            --danger: #f87171;
+            --danger-hover: #ef4444;
             --shadow: rgba(0, 0, 0, 0.3);
             --shadow-card: rgba(0, 0, 0, 0.2);
+            --code-bg: #0f172a;
+            --code-text: #e2e8f0;
+            --code-keyword: #60a5fa;
+            --code-string: #34d399;
+            --code-comment: #94a3b8;
         }
 
         * {
@@ -124,6 +138,15 @@
             background-color: var(--success-hover);
         }
 
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger-hover);
+        }
+
         .theme-toggle {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -156,6 +179,7 @@
             gap: 15px;
             flex-wrap: wrap;
             align-items: center;
+            margin-bottom: 15px;
         }
 
         .search-input {
@@ -182,6 +206,33 @@
             background: var(--bg-primary);
             color: var(--text-primary);
             cursor: pointer;
+        }
+
+        .tag-filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tag-filter {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .tag-filter.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .tag-filter:hover:not(.active) {
+            background: var(--bg-secondary);
         }
 
         .form-section {
@@ -292,6 +343,32 @@
             margin-right: 15px;
         }
 
+        .question-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            font-size: 16px;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .action-btn.danger:hover {
+            color: var(--danger);
+        }
+
         .expand-icon {
             color: var(--text-muted);
             transition: transform 0.2s ease;
@@ -319,12 +396,14 @@
         }
 
         .answer-section,
-        .code-section {
+        .code-section,
+        .tags-section {
             margin-bottom: 20px;
         }
 
         .answer-section:last-child,
-        .code-section:last-child {
+        .code-section:last-child,
+        .tags-section:last-child {
             margin-bottom: 0;
         }
 
@@ -337,28 +416,79 @@
             gap: 8px;
         }
 
-        .answer-text {
+        .editable-content {
             color: var(--text-primary);
             white-space: pre-wrap;
             line-height: 1.6;
+            min-height: 40px;
+            padding: 8px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            transition: all 0.2s ease;
         }
 
-        .code-block {
+        .editable-content.editing {
+            border-color: var(--accent);
             background: var(--bg-secondary);
+            outline: none;
+        }
+
+        .code-editor {
+            background: var(--code-bg);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 15px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
             font-size: 13px;
-            color: var(--text-primary);
+            color: var(--code-text);
             white-space: pre-wrap;
             overflow-x: auto;
+            min-height: 60px;
+            line-height: 1.5;
+            transition: all 0.2s ease;
+        }
+
+        .code-editor.editing {
+            border-color: var(--accent);
+            outline: none;
+            resize: vertical;
+        }
+
+        .code-editor::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .code-editor::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+
+        .code-editor::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .tags-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: var(--accent);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
         }
 
         .copy-actions {
             display: flex;
             gap: 10px;
             margin-top: 15px;
+            flex-wrap: wrap;
         }
 
         .copy-btn {
@@ -420,6 +550,11 @@
             .btn {
                 justify-content: center;
             }
+
+            .question-actions {
+                flex-direction: column;
+                gap: 5px;
+            }
         }
     </style>
 </head>
@@ -447,7 +582,11 @@
                     <option value="question">Search in Questions</option>
                     <option value="answer">Search in Answers</option>
                     <option value="code">Search in Code</option>
+                    <option value="tags">Search in Tags</option>
                 </select>
+            </div>
+            <div class="tag-filters" id="tagFilters">
+                <!-- Tag filters will be dynamically inserted here -->
             </div>
         </section>
 
@@ -465,6 +604,10 @@
                 <div class="form-group">
                     <label class="form-label" for="codeInput">Code Snippet (optional)</label>
                     <textarea class="form-textarea" id="codeInput" placeholder="// Your code here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="tagsInput">Tags (comma-separated, e.g., React, JavaScript)</label>
+                    <input type="text" class="form-input" id="tagsInput" placeholder="React, JavaScript, Hooks">
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
@@ -484,6 +627,8 @@
                 this.questions = [];
                 this.filteredQuestions = [];
                 this.currentTheme = 'light';
+                this.isEditing = {};
+                this.activeTagFilter = null;
                 this.init();
             }
 
@@ -491,6 +636,7 @@
                 this.loadQuestions();
                 this.loadTheme();
                 this.bindEvents();
+                this.renderTagFilters();
                 this.renderQuestions();
             }
 
@@ -499,29 +645,36 @@
                 if (stored) {
                     this.questions = JSON.parse(stored);
                 } else {
-                    // Sample data
+                    // Sample data with tags
                     this.questions = [
                         {
                             id: 1,
                             question: "What is useEffect in React?",
                             answer: "useEffect is a React Hook that lets you perform side effects in functional components. It serves the same purpose as componentDidMount, componentDidUpdate, and componentWillUnmount combined in React class components.",
-                            code: "import React, { useEffect, useState } from 'react';\n\nfunction Example() {\n  const [count, setCount] = useState(0);\n\n  useEffect(() => {\n    document.title = `You clicked ${count} times`;\n  }, [count]); // Only re-run if count changes\n\n  return (\n    <div>\n      <p>You clicked {count} times</p>\n      <button onClick={() => setCount(count + 1)}>\n        Click me\n      </button>\n    </div>\n  );\n}"
+                            code: "import React, { useEffect, useState } from 'react';\n\nfunction Example() {\n  const [count, setCount] = useState(0);\n\n  useEffect(() => {\n    document.title = `You clicked ${count} times`;\n  }, [count]); // Only re-run if count changes\n\n  return (\n    <div>\n      <p>You clicked {count} times</p>\n      <button onClick={() => setCount(count + 1)}>\n        Click me\n      </button>\n    </div>\n  );\n}",
+                            tags: ["React", "Hooks", "JavaScript"]
                         },
                         {
                             id: 2,
                             question: "What is a closure in JavaScript?",
                             answer: "A closure is a function that retains access to its lexical scope even when the function is executed outside that scope. In other words, a closure gives you access to an outer function's scope from an inner function.",
-                            code: "function outerFunction(x) {\n  // This is the outer function's scope\n  \n  function innerFunction(y) {\n    // This inner function has access to x\n    console.log(x + y);\n  }\n  \n  return innerFunction;\n}\n\nconst addFive = outerFunction(5);\naddFive(10); // Outputs: 15\n\n// Even though outerFunction has finished executing,\n// innerFunction still remembers the value of x"
+                            code: "function outerFunction(x) {\n  // This is the outer function's scope\n  \n  function innerFunction(y) {\n    // This inner function has access to x\n    console.log(x + y);\n  }\n  \n  return innerFunction;\n}\n\nconst addFive = outerFunction(5);\naddFive(10); // Outputs: 15\n\n// Even though outerFunction has finished executing,\n// innerFunction still remembers the value of x",
+                            tags: ["JavaScript", "Functions", "Scope"]
                         },
                         {
                             id: 3,
                             question: "Explain the CSS Box Model",
                             answer: "The CSS Box Model describes how the different parts of a CSS box — content, padding, border, and margin — are laid out and how they relate to each other. Every element on a web page is a rectangular box.",
-                            code: "/* Box model example */\n.box {\n  width: 200px;          /* Content width */\n  height: 100px;         /* Content height */\n  padding: 20px;         /* Space inside the border */\n  border: 5px solid #333; /* Border around padding */\n  margin: 15px;          /* Space outside the border */\n}\n\n/* Total width = width + padding + border + margin */\n/* Total width = 200 + 40 + 10 + 30 = 280px */\n\n/* Use box-sizing to include padding and border in width */\n.box-border {\n  box-sizing: border-box;\n  width: 200px; /* Now includes padding and border */\n}"
+                            code: "/* Box model example */\n.box {\n  width: 200px;          /* Content width */\n  height: 100px;         /* Content height */\n  padding: 20px;         /* Space inside the border */\n  border: 5px solid #333; /* Border around padding */\n  margin: 15px;          /* Space outside the border */\n}\n\n/* Total width = width + padding + border + margin */\n/* Total width = 200 + 40 + 10 + 30 = 280px */\n\n/* Use box-sizing to include padding and border in width */\n.box-border {\n  box-sizing: border-box;\n  width: 200px; /* Now includes padding and border */\n}",
+                            tags: ["CSS", "Layout", "Box Model"]
                         }
                     ];
                     this.saveQuestions();
                 }
+                // Ensure all questions have tags array
+                this.questions.forEach(q => {
+                    if (!q.tags) q.tags = [];
+                });
                 this.filteredQuestions = [...this.questions];
             }
 
@@ -538,6 +691,43 @@
 
             saveQuestions() {
                 localStorage.setItem('interviewQuestions', JSON.stringify(this.questions));
+            }
+
+            getAllTags() {
+                const allTags = new Set();
+                this.questions.forEach(q => {
+                    if (q.tags) {
+                        q.tags.forEach(tag => allTags.add(tag));
+                    }
+                });
+                return Array.from(allTags).sort();
+            }
+
+            renderTagFilters() {
+                const container = document.getElementById('tagFilters');
+                const tags = this.getAllTags();
+                
+                if (tags.length === 0) {
+                    container.innerHTML = '';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="tag-filter ${!this.activeTagFilter ? 'active' : ''}" onclick="app.filterByTag(null)">
+                        All
+                    </div>
+                    ${tags.map(tag => `
+                        <div class="tag-filter ${this.activeTagFilter === tag ? 'active' : ''}" onclick="app.filterByTag('${tag}')">
+                            ${this.escapeHtml(tag)}
+                        </div>
+                    `).join('')}
+                `;
+            }
+
+            filterByTag(tag) {
+                this.activeTagFilter = tag;
+                this.performSearch();
+                this.renderTagFilters();
             }
 
             bindEvents() {
@@ -589,34 +779,74 @@
                 const question = document.getElementById('questionInput').value.trim();
                 const answer = document.getElementById('answerInput').value.trim();
                 const code = document.getElementById('codeInput').value.trim();
+                const tagsInput = document.getElementById('tagsInput').value.trim();
 
                 if (!question || !answer) {
                     alert('Please fill in both question and answer fields.');
                     return;
                 }
 
+                const tags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+
                 const newQuestion = {
                     id: Date.now(),
                     question,
                     answer,
-                    code: code || ''
+                    code: code || '',
+                    tags
                 };
 
                 this.questions.unshift(newQuestion);
                 this.saveQuestions();
                 this.filteredQuestions = [...this.questions];
+                this.renderTagFilters();
                 this.renderQuestions();
                 this.hideAddForm();
+            }
+
+            deleteQuestion(id) {
+                if (confirm('Are you sure you want to delete this question?')) {
+                    this.questions = this.questions.filter(q => q.id !== id);
+                    this.saveQuestions();
+                    this.performSearch();
+                    this.renderTagFilters();
+                }
+            }
+
+            toggleLock(id) {
+                this.isEditing[id] = !this.isEditing[id];
+                this.renderQuestions();
+            }
+
+            saveEditedContent(id, field, value) {
+                const question = this.questions.find(q => q.id === id);
+                if (question) {
+                    if (field === 'tags') {
+                        question.tags = value.split(',').map(tag => tag.trim()).filter(tag => tag);
+                    } else {
+                        question[field] = value;
+                    }
+                    this.saveQuestions();
+                    this.renderTagFilters();
+                }
             }
 
             performSearch() {
                 const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
                 const searchType = document.getElementById('searchType').value;
 
-                if (!searchTerm) {
-                    this.filteredQuestions = [...this.questions];
-                } else {
-                    this.filteredQuestions = this.questions.filter(q => {
+                let filtered = [...this.questions];
+
+                // Apply tag filter first
+                if (this.activeTagFilter) {
+                    filtered = filtered.filter(q => 
+                        q.tags && q.tags.includes(this.activeTagFilter)
+                    );
+                }
+
+                // Apply search filter
+                if (searchTerm) {
+                    filtered = filtered.filter(q => {
                         switch (searchType) {
                             case 'question':
                                 return q.question.toLowerCase().includes(searchTerm);
@@ -624,18 +854,25 @@
                                 return q.answer.toLowerCase().includes(searchTerm);
                             case 'code':
                                 return q.code.toLowerCase().includes(searchTerm);
+                            case 'tags':
+                                return q.tags && q.tags.some(tag => 
+                                    tag.toLowerCase().includes(searchTerm)
+                                );
                             default:
                                 return false;
                         }
                     });
                 }
 
+                this.filteredQuestions = filtered;
                 this.renderQuestions();
             }
 
             showAllQuestions() {
                 document.getElementById('searchInput').value = '';
+                this.activeTagFilter = null;
                 this.filteredQuestions = [...this.questions];
+                this.renderTagFilters();
                 this.renderQuestions();
             }
 
@@ -653,41 +890,73 @@
                     return;
                 }
 
-                container.innerHTML = this.filteredQuestions.map(q => `
-                    <div class="question-card" data-id="${q.id}">
-                        <div class="question-header" onclick="app.toggleQuestion(${q.id})">
-                            <div class="question-text">${this.escapeHtml(q.question)}</div>
-                            <div class="expand-icon">▼</div>
-                        </div>
-                        <div class="question-content">
-                            <div class="question-details">
-                                <div class="answer-section">
-                                    <div class="section-label">💡 Answer</div>
-                                    <div class="answer-text">${this.escapeHtml(q.answer)}</div>
-                                </div>
-                                ${q.code ? `
-                                    <div class="code-section">
-                                        <div class="section-label">💻 Code</div>
-                                        <div class="code-block">${this.escapeHtml(q.code)}</div>
-                                    </div>
-                                ` : ''}
-                                <div class="copy-actions">
-                                    <button class="copy-btn" onclick="app.copyToClipboard('answer', ${q.id})">
-                                        📋 Copy Answer
+                container.innerHTML = this.filteredQuestions.map(q => {
+                    const isEditing = this.isEditing[q.id];
+                    const lockIcon = isEditing ? '🔓' : '🔒';
+                    
+                    return `
+                        <div class="question-card" data-id="${q.id}">
+                            <div class="question-header" onclick="app.toggleQuestion(${q.id})">
+                                <div class="question-text">${this.escapeHtml(q.question)}</div>
+                                <div class="question-actions">
+                                    <button class="action-btn" onclick="event.stopPropagation(); app.toggleLock(${q.id})" title="Toggle Edit Mode">
+                                        ${lockIcon}
                                     </button>
-                                    ${q.code ? `
-                                        <button class="copy-btn" onclick="app.copyToClipboard('code', ${q.id})">
-                                            📋 Copy Code
-                                        </button>
-                                        <button class="copy-btn" onclick="app.copyToClipboard('full', ${q.id})">
-                                            📋 Copy All
-                                        </button>
+                                    <button class="action-btn danger" onclick="event.stopPropagation(); app.deleteQuestion(${q.id})" title="Delete Question">
+                                        🗑️
+                                    </button>
+                                    <div class="expand-icon">▼</div>
+                                </div>
+                            </div>
+                            <div class="question-content">
+                                <div class="question-details">
+                                    ${q.tags && q.tags.length > 0 ? `
+                                        <div class="tags-section">
+                                            <div class="section-label">🏷️ Tags</div>
+                                            ${isEditing ? `
+                                                <input type="text" class="form-input" 
+                                                       value="${q.tags.join(', ')}" 
+                                                       onblur="app.saveEditedContent(${q.id}, 'tags', this.value)"
+                                                       onkeypress="if(event.key==='Enter') this.blur()">
+                                            ` : `
+                                                <div class="tags-container">
+                                                    ${q.tags.map(tag => `<span class="tag">${this.escapeHtml(tag)}</span>`).join('')}
+                                                </div>
+                                            `}
+                                        </div>
                                     ` : ''}
+                                    <div class="answer-section">
+                                        <div class="section-label">💡 Answer</div>
+                                        <div class="editable-content ${isEditing ? 'editing' : ''}" 
+                                             ${isEditing ? 'contenteditable="true"' : ''}
+                                             onblur="if(this.isContentEditable) app.saveEditedContent(${q.id}, 'answer', this.textContent)">${this.escapeHtml(q.answer)}</div>
+                                    </div>
+                                    ${q.code ? `
+                                        <div class="code-section">
+                                            <div class="section-label">💻 Code</div>
+                                            <div class="code-editor ${isEditing ? 'editing' : ''}" 
+                                                 ${isEditing ? 'contenteditable="true"' : ''}
+                                                 onblur="if(this.isContentEditable) app.saveEditedContent(${q.id}, 'code', this.textContent)">${this.escapeHtml(q.code)}</div>
+                                        </div>
+                                    ` : ''}
+                                    <div class="copy-actions">
+                                        <button class="copy-btn" onclick="app.copyToClipboard('answer', ${q.id})">
+                                            📋 Copy Answer
+                                        </button>
+                                        ${q.code ? `
+                                            <button class="copy-btn" onclick="app.copyToClipboard('code', ${q.id})">
+                                                📋 Copy Code
+                                            </button>
+                                            <button class="copy-btn" onclick="app.copyToClipboard('full', ${q.id})">
+                                                📋 Copy All
+                                            </button>
+                                        ` : ''}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             }
 
             toggleQuestion(id) {
@@ -711,6 +980,9 @@
                         textToCopy = `Q: ${question.question}\n\nA: ${question.answer}`;
                         if (question.code) {
                             textToCopy += `\n\nCode:\n${question.code}`;
+                        }
+                        if (question.tags && question.tags.length > 0) {
+                            textToCopy += `\n\nTags: ${question.tags.join(', ')}`;
                         }
                         break;
                 }
