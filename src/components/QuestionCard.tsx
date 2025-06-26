@@ -49,11 +49,13 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
     answer: string;
     code: string;
     tags: string;
+    round: string;
   }>({
     question: question.question,
     answer: question.answer,
     code: question.code || '',
-    tags: question.tags?.join(', ') || ''
+    tags: question.tags?.join(', ') || '',
+    round: question.round
   });
 
   const handleFieldEdit = (field: string) => {
@@ -132,6 +134,16 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
     }
   };
 
+  const roundOptions = [
+    { value: 'technical', label: 'Technical' },
+    { value: 'hr', label: 'HR' },
+    { value: 'telephonic', label: 'Telephonic' },
+    { value: 'introduction', label: 'Introduction' },
+    { value: 'behavioral', label: 'Behavioral' },
+    { value: 'system-design', label: 'System Design' },
+    { value: 'coding', label: 'Coding' }
+  ];
+
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       {/* Header */}
@@ -141,6 +153,36 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
       >
         <div className="flex justify-between items-start gap-4">
           <div className="flex-1">
+            {/* Round Badge */}
+            <div className="mb-2">
+              {editingField === 'round' ? (
+                <select
+                  value={tempValues.round}
+                  onChange={(e) => setTempValues(prev => ({ ...prev, round: e.target.value }))}
+                  onBlur={() => handleFieldSave('round')}
+                  onClick={(e) => e.stopPropagation()}
+                  className="px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full border border-blue-300 dark:border-blue-700"
+                  autoFocus
+                >
+                  {roundOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span 
+                  className={`inline-block px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full ${isEditing ? 'cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleFieldEdit('round');
+                  }}
+                >
+                  {roundOptions.find(opt => opt.value === question.round)?.label || question.round}
+                </span>
+              )}
+            </div>
+            
             {editingField === 'question' ? (
               <input
                 type="text"
