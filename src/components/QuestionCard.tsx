@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Edit, Star, Bookmark } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Edit, Star, Bookmark, ImagePlus } from 'lucide-react';
 
 interface Question {
   id: number;
@@ -26,6 +26,7 @@ interface QuestionCardProps {
   onSave: (field: string, value: string) => void;
   onImageClick: (imageSrc: string) => void;
   onRemoveImage: (imageIndex: number) => void;
+  onAddImage: (image: { name: string; data: string; size: number }) => void;
 }
 
 const QuestionCard: React.FC<QuestionCardProps> = ({
@@ -38,9 +39,11 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   onDelete,
   onSave,
   onImageClick,
-  onRemoveImage
+  onRemoveImage,
+  onAddImage
 }) => {
   const [editingField, setEditingField] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [tempValues, setTempValues] = useState<{
     question: string;
     answer: string;
@@ -75,6 +78,29 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
     }
     if (e.key === 'Escape') {
       setEditingField(null);
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          onAddImage({
+            name: file.name,
+            data: event.target.result as string,
+            size: file.size
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    // Reset the input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -316,11 +342,30 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
             )}
 
             {/* Images */}
-            {question.images && question.images.length > 0 && (
-              <div>
-                <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-                  📷 Images
-                </div>
+            <div>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                📷 Images
+                {isEditing && (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="ml-2 p-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    title="Add Image"
+                  >
+                    <ImagePlus size={14} />
+                  </button>
+                )}
+              </div>
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              
+              {question.images && question.images.length > 0 ? (
                 <div className="flex flex-wrap gap-3">
                   {question.images.map((image, index) => (
                     <div key={index} className="relative group">
@@ -341,8 +386,13 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="text-gray-500 dark:text-gray-400 text-sm">
+                  No images added yet.
+                  {isEditing && " Click the + button to add images."}
+                </div>
+              )}
+            </div>
 
             {/* Copy Actions */}
             <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">

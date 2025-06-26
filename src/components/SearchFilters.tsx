@@ -8,8 +8,8 @@ interface SearchFiltersProps {
   activeTagFilter: string | null;
   activeStatusFilter: string;
   tags: string[];
-  onSearchChange: (value: string) => void;
-  onSearchTypeChange: (value: string) => void;
+  onSearchChange: (term: string) => void;
+  onSearchTypeChange: (type: string) => void;
   onRoundChange: (round: string) => void;
   onTagFilter: (tag: string | null) => void;
   onStatusFilter: (status: string) => void;
@@ -28,35 +28,23 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   onTagFilter,
   onStatusFilter
 }) => {
-  const rounds = [
-    { id: 'technical', label: 'Technical' },
-    { id: 'hr', label: 'HR Round' },
-    { id: 'telephonic', label: 'Telephonic' },
-    { id: 'introduction', label: 'Introduction' }
-  ];
-
-  const statusFilters = [
-    { id: 'all', label: 'All', color: 'bg-gray-500' },
-    { id: 'favorite', label: '⭐ Favorites', color: 'bg-yellow-500' },
-    { id: 'review', label: '📌 Review', color: 'bg-green-500' },
-    { id: 'hot', label: '🔥 Hot List', color: 'bg-red-500' }
-  ];
-
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-8 shadow-sm">
-      {/* Search Controls */}
-      <div className="flex gap-4 flex-wrap items-center mb-4">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="flex-1 min-w-[200px] px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Search your questions..."
-        />
+    <div className="space-y-6 mb-8">
+      {/* Search Bar */}
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="Search your questions..."
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
         <select
           value={searchType}
           onChange={(e) => onSearchTypeChange(e.target.value)}
-          className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 cursor-pointer min-w-[150px]"
+          className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
         >
           <option value="question">Search in Questions</option>
           <option value="answer">Search in Answers</option>
@@ -65,49 +53,113 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         </select>
       </div>
 
-      {/* Round Selector */}
-      <div className="flex gap-3 flex-wrap mb-4">
-        {rounds.map(round => (
-          <button
-            key={round.id}
-            onClick={() => onRoundChange(round.id)}
-            className={`px-4 py-2 text-sm font-medium rounded-full border transition-colors ${
-              currentRound === round.id
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-            }`}
-          >
-            {round.label}
-          </button>
-        ))}
+      {/* Round Filters */}
+      <div className="flex flex-wrap gap-3">
+        <button
+          onClick={() => onRoundChange('all')}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            currentRound === 'all'
+              ? 'bg-purple-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-purple-100 dark:hover:bg-purple-900'
+          }`}
+        >
+          🌟 All Rounds
+        </button>
+        <button
+          onClick={() => onRoundChange('technical')}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            currentRound === 'technical'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900'
+          }`}
+        >
+          Technical
+        </button>
+        <button
+          onClick={() => onRoundChange('hr')}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            currentRound === 'hr'
+              ? 'bg-green-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-green-100 dark:hover:bg-green-900'
+          }`}
+        >
+          HR Round
+        </button>
+        <button
+          onClick={() => onRoundChange('telephonic')}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            currentRound === 'telephonic'
+              ? 'bg-yellow-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-yellow-100 dark:hover:bg-yellow-900'
+          }`}
+        >
+          Telephonic
+        </button>
+        <button
+          onClick={() => onRoundChange('introduction')}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            currentRound === 'introduction'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-indigo-100 dark:hover:bg-indigo-900'
+          }`}
+        >
+          Introduction
+        </button>
       </div>
 
       {/* Status Filters */}
-      <div className="flex gap-3 flex-wrap mb-4">
-        {statusFilters.map(filter => (
-          <button
-            key={filter.id}
-            onClick={() => onStatusFilter(filter.id)}
-            className={`px-4 py-2 text-sm font-medium rounded-full border transition-colors ${
-              activeStatusFilter === filter.id
-                ? `${filter.color} text-white border-transparent`
-                : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-            }`}
-          >
-            {filter.label}
-          </button>
-        ))}
+      <div className="flex flex-wrap gap-3">
+        <button
+          onClick={() => onStatusFilter('all')}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            activeStatusFilter === 'all'
+              ? 'bg-gray-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => onStatusFilter('favorite')}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            activeStatusFilter === 'favorite'
+              ? 'bg-yellow-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-yellow-100 dark:hover:bg-yellow-900'
+          }`}
+        >
+          ⭐ Favorites
+        </button>
+        <button
+          onClick={() => onStatusFilter('review')}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            activeStatusFilter === 'review'
+              ? 'bg-green-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-green-100 dark:hover:bg-green-900'
+          }`}
+        >
+          📌 Review
+        </button>
+        <button
+          onClick={() => onStatusFilter('hot')}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            activeStatusFilter === 'hot'
+              ? 'bg-red-600 text-white'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900'
+          }`}
+        >
+          🔥 Hot List
+        </button>
       </div>
 
       {/* Tag Filters */}
       {tags.length > 0 && (
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => onTagFilter(null)}
-            className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
               !activeTagFilter
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900'
             }`}
           >
             All Tags
@@ -115,11 +167,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
           {tags.map(tag => (
             <button
               key={tag}
-              onClick={() => onTagFilter(tag)}
-              className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
+              onClick={() => onTagFilter(tag === activeTagFilter ? null : tag)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                 activeTagFilter === tag
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900'
               }`}
             >
               {tag}
