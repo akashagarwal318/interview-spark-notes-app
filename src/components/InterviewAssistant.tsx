@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import QuickStats from './QuickStats';
@@ -164,10 +163,15 @@ const InterviewAssistant: React.FC = () => {
       }
     ];
 
+    console.log('Loading dummy questions...', dummyQuestions.length);
+    
     const stored = localStorage.getItem('interviewQuestions');
     if (stored) {
-      setQuestions(JSON.parse(stored));
+      const parsedQuestions = JSON.parse(stored);
+      console.log('Loaded questions from localStorage:', parsedQuestions.length);
+      setQuestions(parsedQuestions);
     } else {
+      console.log('Setting dummy questions as default');
       setQuestions(dummyQuestions);
       localStorage.setItem('interviewQuestions', JSON.stringify(dummyQuestions));
     }
@@ -180,16 +184,26 @@ const InterviewAssistant: React.FC = () => {
     document.documentElement.classList.toggle('dark', savedTheme === 'dark');
   }, []);
 
-  // Apply filters
+  // Apply filters - this is where the issue likely is
   useEffect(() => {
+    console.log('Applying filters...');
+    console.log('Total questions:', questions.length);
+    console.log('Current round:', currentRound);
+    console.log('Active status filter:', activeStatusFilter);
+    console.log('Active tag filter:', activeTagFilter);
+    console.log('Search term:', searchTerm);
+    
     let filtered = questions.filter(q => q.round === currentRound);
+    console.log('After round filter:', filtered.length);
 
     if (activeStatusFilter !== 'all') {
       filtered = filtered.filter(q => q[activeStatusFilter as keyof Question] === true);
+      console.log('After status filter:', filtered.length);
     }
 
     if (activeTagFilter) {
       filtered = filtered.filter(q => q.tags?.includes(activeTagFilter));
+      console.log('After tag filter:', filtered.length);
     }
 
     if (searchTerm) {
@@ -207,8 +221,10 @@ const InterviewAssistant: React.FC = () => {
             return false;
         }
       });
+      console.log('After search filter:', filtered.length);
     }
 
+    console.log('Final filtered questions:', filtered.length);
     setFilteredQuestions(filtered);
   }, [questions, currentRound, activeStatusFilter, activeTagFilter, searchTerm, searchType]);
 
