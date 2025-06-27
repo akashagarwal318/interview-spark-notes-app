@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, X, Plus, Edit, Trash2 } from 'lucide-react';
 
 const SearchFilters = ({
   searchTerm,
@@ -53,7 +53,7 @@ const SearchFilters = ({
             placeholder={`Search by ${searchType}...`}
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 dark:placeholder:text-gray-500"
           />
         </div>
         
@@ -82,7 +82,7 @@ const SearchFilters = ({
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
           >
-            {round.label}
+            <span className="whitespace-nowrap">{round.label}</span>
           </button>
         ))}
       </div>
@@ -100,7 +100,7 @@ const SearchFilters = ({
             }`}
           >
             <span>{status.icon}</span>
-            <span>{status.label}</span>
+            <span className="whitespace-nowrap">{status.label}</span>
           </button>
         ))}
       </div>
@@ -118,7 +118,7 @@ const SearchFilters = ({
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
-              <span>{tag}</span>
+              <span className="whitespace-nowrap">{tag}</span>
               {activeTagFilter === tag && (
                 <X className="h-3 w-3 ml-1" />
               )}

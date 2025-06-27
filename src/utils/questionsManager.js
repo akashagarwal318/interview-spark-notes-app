@@ -12,6 +12,13 @@ export const questionsManager = {
       if (stored) {
         const parsed = JSON.parse(stored);
         console.log('Loaded questions from localStorage:', parsed.length);
+        // If we have stored questions but they're empty or less than expected, merge with defaults
+        if (parsed.length === 0) {
+          console.log('No stored questions found, loading defaults');
+          const questions = [...defaultQuestions];
+          questionsManager.saveQuestions(questions);
+          return questions;
+        }
         return parsed;
       }
     } catch (error) {
@@ -19,6 +26,14 @@ export const questionsManager = {
     }
     
     console.log('Using default questions');
+    const questions = [...defaultQuestions];
+    questionsManager.saveQuestions(questions);
+    return questions;
+  },
+
+  // Force reload default questions (for testing)
+  loadDefaultQuestions: () => {
+    console.log('Force loading default questions');
     const questions = [...defaultQuestions];
     questionsManager.saveQuestions(questions);
     return questions;
@@ -117,6 +132,12 @@ export const questionsManager = {
     });
     questionsManager.saveQuestions(updatedQuestions);
     return updatedQuestions;
+  },
+
+  // Clear all questions and reload defaults
+  resetToDefaults: () => {
+    localStorage.removeItem(STORAGE_KEY);
+    return questionsManager.loadDefaultQuestions();
   },
 
   // Export questions to JSON file

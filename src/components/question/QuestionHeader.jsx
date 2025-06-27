@@ -96,7 +96,7 @@ const QuestionHeader = ({
             }`}
             title="Toggle Favorite"
           >
-            <Star size={16} />
+            <Star size={16} fill={question.favorite ? 'currentColor' : 'none'} />
           </button>
           
           <button
@@ -104,7 +104,7 @@ const QuestionHeader = ({
               e.stopPropagation();
               onToggleStatus('review');
             }}
-            className={`p-2 rounded-lg transition-colors flex items-center justify-center ${
+            className={`p-2 rounded-lg transition-colors flex items-center justify-center min-w-[36px] ${
               question.review 
                 ? 'bg-green-500 text-white' 
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-green-100 dark:hover:bg-green-900'
@@ -119,7 +119,7 @@ const QuestionHeader = ({
               e.stopPropagation();
               onToggleStatus('hot');
             }}
-            className={`p-2 rounded-lg transition-colors flex items-center justify-center ${
+            className={`p-2 rounded-lg transition-colors flex items-center justify-center min-w-[36px] ${
               question.hot 
                 ? 'bg-red-500 text-white' 
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900'
@@ -149,7 +149,7 @@ const QuestionHeader = ({
               e.stopPropagation();
               onDuplicate();
             }}
-            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-purple-100 dark:hover:bg-purple-900 hover:text-purple-600 transition-colors flex items-center justify-center"
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-purple-100 dark:hover:bg-purple-900 hover:text-purple-600 transition-colors flex items-center justify-center min-w-[36px]"
             title="Duplicate Question"
           >
             <span className="text-sm">📄</span>
@@ -160,14 +160,14 @@ const QuestionHeader = ({
               e.stopPropagation();
               onDelete();
             }}
-            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900 hover:text-red-600 transition-colors flex items-center justify-center"
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900 hover:text-red-600 transition-colors flex items-center justify-center min-w-[36px]"
             title="Delete Question"
           >
             <span className="text-sm">🗑️</span>
           </button>
           
-          <div className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
-            ▼
+          <div className={`transform transition-transform p-2 ${isExpanded ? 'rotate-180' : ''}`}>
+            <span className="text-sm">▼</span>
           </div>
         </div>
       </div>
