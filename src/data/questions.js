@@ -1,18 +1,5 @@
 
-export interface Question {
-  id: number;
-  round: string;
-  question: string;
-  answer: string;
-  code?: string;
-  tags?: string[];
-  favorite: boolean;
-  review: boolean;
-  hot: boolean;
-  images?: Array<{ name: string; data: string; size: number }>;
-}
-
-export const defaultQuestions: Question[] = [
+export const defaultQuestions = [
   {
     id: 1,
     round: 'technical',
@@ -225,6 +212,79 @@ export const defaultQuestions: Question[] = [
     code: "",
     tags: ["Introduction", "Self-Assessment", "Strengths", "Weaknesses", "Personal Development"],
     favorite: true,
+    review: false,
+    hot: false,
+    images: []
+  },
+  // Additional comprehensive dummy questions for testing
+  {
+    id: 16,
+    round: 'technical',
+    question: "Explain the concept of Virtual DOM in React",
+    answer: "The Virtual DOM is a JavaScript representation of the actual DOM (Document Object Model). It's a programming concept where a virtual representation of the UI is kept in memory and synced with the real DOM.\n\n**How it works:**\n1. **Virtual Representation:** React creates a virtual copy of the DOM in memory\n2. **State Changes:** When state changes, React creates a new virtual DOM tree\n3. **Diffing:** React compares (diffs) the new virtual DOM tree with the previous one\n4. **Reconciliation:** React updates only the parts of the real DOM that actually changed\n\n**Benefits:**\n- **Performance:** Batch updates and minimal DOM manipulation\n- **Predictability:** Declarative programming model\n- **Cross-browser compatibility:** Abstraction layer over DOM APIs\n- **Developer experience:** Easier debugging and testing",
+    code: `// Example of how Virtual DOM works conceptually\n\n// Initial Virtual DOM\nconst virtualDOM1 = {\n  type: 'div',\n  props: {\n    className: 'container'\n  },\n  children: [\n    {\n      type: 'h1',\n      props: {},\n      children: ['Hello World']\n    },\n    {\n      type: 'p',\n      props: {},\n      children: ['Count: 0']\n    }\n  ]\n};\n\n// After state change\nconst virtualDOM2 = {\n  type: 'div',\n  props: {\n    className: 'container'\n  },\n  children: [\n    {\n      type: 'h1',\n      props: {},\n      children: ['Hello World'] // No change\n    },\n    {\n      type: 'p',\n      props: {},\n      children: ['Count: 1'] // Changed!\n    }\n  ]\n};\n\n// React's diffing algorithm identifies only the <p> element changed\n// Only updates that specific DOM node, not the entire tree`,
+    tags: ["React", "Virtual DOM", "Performance", "Reconciliation", "JavaScript"],
+    favorite: true,
+    review: true,
+    hot: false,
+    images: [
+      {
+        name: "virtual-dom-diagram.png",
+        data: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=300&fit=crop",
+        size: 47000
+      }
+    ]
+  },
+  {
+    id: 17,
+    round: 'coding',
+    question: "Implement a binary search algorithm",
+    answer: "Binary search is an efficient algorithm for finding an item from a sorted list of items. It works by repeatedly dividing the search interval in half.\n\n**Algorithm:**\n1. Compare target with middle element\n2. If target equals middle, return index\n3. If target is less than middle, search left half\n4. If target is greater than middle, search right half\n5. Repeat until found or interval is empty\n\n**Time Complexity:** O(log n)\n**Space Complexity:** O(1) iterative, O(log n) recursive\n\n**Prerequisites:**\n- Array must be sorted\n- Random access to elements (arrays, not linked lists)",
+    code: `// Iterative Binary Search\nfunction binarySearch(arr, target) {\n    let left = 0;\n    let right = arr.length - 1;\n    \n    while (left <= right) {\n        let mid = Math.floor((left + right) / 2);\n        \n        if (arr[mid] === target) {\n            return mid; // Found target\n        }\n        \n        if (arr[mid] < target) {\n            left = mid + 1; // Search right half\n        } else {\n            right = mid - 1; // Search left half\n        }\n    }\n    \n    return -1; // Target not found\n}\n\n// Recursive Binary Search\nfunction binarySearchRecursive(arr, target, left = 0, right = arr.length - 1) {\n    if (left > right) {\n        return -1; // Base case: not found\n    }\n    \n    let mid = Math.floor((left + right) / 2);\n    \n    if (arr[mid] === target) {\n        return mid; // Found target\n    }\n    \n    if (arr[mid] < target) {\n        return binarySearchRecursive(arr, target, mid + 1, right);\n    } else {\n        return binarySearchRecursive(arr, target, left, mid - 1);\n    }\n}\n\n// Test cases\nconst sortedArray = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19];\n\nconsole.log(binarySearch(sortedArray, 7));  // Output: 3\nconsole.log(binarySearch(sortedArray, 4));  // Output: -1\nconsole.log(binarySearchRecursive(sortedArray, 15)); // Output: 7`,
+    tags: ["Algorithms", "Binary Search", "Sorting", "Time Complexity", "Recursion"],
+    favorite: true,
+    review: false,
+    hot: true,
+    images: []
+  },
+  {
+    id: 18,
+    round: 'behavioral',
+    question: "Describe a situation where you had to learn a new technology quickly",
+    answer: "This question assesses your adaptability, learning ability, and problem-solving skills.\n\n**STAR Method Response:**\n\n**Situation:** Project required technology I hadn't used before\n**Task:** Master the technology within tight deadline\n**Action:**\n- Identified key learning resources (docs, tutorials, courses)\n- Built small proof-of-concept projects\n- Connected with experts in the community\n- Applied learning immediately to real project\n- Documented learnings for team\n\n**Result:**\n- Successfully delivered project on time\n- Became team's go-to person for the technology\n- Improved team's overall capability\n\n**Learning Strategy Tips:**\n- Start with official documentation\n- Build practical examples\n- Join relevant communities\n- Teach others what you learn\n- Focus on fundamentals first",
+    code: "",
+    tags: ["Learning", "Adaptability", "Problem Solving", "Growth Mindset", "Technical Skills"],
+    favorite: false,
+    review: true,
+    hot: false,
+    images: []
+  },
+  {
+    id: 19,
+    round: 'system-design',
+    question: "Design a file storage system like Google Drive",
+    answer: "Comprehensive system design for a file storage and sharing platform:\n\n**Functional Requirements:**\n- Upload/download files\n- File sharing with permissions\n- File synchronization across devices\n- Version control\n- Search functionality\n- Real-time collaboration\n\n**Non-functional Requirements:**\n- 99.9% availability\n- Support for large files (up to 5GB)\n- Fast upload/download speeds\n- Data durability and consistency\n- Global accessibility\n\n**High-level Architecture:**\n1. **Load Balancer** - Traffic distribution\n2. **API Gateway** - Authentication, rate limiting\n3. **Metadata Service** - File information storage\n4. **File Storage Service** - Actual file storage\n5. **Synchronization Service** - Cross-device sync\n6. **Notification Service** - Real-time updates\n7. **Search Service** - File indexing and search",
+    code: `// File Storage Service Architecture\n\n// File Upload Flow\nclass FileUploadService {\n  async uploadFile(fileData, userId, folderId) {\n    // 1. Validate file size and type\n    if (fileData.size > MAX_FILE_SIZE) {\n      throw new Error('File too large');\n    }\n    \n    // 2. Generate unique file ID\n    const fileId = generateUniqueId();\n    \n    // 3. Store file metadata\n    const metadata = {\n      id: fileId,\n      name: fileData.name,\n      size: fileData.size,\n      userId: userId,\n      folderId: folderId,\n      uploadTime: new Date(),\n      version: 1\n    };\n    \n    await metadataDB.save(metadata);\n    \n    // 4. Upload file to storage (chunked for large files)\n    const chunks = this.chunkFile(fileData);\n    const uploadPromises = chunks.map(chunk => \n      storageService.uploadChunk(fileId, chunk)\n    );\n    \n    await Promise.all(uploadPromises);\n    \n    // 5. Trigger sync to other devices\n    await syncService.notifyDevices(userId, fileId);\n    \n    return { fileId, status: 'uploaded' };\n  }\n  \n  chunkFile(fileData, chunkSize = 1024 * 1024) { // 1MB chunks\n    const chunks = [];\n    for (let i = 0; i < fileData.size; i += chunkSize) {\n      chunks.push(fileData.slice(i, i + chunkSize));\n    }\n    return chunks;\n  }\n}`,
+    tags: ["System Design", "File Storage", "Scalability", "Microservices", "Cloud Architecture"],
+    favorite: true,
+    review: true,
+    hot: true,
+    images: [
+      {
+        name: "file-storage-architecture.png",
+        data: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop",
+        size: 43000
+      }
+    ]
+  },
+  {
+    id: 20,
+    round: 'hr',
+    question: "Where do you see yourself in 5 years?",
+    answer: "This question explores your career ambitions, planning skills, and alignment with the company's growth path.\n\n**Structure Your Answer:**\n\n**Professional Growth:**\n- Skills you want to develop\n- Leadership or technical advancement\n- Industry expertise areas\n\n**Value Creation:**\n- How you'll contribute more to organizations\n- Problems you want to solve\n- Impact you want to make\n\n**Learning Goals:**\n- New technologies or domains\n- Certifications or education\n- Cross-functional experience\n\n**Sample Response Framework:**\n\"In 5 years, I see myself having grown significantly in [specific area]. I'd like to be leading [type of projects/teams] and contributing to [company goals]. I'm particularly interested in developing expertise in [relevant field] and helping mentor junior developers.\"\n\n**Tips:**\n- Be specific but flexible\n- Align with company trajectory\n- Show ambition without seeming unrealistic\n- Mention continuous learning",
+    code: "",
+    tags: ["Career Planning", "Goals", "Professional Development", "Leadership", "Growth"],
+    favorite: false,
     review: false,
     hot: false,
     images: []

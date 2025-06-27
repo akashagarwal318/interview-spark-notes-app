@@ -1,11 +1,12 @@
 
-import { Question, defaultQuestions } from '../data/questions';
+import { defaultQuestions } from '../data/questions';
 
 const STORAGE_KEY = 'interviewQuestions';
+const SETTINGS_KEY = 'appSettings';
 
 export const questionsManager = {
   // Load questions from localStorage or return defaults
-  loadQuestions: (): Question[] => {
+  loadQuestions: () => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
@@ -24,7 +25,7 @@ export const questionsManager = {
   },
 
   // Save questions to localStorage
-  saveQuestions: (questions: Question[]): void => {
+  saveQuestions: (questions) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(questions));
       console.log('Saved questions to localStorage:', questions.length);
@@ -33,10 +34,32 @@ export const questionsManager = {
     }
   },
 
+  // Load app settings
+  loadSettings: () => {
+    try {
+      const stored = localStorage.getItem(SETTINGS_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error('Error loading settings from localStorage:', error);
+    }
+    return {};
+  },
+
+  // Save app settings
+  saveSettings: (settings) => {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch (error) {
+      console.error('Error saving settings to localStorage:', error);
+    }
+  },
+
   // Add a new question
-  addQuestion: (questionData: Omit<Question, 'id' | 'favorite' | 'review' | 'hot'>): Question => {
+  addQuestion: (questionData) => {
     const questions = questionsManager.loadQuestions();
-    const newQuestion: Question = {
+    const newQuestion = {
       id: Date.now(),
       ...questionData,
       favorite: false,
@@ -50,7 +73,7 @@ export const questionsManager = {
   },
 
   // Update a question
-  updateQuestion: (id: number, updates: Partial<Question>): Question[] => {
+  updateQuestion: (id, updates) => {
     const questions = questionsManager.loadQuestions();
     const updatedQuestions = questions.map(q => 
       q.id === id ? { ...q, ...updates } : q
@@ -60,7 +83,7 @@ export const questionsManager = {
   },
 
   // Delete a question
-  deleteQuestion: (id: number): Question[] => {
+  deleteQuestion: (id) => {
     const questions = questionsManager.loadQuestions();
     const updatedQuestions = questions.filter(q => q.id !== id);
     questionsManager.saveQuestions(updatedQuestions);
@@ -68,7 +91,7 @@ export const questionsManager = {
   },
 
   // Add image to a question
-  addImageToQuestion: (id: number, image: { name: string; data: string; size: number }): Question[] => {
+  addImageToQuestion: (id, image) => {
     const questions = questionsManager.loadQuestions();
     const updatedQuestions = questions.map(q => {
       if (q.id === id) {
@@ -82,7 +105,7 @@ export const questionsManager = {
   },
 
   // Remove image from a question
-  removeImageFromQuestion: (id: number, imageIndex: number): Question[] => {
+  removeImageFromQuestion: (id, imageIndex) => {
     const questions = questionsManager.loadQuestions();
     const updatedQuestions = questions.map(q => {
       if (q.id === id && q.images) {
@@ -94,5 +117,38 @@ export const questionsManager = {
     });
     questionsManager.saveQuestions(updatedQuestions);
     return updatedQuestions;
+  },
+
+  // Export questions to JSON file
+  exportQuestions: () => {
+    const questions = questionsManager.loadQuestions();
+    const dataStr = JSON.stringify(questions, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `interview-questions-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+  },
+
+  // Import questions from JSON file
+  importQuestions: (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const importedQuestions = JSON.parse(event.target.result);
+          if (Array.isArray(importedQuestions)) {
+            questionsManager.saveQuestions(importedQuestions);
+            resolve(importedQuestions);
+          } else {
+            reject(new Error('Invalid file format'));
+          }
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.readAsText(file);
+    });
   }
 };

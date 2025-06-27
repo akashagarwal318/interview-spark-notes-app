@@ -1,28 +1,32 @@
 
 import React, { useState, useEffect } from 'react';
 import { questionsManager } from '../utils/questionsManager';
-import { Question } from '../data/questions';
 import Header from './Header';
 import QuickStats from './QuickStats';
 import SearchFilters from './SearchFilters';
 import QuestionForm from './QuestionForm';
 import QuestionCard from './QuestionCard';
 import ImageModal from './ImageModal';
+import PaginationControls from './question/PaginationControls';
 
-const InterviewAssistant: React.FC = () => {
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
+const InterviewAssistant = () => {
+  const [questions, setQuestions] = useState([]);
+  const [filteredQuestions, setFilteredQuestions] = useState([]);
   const [currentTheme, setCurrentTheme] = useState('light');
   const [isFormVisible, setIsFormVisible] = useState(false);
-  const [expandedQuestions, setExpandedQuestions] = useState<Set<number>>(new Set());
-  const [editingQuestions, setEditingQuestions] = useState<Set<number>>(new Set());
+  const [expandedQuestions, setExpandedQuestions] = useState(new Set());
+  const [editingQuestions, setEditingQuestions] = useState(new Set());
   
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState('question');
   const [currentRound, setCurrentRound] = useState('technical');
-  const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null);
+  const [activeTagFilter, setActiveTagFilter] = useState(null);
   const [activeStatusFilter, setActiveStatusFilter] = useState('all');
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [questionsPerPage, setQuestionsPerPage] = useState(10);
   
   // Image modal
   const [imageModalOpen, setImageModalOpen] = useState(false);
@@ -41,6 +45,19 @@ const InterviewAssistant: React.FC = () => {
     document.documentElement.classList.toggle('dark', savedTheme === 'dark');
   }, []);
 
+  // Load pagination settings
+  useEffect(() => {
+    const savedQuestionsPerPage = localStorage.getItem('questionsPerPage');
+    if (savedQuestionsPerPage) {
+      setQuestionsPerPage(Number(savedQuestionsPerPage));
+    }
+  }, []);
+
+  // Save pagination settings
+  useEffect(() => {
+    localStorage.setItem('questionsPerPage', questionsPerPage.toString());
+  }, [questionsPerPage]);
+
   // Apply filters
   useEffect(() => {
     console.log('Applying filters...');
@@ -54,7 +71,7 @@ const InterviewAssistant: React.FC = () => {
     console.log('After round filter:', filtered.length);
 
     if (activeStatusFilter !== 'all') {
-      filtered = filtered.filter(q => q[activeStatusFilter as keyof Question] === true);
+      filtered = filtered.filter(q => q[activeStatusFilter] === true);
       console.log('After status filter:', filtered.length);
     }
 
@@ -83,15 +100,23 @@ const InterviewAssistant: React.FC = () => {
 
     console.log('Final filtered questions:', filtered.length);
     setFilteredQuestions(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [questions, currentRound, activeStatusFilter, activeTagFilter, searchTerm, searchType]);
 
-  const handleAddQuestion = (questionData: any) => {
+  // Handle round change - collapse all questions
+  const handleRoundChange = (newRound) => {
+    setCurrentRound(newRound);
+    setExpandedQuestions(new Set()); // Collapse all questions
+    setEditingQuestions(new Set()); // Exit edit mode for all
+  };
+
+  const handleAddQuestion = (questionData) => {
     const newQuestion = questionsManager.addQuestion(questionData);
     setQuestions(questionsManager.loadQuestions());
     setIsFormVisible(false);
   };
 
-  const handleToggleExpand = (id: number) => {
+  const handleToggleExpand = (id) => {
     const newExpanded = new Set(expandedQuestions);
     if (newExpanded.has(id)) {
       newExpanded.delete(id);
@@ -101,7 +126,7 @@ const InterviewAssistant: React.FC = () => {
     setExpandedQuestions(newExpanded);
   };
 
-  const handleToggleEdit = (id: number) => {
+  const handleToggleEdit = (id) => {
     const newEditing = new Set(editingQuestions);
     if (newEditing.has(id)) {
       newEditing.delete(id);
@@ -111,7 +136,7 @@ const InterviewAssistant: React.FC = () => {
     setEditingQuestions(newEditing);
   };
 
-  const handleToggleStatus = (id: number, status: 'favorite' | 'review' | 'hot') => {
+  const handleToggleStatus = (id, status) => {
     const question = questions.find(q => q.id === id);
     if (question) {
       questionsManager.updateQuestion(id, { [status]: !question[status] });
@@ -119,14 +144,28 @@ const InterviewAssistant: React.FC = () => {
     }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id) => {
     if (confirm('Are you sure you want to delete this question?')) {
       questionsManager.deleteQuestion(id);
       setQuestions(questionsManager.loadQuestions());
     }
   };
 
-  const handleSave = (id: number, field: string, value: string) => {
+  const handleDuplicate = (id) => {
+    const question = questions.find(q => q.id === id);
+    if (question) {
+      const duplicatedQuestion = {
+        ...question,
+        question: `${question.question} (Copy)`,
+        id: undefined // Let the manager assign a new ID
+      };
+      delete duplicatedQuestion.id;
+      questionsManager.addQuestion(duplicatedQuestion);
+      setQuestions(questionsManager.loadQuestions());
+    }
+  };
+
+  const handleSave = (id, field, value) => {
     if (field === 'tags') {
       questionsManager.updateQuestion(id, { 
         tags: value.split(',').map(tag => tag.trim()).filter(tag => tag) 
@@ -137,12 +176,12 @@ const InterviewAssistant: React.FC = () => {
     setQuestions(questionsManager.loadQuestions());
   };
 
-  const handleAddImage = (questionId: number, image: { name: string; data: string; size: number }) => {
+  const handleAddImage = (questionId, image) => {
     questionsManager.addImageToQuestion(questionId, image);
     setQuestions(questionsManager.loadQuestions());
   };
 
-  const handleRemoveImage = (questionId: number, imageIndex: number) => {
+  const handleRemoveImage = (questionId, imageIndex) => {
     questionsManager.removeImageFromQuestion(questionId, imageIndex);
     setQuestions(questionsManager.loadQuestions());
   };
@@ -161,13 +200,30 @@ const InterviewAssistant: React.FC = () => {
     setCurrentRound('all');
   };
 
-  const handleImageClick = (imageSrc: string) => {
+  const handleImageClick = (imageSrc) => {
     setCurrentImageSrc(imageSrc);
     setImageModalOpen(true);
   };
 
+  // Pagination
+  const totalPages = Math.ceil(filteredQuestions.length / questionsPerPage);
+  const paginatedQuestions = filteredQuestions.slice(
+    (currentPage - 1) * questionsPerPage,
+    currentPage * questionsPerPage
+  );
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleQuestionsPerPageChange = (newQuestionsPerPage) => {
+    setQuestionsPerPage(newQuestionsPerPage);
+    setCurrentPage(1);
+  };
+
   const getAllTags = () => {
-    const allTags = new Set<string>();
+    const allTags = new Set();
     const questionsToCheck = currentRound === 'all' ? questions : questions.filter(q => q.round === currentRound);
     questionsToCheck.forEach(q => {
       q.tags?.forEach(tag => allTags.add(tag));
@@ -184,7 +240,7 @@ const InterviewAssistant: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto p-4 sm:p-6">
         <Header
           onAddQuestion={() => setIsFormVisible(true)}
           onShowAll={handleShowAll}
@@ -203,7 +259,7 @@ const InterviewAssistant: React.FC = () => {
           tags={getAllTags()}
           onSearchChange={setSearchTerm}
           onSearchTypeChange={setSearchType}
-          onRoundChange={setCurrentRound}
+          onRoundChange={handleRoundChange}
           onTagFilter={setActiveTagFilter}
           onStatusFilter={setActiveStatusFilter}
         />
@@ -215,7 +271,18 @@ const InterviewAssistant: React.FC = () => {
           onCancel={() => setIsFormVisible(false)}
         />
 
-        <div className="space-y-6">
+        {filteredQuestions.length > 0 && (
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            questionsPerPage={questionsPerPage}
+            totalQuestions={filteredQuestions.length}
+            onPageChange={handlePageChange}
+            onQuestionsPerPageChange={handleQuestionsPerPageChange}
+          />
+        )}
+
+        <div className="space-y-4 sm:space-y-6">
           {filteredQuestions.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-6xl mb-4 opacity-50">🔍</div>
@@ -223,7 +290,7 @@ const InterviewAssistant: React.FC = () => {
               <p className="text-gray-600 dark:text-gray-400">Try adjusting your search terms or add a new question.</p>
             </div>
           ) : (
-            filteredQuestions.map(question => (
+            paginatedQuestions.map(question => (
               <QuestionCard
                 key={question.id}
                 question={question}
@@ -233,6 +300,7 @@ const InterviewAssistant: React.FC = () => {
                 onToggleEdit={() => handleToggleEdit(question.id)}
                 onToggleStatus={(status) => handleToggleStatus(question.id, status)}
                 onDelete={() => handleDelete(question.id)}
+                onDuplicate={() => handleDuplicate(question.id)}
                 onSave={(field, value) => handleSave(question.id, field, value)}
                 onImageClick={handleImageClick}
                 onRemoveImage={(imageIndex) => handleRemoveImage(question.id, imageIndex)}
@@ -241,6 +309,19 @@ const InterviewAssistant: React.FC = () => {
             ))
           )}
         </div>
+
+        {filteredQuestions.length > 0 && (
+          <div className="mt-6">
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              questionsPerPage={questionsPerPage}
+              totalQuestions={filteredQuestions.length}
+              onPageChange={handlePageChange}
+              onQuestionsPerPageChange={handleQuestionsPerPageChange}
+            />
+          </div>
+        )}
 
         <ImageModal
           isOpen={imageModalOpen}
