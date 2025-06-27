@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { questionsManager } from '../utils/questionsManager';
 import Header from './Header';
@@ -20,7 +19,7 @@ const InterviewAssistant = () => {
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState('question');
-  const [currentRound, setCurrentRound] = useState('technical');
+  const [currentRound, setCurrentRound] = useState('all');
   const [activeTagFilter, setActiveTagFilter] = useState(null);
   const [activeStatusFilter, setActiveStatusFilter] = useState('all');
   
@@ -35,6 +34,7 @@ const InterviewAssistant = () => {
   // Initialize questions
   useEffect(() => {
     const loadedQuestions = questionsManager.loadQuestions();
+    console.log('Loaded questions:', loadedQuestions.length);
     setQuestions(loadedQuestions);
   }, []);
 
@@ -271,17 +271,6 @@ const InterviewAssistant = () => {
           onCancel={() => setIsFormVisible(false)}
         />
 
-        {filteredQuestions.length > 0 && (
-          <PaginationControls
-            currentPage={currentPage}
-            totalPages={totalPages}
-            questionsPerPage={questionsPerPage}
-            totalQuestions={filteredQuestions.length}
-            onPageChange={handlePageChange}
-            onQuestionsPerPageChange={handleQuestionsPerPageChange}
-          />
-        )}
-
         <div className="space-y-4 sm:space-y-6">
           {filteredQuestions.length === 0 ? (
             <div className="text-center py-16">
@@ -311,7 +300,7 @@ const InterviewAssistant = () => {
         </div>
 
         {filteredQuestions.length > 0 && (
-          <div className="mt-6">
+          <div className="mt-8">
             <PaginationControls
               currentPage={currentPage}
               totalPages={totalPages}

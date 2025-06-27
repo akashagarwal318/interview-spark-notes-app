@@ -30,13 +30,14 @@ const QuestionHeader = ({
           <div className="mb-2">
             {editingField === 'round' ? (
               <select
-                value={tempValues.round}
+                value={tempValues.round || ''}
                 onChange={(e) => onTempValueChange('round', e.target.value)}
                 onBlur={() => onFieldSave('round')}
                 onClick={(e) => e.stopPropagation()}
-                className="px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full border border-blue-300 dark:border-blue-700"
+                className="px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full border border-blue-300 dark:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 autoFocus
               >
+                <option value="">Select Round</option>
                 {roundOptions.map(option => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -45,13 +46,13 @@ const QuestionHeader = ({
               </select>
             ) : (
               <span 
-                className={`inline-block px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full ${isEditing ? 'cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800' : ''}`}
+                className={`inline-block px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full font-medium ${isEditing ? 'cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onFieldEdit('round');
+                  if (isEditing) onFieldEdit('round');
                 }}
               >
-                {roundOptions.find(opt => opt.value === question.round)?.label || question.round}
+                {roundOptions.find(opt => opt.value === question.round)?.label || question.round || 'No Round'}
               </span>
             )}
           </div>
@@ -73,7 +74,7 @@ const QuestionHeader = ({
               className={`text-lg font-semibold text-gray-900 dark:text-white ${isEditing ? 'cursor-text hover:bg-yellow-100 dark:hover:bg-yellow-900 px-2 py-1 rounded' : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
-                onFieldEdit('question');
+                if (isEditing) onFieldEdit('question');
               }}
             >
               {question.question}
@@ -103,14 +104,14 @@ const QuestionHeader = ({
               e.stopPropagation();
               onToggleStatus('review');
             }}
-            className={`p-2 rounded-lg transition-colors ${
+            className={`p-2 rounded-lg transition-colors flex items-center justify-center ${
               question.review 
                 ? 'bg-green-500 text-white' 
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-green-100 dark:hover:bg-green-900'
             }`}
             title="Toggle Review"
           >
-            📌
+            <span className="text-sm">📌</span>
           </button>
           
           <button
@@ -118,14 +119,14 @@ const QuestionHeader = ({
               e.stopPropagation();
               onToggleStatus('hot');
             }}
-            className={`p-2 rounded-lg transition-colors ${
+            className={`p-2 rounded-lg transition-colors flex items-center justify-center ${
               question.hot 
                 ? 'bg-red-500 text-white' 
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900'
             }`}
             title="Toggle Hot List"
           >
-            🔥
+            <span className="text-sm">🔥</span>
           </button>
           
           <button
@@ -148,10 +149,10 @@ const QuestionHeader = ({
               e.stopPropagation();
               onDuplicate();
             }}
-            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-purple-100 dark:hover:bg-purple-900 hover:text-purple-600 transition-colors"
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-purple-100 dark:hover:bg-purple-900 hover:text-purple-600 transition-colors flex items-center justify-center"
             title="Duplicate Question"
           >
-            📄
+            <span className="text-sm">📄</span>
           </button>
           
           <button
@@ -159,10 +160,10 @@ const QuestionHeader = ({
               e.stopPropagation();
               onDelete();
             }}
-            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900 hover:text-red-600 transition-colors"
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900 hover:text-red-600 transition-colors flex items-center justify-center"
             title="Delete Question"
           >
-            🗑️
+            <span className="text-sm">🗑️</span>
           </button>
           
           <div className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}>

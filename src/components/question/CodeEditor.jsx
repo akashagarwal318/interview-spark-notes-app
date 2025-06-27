@@ -13,15 +13,30 @@ const CodeEditor = ({
 }) => {
   if (!question.code) return null;
 
-  // Simple syntax highlighting for JavaScript/JSX
+  // Enhanced syntax highlighting for JavaScript/JSX
   const highlightCode = (code) => {
     return code
-      .replace(/(\b(?:const|let|var|function|class|if|else|for|while|return|import|export|from|default)\b)/g, '<span style="color: #569cd6;">$1</span>')
-      .replace(/(\b(?:true|false|null|undefined)\b)/g, '<span style="color: #569cd6;">$1</span>')
-      .replace(/(\/\/.*$)/gm, '<span style="color: #6a9955;">$1</span>')
-      .replace(/(\/\*[\s\S]*?\*\/)/g, '<span style="color: #6a9955;">$1</span>')
-      .replace(/(['"`])((?:\\.|(?!\1)[^\\])*?)\1/g, '<span style="color: #ce9178;">$1$2$1</span>')
-      .replace(/(\b\d+\.?\d*\b)/g, '<span style="color: #b5cea8;">$1</span>');
+      // Keywords
+      .replace(/(\b(?:const|let|var|function|class|if|else|for|while|return|import|export|from|default|async|await|try|catch|finally|throw|new|this|super|extends|implements|interface|type|enum|namespace|public|private|protected|static|readonly|abstract)\b)/g, '<span style="color: #569cd6; font-weight: bold;">$1</span>')
+      // Built-in values
+      .replace(/(\b(?:true|false|null|undefined|NaN|Infinity)\b)/g, '<span style="color: #4fc1ff; font-weight: bold;">$1</span>')
+      // Numbers
+      .replace(/(\b\d+\.?\d*\b)/g, '<span style="color: #b5cea8; font-weight: bold;">$1</span>')
+      // Strings
+      .replace(/(["'`])((?:\\.|(?!\1)[^\\])*?)\1/g, '<span style="color: #ce9178;">$1$2$1</span>')
+      // Comments
+      .replace(/(\/\/.*$)/gm, '<span style="color: #6a9955; font-style: italic;">$1</span>')
+      .replace(/(\/\*[\s\S]*?\*\/)/g, '<span style="color: #6a9955; font-style: italic;">$1</span>')
+      // Functions
+      .replace(/(\b\w+)(?=\s*\()/g, '<span style="color: #dcdcaa; font-weight: bold;">$1</span>')
+      // Variables (simple detection)
+      .replace(/(\b[a-zA-Z_$][a-zA-Z0-9_$]*\b)(?=\s*[=:])/g, '<span style="color: #9cdcfe;">$1</span>')
+      // JSX tags
+      .replace(/(<\/?[a-zA-Z][a-zA-Z0-9]*[^>]*>)/g, '<span style="color: #92c5f7;">$1</span>')
+      // Operators
+      .replace(/([+\-*/%=<>!&|^~?:])/g, '<span style="color: #d4d4d4;">$1</span>')
+      // Brackets
+      .replace(/([(){}[\]])/g, '<span style="color: #ffd700; font-weight: bold;">$1</span>');
   };
 
   return (
@@ -37,7 +52,7 @@ const CodeEditor = ({
           onKeyDown={(e) => onKeyPress(e, 'code')}
           rows={12}
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-900 text-green-400 focus:ring-2 focus:ring-blue-500 font-mono text-sm resize-y"
-          style={{ fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace' }}
+          style={{ fontFamily: 'Monaco, Menlo, "Ubuntu Mono", "Consolas", "Courier New", monospace' }}
           autoFocus
         />
       ) : (
@@ -54,8 +69,11 @@ const CodeEditor = ({
           </div>
           <div className="p-4 overflow-x-auto">
             <pre 
-              className="text-green-400 font-mono text-sm whitespace-pre-wrap"
-              style={{ fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace' }}
+              className="text-sm whitespace-pre-wrap leading-relaxed"
+              style={{ 
+                fontFamily: 'Monaco, Menlo, "Ubuntu Mono", "Consolas", "Courier New", monospace',
+                lineHeight: '1.6'
+              }}
               dangerouslySetInnerHTML={{ 
                 __html: highlightCode(question.code || '') 
               }}
