@@ -1,25 +1,16 @@
 
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  IconButton,
-  Box
-} from '@mui/material';
-import {
-  Edit as EditIcon,
-  ViewList as ViewListIcon,
-  Brightness4 as Brightness4Icon,
-  Brightness7 as Brightness7Icon
-} from '@mui/icons-material';
-import { setFormVisible, toggleTheme, resetFilters } from '../../store/slices/uiSlice';
+import { Plus, List, Sun, Moon, Download } from 'lucide-react';
+import { Button } from '../ui/button';
+import { setFormVisible, toggleTheme } from '../../store/slices/uiSlice';
+import { resetFilters } from '../../store/slices/questionsSlice';
+import { useIsMobile } from '../../hooks/use-mobile';
 
 const Header = () => {
   const dispatch = useDispatch();
   const { theme } = useSelector((state) => state.ui);
+  const isMobile = useIsMobile();
 
   const handleAddQuestion = () => {
     dispatch(setFormVisible(true));
@@ -33,62 +24,77 @@ const Header = () => {
     dispatch(toggleTheme());
   };
 
+  const handleExport = () => {
+    // TODO: Implement export functionality
+    console.log('Export functionality to be implemented');
+  };
+
   return (
-    <AppBar 
-      position="static" 
-      elevation={0} 
-      sx={{ 
-        mb: 4, 
-        backgroundColor: 'transparent', 
-        color: 'inherit' 
-      }}
-    >
-      <Toolbar sx={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-        <Typography 
-          variant="h4" 
-          component="h1" 
-          sx={{ 
-            fontWeight: 'bold', 
-            fontSize: { xs: '1.5rem', md: '2rem' } 
-          }}
-        >
-          🚀 Interview Assistant
-        </Typography>
+    <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+      <div className="container flex h-14 items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            🚀 Interview Assistant
+          </div>
+        </div>
         
-        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Button
-            variant="contained"
-            startIcon={<EditIcon />}
-            onClick={handleAddQuestion}
-            sx={{ minWidth: 'auto' }}
-          >
-            Add New Question
-          </Button>
+        <div className="flex items-center space-x-2">
+          {!isMobile && (
+            <>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleAddQuestion}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Question
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShowAll}
+                className="gap-2"
+              >
+                <List className="h-4 w-4" />
+                All Questions
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExport}
+                className="gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export
+              </Button>
+            </>
+          )}
           
           <Button
-            variant="outlined"
-            startIcon={<ViewListIcon />}
-            onClick={handleShowAll}
-            sx={{ minWidth: 'auto' }}
-          >
-            All Questions
-          </Button>
-          
-          <IconButton
+            variant="ghost"
+            size="sm"
             onClick={handleToggleTheme}
-            color="inherit"
-            sx={{ 
-              border: 1, 
-              borderColor: 'divider',
-              width: 44,
-              height: 44
-            }}
+            className="px-2"
           >
-            {theme === 'light' ? <Brightness4Icon /> : <Brightness7Icon />}
-          </IconButton>
-        </Box>
-      </Toolbar>
-    </AppBar>
+            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          </Button>
+
+          {isMobile && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleAddQuestion}
+              className="px-2"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 

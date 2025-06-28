@@ -1,24 +1,26 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  Paper,
-  Typography,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Button,
-  Box,
-  Stack
-} from '@mui/material';
-import { addQuestion } from '../../store/slices/questionsSlice';
+import { X, Upload, Code } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
+import { Label } from '../ui/label';
+import { Badge } from '../ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '../ui/select';
+import { addQuestion, updateQuestion } from '../../store/slices/questionsSlice';
 import { setFormVisible } from '../../store/slices/uiSlice';
 
 const QuestionForm = () => {
   const dispatch = useDispatch();
-  const { isFormVisible } = useSelector((state) => state.ui);
+  const { isFormVisible, editingQuestion } = useSelector((state) => state.ui);
   const { currentRound } = useSelector((state) => state.questions);
 
   const [formData, setFormData] = useState({
@@ -29,6 +31,21 @@ const QuestionForm = () => {
     tags: ''
   });
   const [images, setImages] = useState([]);
+  const [tagInput, setTagInput] = useState('');
+
+  // Initialize form when editing
+  useEffect(() => {
+    if (editingQuestion) {
+      setFormData({
+        round: editingQuestion.round,
+        question: editingQuestion.question,
+        answer: editingQuestion.answer,
+        code: editingQuestion.code || '',
+        tags: editingQuestion.tags ? editingQuestion.tags.join(', ') : ''
+      });
+      setImages(editingQuestion.images || []);
+    }
+  }, [editingQuestion]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,6 +57,7 @@ const QuestionForm = () => {
 
     const processedImages = await Promise.all(
       images.map(file => {
+        if (file.data) return Promise.resolve(file); // Already processed
         return new Promise((resolve) => {
           const reader = new FileReader();
           reader.onload = (e) => {
@@ -60,22 +78,22 @@ const QuestionForm = () => {
       images: processedImages
     };
 
-    dispatch(addQuestion(questionData));
-    dispatch(setFormVisible(false));
+    if (editingQuestion) {
+      dispatch(updateQuestion({ ...questionData, id: editingQuestion.id }));
+    } else {
+      dispatch(addQuestion(questionData));
+    }
     
-    // Reset form
-    setFormData({
-      round: currentRound === 'all' ? 'technical' : currentRound,
-      question: '',
-      answer: '',
-      code: '',
-      tags: ''
-    });
-    setImages([]);
+    dispatch(setFormVisible(false));
+    resetForm();
   };
 
   const handleCancel = () => {
     dispatch(setFormVisible(false));
+    resetForm();
+  };
+
+  const resetForm = () => {
     setFormData({
       round: currentRound === 'all' ? 'technical' : currentRound,
       question: '',
@@ -84,102 +102,205 @@ const QuestionForm = () => {
       tags: ''
     });
     setImages([]);
+    setTagInput('');
   };
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files || []);
-    setImages(files);
+    setImages(prev => [...prev, ...files]);
+  };
+
+  const removeImage = (index) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addTag = () => {
+    if (tagInput.trim()) {
+      const currentTags = formData.tags ? formData.tags.split(',').map(t => t.trim()) : [];
+      if (!currentTags.includes(tagInput.trim())) {
+        const newTags = [...currentTags, tagInput.trim()];
+        setFormData(prev => ({ ...prev, tags: newTags.join(', ') }));
+      }
+      setTagInput('');
+    }
+  };
+
+  const removeTag = (tagToRemove) => {
+    const currentTags = formData.tags.split(',').map(t => t.trim());
+    const newTags = currentTags.filter(tag => tag !== tagToRemove);
+    setFormData(prev => ({ ...prev, tags: newTags.join(', ') }));
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && e.target.name === 'tagInput') {
+      e.preventDefault();
+      addTag();
+    }
   };
 
   if (!isFormVisible) return null;
 
+  const tags = formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(t => t) : [];
+
   return (
-    <Paper sx={{ p: 3, mb: 4, border: 1, borderColor: 'divider' }}>
-      <Typography variant="h5" gutterBottom>
-        Add New Question
-      </Typography>
-      
-      <Box component="form" onSubmit={handleSubmit}>
-        <Stack spacing={3}>
-          <FormControl fullWidth>
-            <InputLabel>Interview Round</InputLabel>
-            <Select
-              value={formData.round}
-              label="Interview Round"
-              onChange={(e) => setFormData(prev => ({ ...prev, round: e.target.value }))}
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>
+              {editingQuestion ? 'Edit Question' : 'Add New Question'}
+            </CardTitle>
+            <Button variant="ghost" size="sm" onClick={handleCancel}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="round">Interview Round</Label>
+            <Select 
+              value={formData.round} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, round: value }))}
             >
-              <MenuItem value="technical">Technical Round</MenuItem>
-              <MenuItem value="hr">HR Round</MenuItem>
-              <MenuItem value="telephonic">Telephonic Round</MenuItem>
-              <MenuItem value="introduction">Introduction Round</MenuItem>
-              <MenuItem value="behavioral">Behavioral Round</MenuItem>
-              <MenuItem value="system-design">System Design Round</MenuItem>
-              <MenuItem value="coding">Coding Round</MenuItem>
+              <SelectTrigger>
+                <SelectValue placeholder="Select round" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="technical">Technical Round</SelectItem>
+                <SelectItem value="hr">HR Round</SelectItem>
+                <SelectItem value="telephonic">Telephonic Round</SelectItem>
+                <SelectItem value="introduction">Introduction Round</SelectItem>
+                <SelectItem value="behavioral">Behavioral Round</SelectItem>
+                <SelectItem value="system-design">System Design Round</SelectItem>
+                <SelectItem value="coding">Coding Round</SelectItem>
+              </SelectContent>
             </Select>
-          </FormControl>
+          </div>
 
-          <TextField
-            fullWidth
-            required
-            label="Question"
-            value={formData.question}
-            onChange={(e) => setFormData(prev => ({ ...prev, question: e.target.value }))}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="question">Question *</Label>
+            <Textarea
+              id="question"
+              placeholder="Enter your interview question..."
+              value={formData.question}
+              onChange={(e) => setFormData(prev => ({ ...prev, question: e.target.value }))}
+              rows={3}
+            />
+          </div>
 
-          <TextField
-            fullWidth
-            required
-            multiline
-            rows={6}
-            label="Answer"
-            value={formData.answer}
-            onChange={(e) => setFormData(prev => ({ ...prev, answer: e.target.value }))}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="answer">Answer *</Label>
+            <Textarea
+              id="answer"
+              placeholder="Enter the answer or key points..."
+              value={formData.answer}
+              onChange={(e) => setFormData(prev => ({ ...prev, answer: e.target.value }))}
+              rows={6}
+            />
+          </div>
 
-          <TextField
-            fullWidth
-            multiline
-            rows={8}
-            label="Code Snippet (optional)"
-            placeholder="// Your code here..."
-            value={formData.code}
-            onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
-            sx={{
-              '& .MuiInputBase-input': {
-                fontFamily: 'Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-                fontSize: '0.875rem'
-              }
-            }}
-          />
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Code className="h-4 w-4" />
+              <Label htmlFor="code">Code Snippet (Optional)</Label>
+            </div>
+            <Textarea
+              id="code"
+              placeholder="// Your code here..."
+              value={formData.code}
+              onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
+              rows={8}
+              className="font-mono text-sm bg-gray-50 dark:bg-gray-900"
+            />
+          </div>
 
-          <TextField
-            fullWidth
-            label="Tags (comma-separated)"
-            placeholder="React, JavaScript, Hooks"
-            value={formData.tags}
-            onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
-          />
+          <div className="space-y-2">
+            <Label>Tags</Label>
+            <div className="flex gap-2">
+              <Input
+                name="tagInput"
+                placeholder="Add a tag..."
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="flex-1"
+              />
+              <Button type="button" onClick={addTag} size="sm">
+                Add
+              </Button>
+            </div>
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {tags.map((tag, index) => (
+                  <Badge key={index} variant="secondary" className="gap-1">
+                    {tag}
+                    <X 
+                      className="h-3 w-3 cursor-pointer" 
+                      onClick={() => removeTag(tag)} 
+                    />
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
 
-          <TextField
-            fullWidth
-            type="file"
-            label="Images (optional)"
-            InputLabelProps={{ shrink: true }}
-            inputProps={{ multiple: true, accept: 'image/*' }}
-            onChange={handleImageChange}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="images">Images (Optional)</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="images"
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleImageChange}
+                className="flex-1"
+              />
+              <Upload className="h-4 w-4 text-muted-foreground" />
+            </div>
+            {images.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {images.map((image, index) => (
+                  <div key={index} className="relative">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100">
+                      {image.data ? (
+                        <img 
+                          src={image.data} 
+                          alt={image.name} 
+                          className="w-full h-full object-cover" 
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                          {image.name}
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full"
+                      onClick={() => removeImage(index)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-          <Stack direction="row" spacing={2} justifyContent="flex-end">
-            <Button variant="outlined" onClick={handleCancel}>
+          <div className="flex gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">
               Cancel
             </Button>
-            <Button type="submit" variant="contained">
-              💾 Save Question
+            <Button onClick={handleSubmit} className="flex-1">
+              {editingQuestion ? 'Update Question' : '💾 Save Question'}
             </Button>
-          </Stack>
-        </Stack>
-      </Box>
-    </Paper>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

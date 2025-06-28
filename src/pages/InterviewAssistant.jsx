@@ -1,6 +1,6 @@
+
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Container, Typography, Box } from '@mui/material';
 import { loadQuestions, saveQuestions } from '../store/slices/questionsSlice';
 import { setTheme } from '../store/slices/uiSlice';
 import Header from '../components/layout/Header.jsx';
@@ -44,42 +44,47 @@ const InterviewAssistant = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 3 }}>
-        <Typography>Loading...</Typography>
-      </Container>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading questions...</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+    <div className="min-h-screen bg-background">
       <Header />
-      <QuickStats />
-      <SearchFilters />
+      
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        <QuickStats />
+        <SearchFilters />
+
+        <div className="mb-6">
+          {filteredItems.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-xl font-semibold mb-2">No questions found</h3>
+              <p className="text-muted-foreground mb-6">
+                Try adjusting your search terms or add a new question.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {paginatedQuestions.map(question => (
+                <QuestionCard key={question.id} question={question} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <PaginationControls />
+      </div>
+
       <QuestionForm />
-
-      <Box sx={{ mb: 4 }}>
-        {filteredItems.length === 0 ? (
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Typography variant="h3" sx={{ fontSize: '4rem', mb: 2, opacity: 0.5 }}>
-              🔍
-            </Typography>
-            <Typography variant="h5" gutterBottom>
-              No questions found
-            </Typography>
-            <Typography color="text.secondary">
-              Try adjusting your search terms or add a new question.
-            </Typography>
-          </Box>
-        ) : (
-          paginatedQuestions.map(question => (
-            <QuestionCard key={question.id} question={question} />
-          ))
-        )}
-      </Box>
-
-      <PaginationControls />
       <ImageModal />
-    </Container>
+    </div>
   );
 };
 

@@ -14,7 +14,8 @@ const initialState = {
     favorite: false,
     review: false,
     hot: false
-  }
+  },
+  selectedTags: []
 };
 
 const questionsSlice = createSlice({
@@ -90,6 +91,23 @@ const questionsSlice = createSlice({
       state.currentPage = 1;
       questionsSlice.caseReducers.applyFilters(state);
     },
+    setSelectedTags: (state, action) => {
+      state.selectedTags = action.payload;
+      state.currentPage = 1;
+      questionsSlice.caseReducers.applyFilters(state);
+    },
+    resetFilters: (state) => {
+      state.currentRound = 'all';
+      state.searchTerm = '';
+      state.filters = {
+        favorite: false,
+        review: false,
+        hot: false
+      };
+      state.selectedTags = [];
+      state.currentPage = 1;
+      questionsSlice.caseReducers.applyFilters(state);
+    },
     applyFilters: (state) => {
       let filtered = [...state.items];
       
@@ -105,6 +123,13 @@ const questionsSlice = createSlice({
           q.question.toLowerCase().includes(term) ||
           q.answer.toLowerCase().includes(term) ||
           q.tags.some(tag => tag.toLowerCase().includes(term))
+        );
+      }
+      
+      // Tag filters
+      if (state.selectedTags.length > 0) {
+        filtered = filtered.filter(q => 
+          state.selectedTags.some(tag => q.tags.includes(tag))
         );
       }
       
@@ -150,6 +175,8 @@ export const {
   setQuestionsPerPage,
   setSortBy,
   setFilters,
+  setSelectedTags,
+  resetFilters,
   applyFilters
 } = questionsSlice.actions;
 

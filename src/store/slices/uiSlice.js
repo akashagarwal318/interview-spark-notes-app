@@ -4,6 +4,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   theme: 'light',
   isFormVisible: false,
+  editingQuestion: null,
   imageModal: {
     isOpen: false,
     imageSrc: ''
@@ -24,12 +25,16 @@ const uiSlice = createSlice({
     },
     setFormVisible: (state, action) => {
       state.isFormVisible = action.payload;
+      if (!action.payload) {
+        state.editingQuestion = null;
+      }
+    },
+    setEditingQuestion: (state, action) => {
+      state.editingQuestion = action.payload;
+      state.isFormVisible = true;
     },
     setImageModal: (state, action) => {
       state.imageModal = action.payload;
-    },
-    resetFilters: (state) => {
-      // This will be handled by questionsSlice
     }
   }
 });
@@ -38,8 +43,8 @@ export const {
   setTheme,
   toggleTheme,
   setFormVisible,
-  setImageModal,
-  resetFilters
+  setEditingQuestion,
+  setImageModal
 } = uiSlice.actions;
 
 export default uiSlice.reducer;
