@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { ThemeProvider, CssBaseline, Container } from '@mui/material';
+import { lightTheme, darkTheme } from '../theme/muiTheme';
 import { questionsManager } from '../utils/questionsManager';
 import Header from './Header';
 import QuickStats from './QuickStats';
@@ -239,8 +241,9 @@ const InterviewAssistant = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-      <div className="max-w-6xl mx-auto p-4 sm:p-6">
+    <ThemeProvider theme={currentTheme === 'light' ? lightTheme : darkTheme}>
+      <CssBaseline />
+      <Container maxWidth="lg" sx={{ py: 3 }}>
         <Header
           onAddQuestion={() => setIsFormVisible(true)}
           onShowAll={handleShowAll}
@@ -273,11 +276,11 @@ const InterviewAssistant = () => {
 
         <div className="space-y-4 sm:space-y-6">
           {filteredQuestions.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4 opacity-50">🔍</div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No questions found</h3>
-              <p className="text-gray-600 dark:text-gray-400">Try adjusting your search terms or add a new question.</p>
-            </div>
+            <Container sx={{ textAlign: 'center', py: 8 }}>
+              <div style={{ fontSize: '4rem', marginBottom: '1rem', opacity: 0.5 }}>🔍</div>
+              <Typography variant="h5" gutterBottom>No questions found</Typography>
+              <Typography color="text.secondary">Try adjusting your search terms or add a new question.</Typography>
+            </Container>
           ) : (
             paginatedQuestions.map(question => (
               <QuestionCard
@@ -300,16 +303,14 @@ const InterviewAssistant = () => {
         </div>
 
         {filteredQuestions.length > 0 && (
-          <div className="mt-8">
-            <PaginationControls
-              currentPage={currentPage}
-              totalPages={totalPages}
-              questionsPerPage={questionsPerPage}
-              totalQuestions={filteredQuestions.length}
-              onPageChange={handlePageChange}
-              onQuestionsPerPageChange={handleQuestionsPerPageChange}
-            />
-          </div>
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            questionsPerPage={questionsPerPage}
+            totalQuestions={filteredQuestions.length}
+            onPageChange={handlePageChange}
+            onQuestionsPerPageChange={handleQuestionsPerPageChange}
+          />
         )}
 
         <ImageModal
@@ -317,8 +318,8 @@ const InterviewAssistant = () => {
           imageSrc={currentImageSrc}
           onClose={() => setImageModalOpen(false)}
         />
-      </div>
-    </div>
+      </Container>
+    </ThemeProvider>
   );
 };
 

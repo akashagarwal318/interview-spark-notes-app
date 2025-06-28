@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Box, Card, CardContent, Typography, Grid } from '@mui/material';
 
 interface Stats {
   total: number;
@@ -13,25 +14,35 @@ interface QuickStatsProps {
 }
 
 const QuickStats: React.FC<QuickStatsProps> = ({ stats }) => {
+  const statItems = [
+    { label: 'Total Questions', value: stats.total, color: 'primary.main' },
+    { label: '⭐ Favorites', value: stats.favorites, color: 'warning.main' },
+    { label: '📌 Review', value: stats.review, color: 'success.main' },
+    { label: '🔥 Hot List', value: stats.hot, color: 'error.main' },
+  ];
+
   return (
-    <div className="flex gap-4 mb-6 flex-wrap justify-center md:justify-start">
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-center min-w-[120px] shadow-sm">
-        <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-        <div className="text-xs text-gray-500 mt-1">Total Questions</div>
-      </div>
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-center min-w-[120px] shadow-sm">
-        <div className="text-2xl font-bold text-yellow-600">{stats.favorites}</div>
-        <div className="text-xs text-gray-500 mt-1">⭐ Favorites</div>
-      </div>
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-center min-w-[120px] shadow-sm">
-        <div className="text-2xl font-bold text-green-600">{stats.review}</div>
-        <div className="text-xs text-gray-500 mt-1">📌 Review</div>
-      </div>
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-center min-w-[120px] shadow-sm">
-        <div className="text-2xl font-bold text-red-600">{stats.hot}</div>
-        <div className="text-xs text-gray-500 mt-1">🔥 Hot List</div>
-      </div>
-    </div>
+    <Grid container spacing={2} sx={{ mb: 3 }}>
+      {statItems.map((item, index) => (
+        <Grid item xs={6} sm={3} key={index}>
+          <Card elevation={1}>
+            <CardContent sx={{ textAlign: 'center', py: 2 }}>
+              <Typography 
+                variant="h4" 
+                component="div" 
+                fontWeight="bold"
+                sx={{ color: item.color, mb: 0.5 }}
+              >
+                {item.value}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {item.label}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
   );
 };
 

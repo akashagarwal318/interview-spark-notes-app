@@ -1,6 +1,19 @@
 
 import React from 'react';
-import { Search, X, Plus, Edit, Trash2 } from 'lucide-react';
+import { 
+  Box, 
+  TextField, 
+  Select, 
+  MenuItem, 
+  FormControl, 
+  InputLabel,
+  Chip, 
+  Paper,
+  Typography,
+  InputAdornment,
+  Stack
+} from '@mui/material';
+import { Search, Close } from '@mui/icons-material';
 
 const SearchFilters = ({
   searchTerm,
@@ -16,14 +29,14 @@ const SearchFilters = ({
   onStatusFilter
 }) => {
   const rounds = [
-    { value: 'all', label: 'All Rounds', color: 'bg-gray-500' },
-    { value: 'technical', label: 'Technical', color: 'bg-blue-500' },
-    { value: 'hr', label: 'HR', color: 'bg-green-500' },
-    { value: 'telephonic', label: 'Telephonic', color: 'bg-purple-500' },
-    { value: 'introduction', label: 'Introduction', color: 'bg-yellow-500' },
-    { value: 'behavioral', label: 'Behavioral', color: 'bg-pink-500' },
-    { value: 'system-design', label: 'System Design', color: 'bg-red-500' },
-    { value: 'coding', label: 'Coding', color: 'bg-indigo-500' }
+    { value: 'all', label: 'All Rounds', color: '#6b7280' },
+    { value: 'technical', label: 'Technical', color: '#3b82f6' },
+    { value: 'hr', label: 'HR', color: '#10b981' },
+    { value: 'telephonic', label: 'Telephonic', color: '#8b5cf6' },
+    { value: 'introduction', label: 'Introduction', color: '#f59e0b' },
+    { value: 'behavioral', label: 'Behavioral', color: '#ec4899' },
+    { value: 'system-design', label: 'System Design', color: '#ef4444' },
+    { value: 'coding', label: 'Coding', color: '#6366f1' }
   ];
 
   const searchTypes = [
@@ -41,147 +54,151 @@ const SearchFilters = ({
   ];
 
   return (
-    <div className="space-y-4 mb-6">
+    <Box sx={{ mb: 3 }}>
       {/* Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-            <Search className="h-4 w-4 text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder={`Search by ${searchType}...`}
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400 dark:placeholder:text-gray-500"
-          />
-        </div>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder={`Search by ${searchType}...`}
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+        />
         
-        <select
-          value={searchType}
-          onChange={(e) => onSearchTypeChange(e.target.value)}
-          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 min-w-[140px]"
-        >
-          {searchTypes.map(type => (
-            <option key={type.value} value={type.value}>
-              Search {type.label}
-            </option>
-          ))}
-        </select>
-      </div>
+        <FormControl sx={{ minWidth: 140 }}>
+          <InputLabel>Search Type</InputLabel>
+          <Select
+            value={searchType}
+            label="Search Type"
+            onChange={(e) => onSearchTypeChange(e.target.value)}
+          >
+            {searchTypes.map(type => (
+              <MenuItem key={type.value} value={type.value}>
+                Search {type.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Stack>
 
       {/* Round Filters */}
-      <div className="flex flex-wrap gap-2">
+      <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
         {rounds.map(round => (
-          <button
+          <Chip
             key={round.value}
+            label={round.label}
             onClick={() => onRoundChange(round.value)}
-            className={`px-3 py-2 text-sm rounded-full transition-all font-medium ${
-              currentRound === round.value
-                ? `${round.color} text-white shadow-lg transform scale-105`
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            <span className="whitespace-nowrap">{round.label}</span>
-          </button>
+            variant={currentRound === round.value ? 'filled' : 'outlined'}
+            sx={{
+              backgroundColor: currentRound === round.value ? round.color : 'transparent',
+              color: currentRound === round.value ? 'white' : 'inherit',
+              '&:hover': {
+                backgroundColor: currentRound === round.value ? round.color : 'action.hover',
+              }
+            }}
+          />
         ))}
-      </div>
+      </Stack>
 
       {/* Status Filters */}
-      <div className="flex flex-wrap gap-2">
+      <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
         {statusFilters.map(status => (
-          <button
+          <Chip
             key={status.value}
+            icon={<span>{status.icon}</span>}
+            label={status.label}
             onClick={() => onStatusFilter(status.value)}
-            className={`px-3 py-2 text-sm rounded-lg transition-all flex items-center gap-2 font-medium ${
-              activeStatusFilter === status.value
-                ? 'bg-blue-500 text-white shadow-lg'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            <span>{status.icon}</span>
-            <span className="whitespace-nowrap">{status.label}</span>
-          </button>
+            variant={activeStatusFilter === status.value ? 'filled' : 'outlined'}
+            color={activeStatusFilter === status.value ? 'primary' : 'default'}
+          />
         ))}
-      </div>
+      </Stack>
 
       {/* Tag Filters */}
       {tags.length > 0 && (
-        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+        <Stack 
+          direction="row" 
+          spacing={1} 
+          sx={{ 
+            mb: 2, 
+            flexWrap: 'wrap', 
+            gap: 1,
+            maxHeight: 128,
+            overflow: 'auto'
+          }}
+        >
           {tags.map(tag => (
-            <button
+            <Chip
               key={tag}
+              label={tag}
               onClick={() => onTagFilter(activeTagFilter === tag ? null : tag)}
-              className={`px-3 py-1 text-xs rounded-full transition-all flex items-center gap-1 font-medium ${
-                activeTagFilter === tag
-                  ? 'bg-green-500 text-white shadow-lg'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-            >
-              <span className="whitespace-nowrap">{tag}</span>
-              {activeTagFilter === tag && (
-                <X className="h-3 w-3 ml-1" />
-              )}
-            </button>
+              onDelete={activeTagFilter === tag ? () => onTagFilter(null) : undefined}
+              variant={activeTagFilter === tag ? 'filled' : 'outlined'}
+              color={activeTagFilter === tag ? 'secondary' : 'default'}
+              size="small"
+            />
           ))}
-        </div>
+        </Stack>
       )}
 
       {/* Active Filters Summary */}
       {(searchTerm || activeTagFilter || activeStatusFilter !== 'all' || currentRound !== 'all') && (
-        <div className="flex flex-wrap items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Active filters:</span>
-          
-          {searchTerm && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded font-medium">
-              Search: "{searchTerm}"
-              <button
-                onClick={() => onSearchChange('')}
-                className="hover:bg-blue-200 dark:hover:bg-blue-700 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-          
-          {currentRound !== 'all' && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded font-medium">
-              Round: {rounds.find(r => r.value === currentRound)?.label}
-              <button
-                onClick={() => onRoundChange('all')}
-                className="hover:bg-blue-200 dark:hover:bg-blue-700 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-          
-          {activeStatusFilter !== 'all' && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded font-medium">
-              Status: {statusFilters.find(s => s.value === activeStatusFilter)?.label}
-              <button
-                onClick={() => onStatusFilter('all')}
-                className="hover:bg-blue-200 dark:hover:bg-blue-700 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-          
-          {activeTagFilter && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded font-medium">
-              Tag: {activeTagFilter}
-              <button
-                onClick={() => onTagFilter(null)}
-                className="hover:bg-blue-200 dark:hover:bg-blue-700 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-        </div>
+        <Paper sx={{ p: 2, bgcolor: 'primary.50', border: 1, borderColor: 'primary.200' }}>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap', gap: 1 }}>
+            <Typography variant="body2" fontWeight="medium" color="primary.700">
+              Active filters:
+            </Typography>
+            
+            {searchTerm && (
+              <Chip
+                label={`Search: "${searchTerm}"`}
+                onDelete={() => onSearchChange('')}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            )}
+            
+            {currentRound !== 'all' && (
+              <Chip
+                label={`Round: ${rounds.find(r => r.value === currentRound)?.label}`}
+                onDelete={() => onRoundChange('all')}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            )}
+            
+            {activeStatusFilter !== 'all' && (
+              <Chip
+                label={`Status: ${statusFilters.find(s => s.value === activeStatusFilter)?.label}`}
+                onDelete={() => onStatusFilter('all')}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            )}
+            
+            {activeTagFilter && (
+              <Chip
+                label={`Tag: ${activeTagFilter}`}
+                onDelete={() => onTagFilter(null)}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            )}
+          </Stack>
+        </Paper>
       )}
-    </div>
+    </Box>
   );
 };
 
