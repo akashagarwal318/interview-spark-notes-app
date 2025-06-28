@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Container, Typography, Box } from '@mui/material';
@@ -5,7 +6,7 @@ import { loadQuestions, saveQuestions } from '../store/slices/questionsSlice';
 import { setTheme } from '../store/slices/uiSlice';
 import Header from '../components/layout/Header.jsx';
 import QuickStats from '../components/stats/QuickStats.jsx';
-import SearchFilters from '../components/filters/SearchFilters';
+import SearchFilters from '../components/filters/SearchFilters.jsx';
 import QuestionForm from '../components/forms/QuestionForm';
 import QuestionCard from '../components/questions/QuestionCard';
 import ImageModal from '../components/modals/ImageModal';
