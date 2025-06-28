@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Box, Card, CardContent, Typography, Grid } from '@mui/material';
+import { Box, Card, CardContent, Typography, Grid2 as Grid } from '@mui/material';
 
 interface Stats {
   total: number;
@@ -24,7 +24,7 @@ const QuickStats: React.FC<QuickStatsProps> = ({ stats }) => {
   return (
     <Grid container spacing={2} sx={{ mb: 3 }}>
       {statItems.map((item, index) => (
-        <Grid item xs={6} sm={3} key={index}>
+        <Grid xs={6} sm={3} key={index}>
           <Card elevation={1}>
             <CardContent sx={{ textAlign: 'center', py: 2 }}>
               <Typography 
