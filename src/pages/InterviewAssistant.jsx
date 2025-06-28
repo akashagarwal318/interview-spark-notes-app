@@ -4,7 +4,7 @@ import { Container, Typography, Box } from '@mui/material';
 import { loadQuestions, saveQuestions } from '../store/slices/questionsSlice';
 import { setTheme } from '../store/slices/uiSlice';
 import Header from '../components/layout/Header.jsx';
-import QuickStats from '../components/stats/QuickStats';
+import QuickStats from '../components/stats/QuickStats.jsx';
 import SearchFilters from '../components/filters/SearchFilters';
 import QuestionForm from '../components/forms/QuestionForm';
 import QuestionCard from '../components/questions/QuestionCard';
