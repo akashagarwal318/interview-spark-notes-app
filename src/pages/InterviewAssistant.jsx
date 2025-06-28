@@ -9,7 +9,7 @@ import QuickStats from '../components/stats/QuickStats.jsx';
 import SearchFilters from '../components/filters/SearchFilters.jsx';
 import QuestionForm from '../components/forms/QuestionForm.jsx';
 import QuestionCard from '../components/questions/QuestionCard.jsx';
-import ImageModal from '../components/modals/ImageModal';
+import ImageModal from '../components/modals/ImageModal.jsx';
 import PaginationControls from '../components/pagination/PaginationControls';
 
 const InterviewAssistant = () => {
