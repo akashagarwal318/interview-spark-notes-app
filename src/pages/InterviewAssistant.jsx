@@ -8,7 +8,7 @@ import Header from '../components/layout/Header.jsx';
 import QuickStats from '../components/stats/QuickStats.jsx';
 import SearchFilters from '../components/filters/SearchFilters.jsx';
 import QuestionForm from '../components/forms/QuestionForm.jsx';
-import QuestionCard from '../components/questions/QuestionCard';
+import QuestionCard from '../components/questions/QuestionCard.jsx';
 import ImageModal from '../components/modals/ImageModal';
 import PaginationControls from '../components/pagination/PaginationControls';
 
