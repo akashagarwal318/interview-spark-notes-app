@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import {
@@ -25,7 +24,7 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Image as ImageIcon
-} from '@mui/material/icons-material';
+} from '@mui/icons-material';
 import { updateQuestion, deleteQuestion } from '../../store/slices/questionsSlice';
 import { setImageModal } from '../../store/slices/uiSlice';
 
