@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { store } from './store';
+import { store } from './store/index.ts';
 import { lightTheme, darkTheme } from './theme/theme';
 import InterviewAssistant from './pages/InterviewAssistant.jsx';
 
