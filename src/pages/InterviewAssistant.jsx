@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Container, Typography, Box } from '@mui/material';
@@ -10,7 +9,7 @@ import SearchFilters from '../components/filters/SearchFilters.jsx';
 import QuestionForm from '../components/forms/QuestionForm.jsx';
 import QuestionCard from '../components/questions/QuestionCard.jsx';
 import ImageModal from '../components/modals/ImageModal.jsx';
-import PaginationControls from '../components/pagination/PaginationControls';
+import PaginationControls from '../components/pagination/PaginationControls.jsx';
 
 const InterviewAssistant = () => {
   const dispatch = useDispatch();
