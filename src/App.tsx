@@ -4,12 +4,12 @@ import { Provider } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { store } from './store';
+import { store, RootState } from './store';
 import { lightTheme, darkTheme } from './theme/theme';
 import InterviewAssistant from './pages/InterviewAssistant';
 
 const AppContent = () => {
-  const { theme } = useSelector((state) => state.ui);
+  const { theme } = useSelector((state: RootState) => state.ui);
   
   return (
     <ThemeProvider theme={theme === 'light' ? lightTheme : darkTheme}>
