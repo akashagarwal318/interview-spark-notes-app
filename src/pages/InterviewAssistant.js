@@ -18,7 +18,8 @@ const InterviewAssistant = () => {
     filteredItems, 
     currentPage, 
     questionsPerPage, 
-    loading 
+    loading,
+    items 
   } = useSelector((state) => state.questions);
 
   // Initialize data and theme
@@ -31,11 +32,10 @@ const InterviewAssistant = () => {
 
   // Save questions whenever they change
   useEffect(() => {
-    const { items } = store.getState().questions;
     if (items.length > 0) {
       dispatch(saveQuestions(items));
     }
-  }, [filteredItems, dispatch]);
+  }, [filteredItems, dispatch, items]);
 
   // Pagination
   const paginatedQuestions = filteredItems.slice(

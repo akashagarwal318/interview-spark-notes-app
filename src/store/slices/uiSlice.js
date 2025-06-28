@@ -1,18 +1,18 @@
 
 import { createSlice } from '@reduxjs/toolkit';
 
+const initialState = {
+  theme: 'light',
+  isFormVisible: false,
+  imageModal: {
+    isOpen: false,
+    imageSrc: ''
+  }
+};
+
 const uiSlice = createSlice({
   name: 'ui',
-  initialState: {
-    theme: 'light',
-    isFormVisible: false,
-    expandedQuestions: new Set(),
-    editingQuestions: new Set(),
-    imageModal: {
-      isOpen: false,
-      imageSrc: ''
-    }
-  },
+  initialState,
   reducers: {
     setTheme: (state, action) => {
       state.theme = action.payload;
@@ -25,30 +25,11 @@ const uiSlice = createSlice({
     setFormVisible: (state, action) => {
       state.isFormVisible = action.payload;
     },
-    toggleQuestionExpanded: (state, action) => {
-      const id = action.payload;
-      if (state.expandedQuestions.has(id)) {
-        state.expandedQuestions.delete(id);
-      } else {
-        state.expandedQuestions.add(id);
-      }
-    },
-    toggleQuestionEdit: (state, action) => {
-      const id = action.payload;
-      if (state.editingQuestions.has(id)) {
-        state.editingQuestions.delete(id);
-      } else {
-        state.editingQuestions.add(id);
-      }
-    },
     setImageModal: (state, action) => {
       state.imageModal = action.payload;
     },
-    clearExpandedQuestions: (state) => {
-      state.expandedQuestions = new Set();
-    },
-    clearEditingQuestions: (state) => {
-      state.editingQuestions = new Set();
+    resetFilters: (state) => {
+      // This will be handled by questionsSlice
     }
   }
 });
@@ -57,11 +38,8 @@ export const {
   setTheme,
   toggleTheme,
   setFormVisible,
-  toggleQuestionExpanded,
-  toggleQuestionEdit,
   setImageModal,
-  clearExpandedQuestions,
-  clearEditingQuestions
+  resetFilters
 } = uiSlice.actions;
 
 export default uiSlice.reducer;
