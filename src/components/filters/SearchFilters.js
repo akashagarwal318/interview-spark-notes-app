@@ -1,33 +1,44 @@
 
-import React from 'react';
-import { 
-  Box, 
-  TextField, 
-  Select, 
-  MenuItem, 
-  FormControl, 
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  Box,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
   InputLabel,
-  Chip, 
+  Chip,
   Paper,
   Typography,
   InputAdornment,
   Stack
 } from '@mui/material';
-import { Search, Close } from '@mui/icons-material';
+import { Search as SearchIcon } from '@mui/icons-material';
+import {
+  setSearchTerm,
+  setSearchType,
+  setCurrentRound,
+  setActiveTagFilter,
+  setActiveStatusFilter,
+  applyFilters,
+  resetFilters
+} from '../../store/slices/questionsSlice';
+import { useDebounce } from '../../hooks/useDebounce';
 
-const SearchFilters = ({
-  searchTerm,
-  searchType,
-  currentRound,
-  activeTagFilter,
-  activeStatusFilter,
-  tags,
-  onSearchChange,
-  onSearchTypeChange,
-  onRoundChange,
-  onTagFilter,
-  onStatusFilter
-}) => {
+const SearchFilters = () => {
+  const dispatch = useDispatch();
+  const {
+    items,
+    searchTerm,
+    searchType,
+    currentRound,
+    activeTagFilter,
+    activeStatusFilter
+  } = useSelector((state) => state.questions);
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const rounds = [
     { value: 'all', label: 'All Rounds', color: '#6b7280' },
     { value: 'technical', label: 'Technical', color: '#3b82f6' },
@@ -53,6 +64,60 @@ const SearchFilters = ({
     { value: 'hot', label: 'Hot List', icon: '🔥' }
   ];
 
+  const getAllTags = () => {
+    const allTags = new Set();
+    const questionsToCheck = currentRound === 'all' ? items : items.filter(q => q.round === currentRound);
+    questionsToCheck.forEach(q => {
+      q.tags?.forEach(tag => allTags.add(tag));
+    });
+    return Array.from(allTags).sort();
+  };
+
+  const tags = getAllTags();
+
+  useEffect(() => {
+    dispatch(applyFilters());
+  }, [debouncedSearchTerm, searchType, currentRound, activeTagFilter, activeStatusFilter, dispatch]);
+
+  const handleSearchChange = (value) => {
+    dispatch(setSearchTerm(value));
+  };
+
+  const handleSearchTypeChange = (type) => {
+    dispatch(setSearchType(type));
+  };
+
+  const handleRoundChange = (round) => {
+    dispatch(setCurrentRound(round));
+  };
+
+  const handleTagFilter = (tag) => {
+    dispatch(setActiveTagFilter(activeTagFilter === tag ? null : tag));
+  };
+
+  const handleStatusFilter = (status) => {
+    dispatch(setActiveStatusFilter(status));
+  };
+
+  const clearFilter = (filterType) => {
+    switch (filterType) {
+      case 'search':
+        dispatch(setSearchTerm(''));
+        break;
+      case 'round':
+        dispatch(setCurrentRound('all'));
+        break;
+      case 'status':
+        dispatch(setActiveStatusFilter('all'));
+        break;
+      case 'tag':
+        dispatch(setActiveTagFilter(null));
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <Box sx={{ mb: 3 }}>
       {/* Search Bar */}
@@ -62,11 +127,11 @@ const SearchFilters = ({
           variant="outlined"
           placeholder={`Search by ${searchType}...`}
           value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <Search />
+                <SearchIcon />
               </InputAdornment>
             ),
           }}
@@ -77,7 +142,7 @@ const SearchFilters = ({
           <Select
             value={searchType}
             label="Search Type"
-            onChange={(e) => onSearchTypeChange(e.target.value)}
+            onChange={(e) => handleSearchTypeChange(e.target.value)}
           >
             {searchTypes.map(type => (
               <MenuItem key={type.value} value={type.value}>
@@ -94,7 +159,7 @@ const SearchFilters = ({
           <Chip
             key={round.value}
             label={round.label}
-            onClick={() => onRoundChange(round.value)}
+            onClick={() => handleRoundChange(round.value)}
             variant={currentRound === round.value ? 'filled' : 'outlined'}
             sx={{
               backgroundColor: currentRound === round.value ? round.color : 'transparent',
@@ -114,7 +179,7 @@ const SearchFilters = ({
             key={status.value}
             icon={<span>{status.icon}</span>}
             label={status.label}
-            onClick={() => onStatusFilter(status.value)}
+            onClick={() => handleStatusFilter(status.value)}
             variant={activeStatusFilter === status.value ? 'filled' : 'outlined'}
             color={activeStatusFilter === status.value ? 'primary' : 'default'}
           />
@@ -138,8 +203,8 @@ const SearchFilters = ({
             <Chip
               key={tag}
               label={tag}
-              onClick={() => onTagFilter(activeTagFilter === tag ? null : tag)}
-              onDelete={activeTagFilter === tag ? () => onTagFilter(null) : undefined}
+              onClick={() => handleTagFilter(tag)}
+              onDelete={activeTagFilter === tag ? () => handleTagFilter(null) : undefined}
               variant={activeTagFilter === tag ? 'filled' : 'outlined'}
               color={activeTagFilter === tag ? 'secondary' : 'default'}
               size="small"
@@ -159,7 +224,7 @@ const SearchFilters = ({
             {searchTerm && (
               <Chip
                 label={`Search: "${searchTerm}"`}
-                onDelete={() => onSearchChange('')}
+                onDelete={() => clearFilter('search')}
                 size="small"
                 color="primary"
                 variant="outlined"
@@ -169,7 +234,7 @@ const SearchFilters = ({
             {currentRound !== 'all' && (
               <Chip
                 label={`Round: ${rounds.find(r => r.value === currentRound)?.label}`}
-                onDelete={() => onRoundChange('all')}
+                onDelete={() => clearFilter('round')}
                 size="small"
                 color="primary"
                 variant="outlined"
@@ -179,7 +244,7 @@ const SearchFilters = ({
             {activeStatusFilter !== 'all' && (
               <Chip
                 label={`Status: ${statusFilters.find(s => s.value === activeStatusFilter)?.label}`}
-                onDelete={() => onStatusFilter('all')}
+                onDelete={() => clearFilter('status')}
                 size="small"
                 color="primary"
                 variant="outlined"
@@ -189,7 +254,7 @@ const SearchFilters = ({
             {activeTagFilter && (
               <Chip
                 label={`Tag: ${activeTagFilter}`}
-                onDelete={() => onTagFilter(null)}
+                onDelete={() => clearFilter('tag')}
                 size="small"
                 color="primary"
                 variant="outlined"

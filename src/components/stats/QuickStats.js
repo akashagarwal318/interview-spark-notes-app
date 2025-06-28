@@ -1,19 +1,18 @@
 
 import React from 'react';
-import { Box, Card, CardContent, Typography, Grid } from '@mui/material';
+import { useSelector } from 'react-redux';
+import { Grid, Card, CardContent, Typography } from '@mui/material';
 
-interface Stats {
-  total: number;
-  favorites: number;
-  review: number;
-  hot: number;
-}
+const QuickStats = () => {
+  const { items } = useSelector((state) => state.questions);
 
-interface QuickStatsProps {
-  stats: Stats;
-}
+  const stats = {
+    total: items.length,
+    favorites: items.filter(q => q.favorite).length,
+    review: items.filter(q => q.review).length,
+    hot: items.filter(q => q.hot).length
+  };
 
-const QuickStats: React.FC<QuickStatsProps> = ({ stats }) => {
   const statItems = [
     { label: 'Total Questions', value: stats.total, color: 'primary.main' },
     { label: '⭐ Favorites', value: stats.favorites, color: 'warning.main' },
