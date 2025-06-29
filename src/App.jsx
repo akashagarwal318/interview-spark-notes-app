@@ -1,25 +1,29 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, CssBaseline } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { store } from './store/index.ts';
-import { lightTheme, darkTheme } from './theme/theme';
 import InterviewAssistant from './pages/InterviewAssistant.jsx';
 
 const AppContent = () => {
   const { theme } = useSelector((state) => state.ui);
   
+  useEffect(() => {
+    // Apply theme to document root
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+  
   return (
-    <ThemeProvider theme={theme === 'light' ? lightTheme : darkTheme}>
-      <CssBaseline />
-      <Router>
-        <Routes>
-          <Route path="/" element={<InterviewAssistant />} />
-        </Routes>
-      </Router>
-    </ThemeProvider>
+    <Router>
+      <Routes>
+        <Route path="/" element={<InterviewAssistant />} />
+      </Routes>
+    </Router>
   );
 };
 
