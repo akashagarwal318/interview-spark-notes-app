@@ -9,15 +9,18 @@ import {
   Edit, 
   Trash2, 
   Image as ImageIcon,
-  Calendar,
-  Tag
+  MoreVertical
 } from 'lucide-react';
-import { Card, CardContent, CardHeader } from '../ui/card';
 import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
 import { updateQuestion, deleteQuestion } from '../../store/slices/questionsSlice';
 import { setImageModal, setEditingQuestion } from '../../store/slices/uiSlice';
 import CodeBlock from '../ui/CodeBlock';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 
 const QuestionCard = ({ question }) => {
   const dispatch = useDispatch();
@@ -44,25 +47,11 @@ const QuestionCard = ({ question }) => {
     dispatch(setImageModal({ isOpen: true, imageSrc }));
   };
 
-  const getRoundColor = (round) => {
-    const colors = {
-      'technical': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-      'hr': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-      'telephonic': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-      'introduction': 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300',
-      'behavioral': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-      'system-design': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-      'coding': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
-    };
-    return colors[round] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
-  };
-
   const formatDate = (dateString) => {
     try {
+      if (!dateString) return 'Recently added';
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return 'Recently added';
-      }
+      if (isNaN(date.getTime())) return 'Recently added';
       return date.toLocaleDateString('en-US', { 
         year: 'numeric', 
         month: 'short', 
@@ -74,141 +63,137 @@ const QuestionCard = ({ question }) => {
   };
 
   return (
-    <Card className="mb-3 overflow-hidden hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500">
-      <CardHeader className="pb-3 px-4 pt-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="secondary" className={`${getRoundColor(question.round)} font-medium text-xs`}>
-              {question.round?.replace('-', ' ').toUpperCase() || 'GENERAL'}
-            </Badge>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Calendar className="h-3 w-3" />
-              {formatDate(question.createdAt)}
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleEdit}
-              className="h-7 w-7 p-0 hover:bg-blue-50"
-            >
-              <Edit className="h-3 w-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleDelete}
-              className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-red-50"
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
-          </div>
+    <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-4 hover:shadow-md transition-shadow">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 leading-relaxed">
+            {question.question}
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {question.round?.replace('-', ' ').charAt(0).toUpperCase() + question.round?.replace('-', ' ').slice(1) || 'General'} • {formatDate(question.createdAt)}
+          </p>
         </div>
-
-        <h3 className="text-base font-semibold leading-tight line-clamp-2 mt-2">
-          {question.question}
-        </h3>
-
-        {/* Action Buttons */}
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleToggle('favorite')}
-              className={`h-7 w-7 p-0 ${question.favorite ? 'text-yellow-500 hover:text-yellow-600' : 'text-muted-foreground'}`}
-            >
-              <Star className={`h-4 w-4 ${question.favorite ? 'fill-current' : ''}`} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleToggle('review')}
-              className={`h-7 w-7 p-0 ${question.review ? 'text-green-500 hover:text-green-600' : 'text-muted-foreground'}`}
-            >
-              <Bookmark className={`h-4 w-4 ${question.review ? 'fill-current' : ''}`} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleToggle('hot')}
-              className={`h-7 w-7 p-0 ${question.hot ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground'}`}
-            >
-              <Flame className={`h-4 w-4 ${question.hot ? 'fill-current' : ''}`} />
-            </Button>
-          </div>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setExpanded(!expanded)}
-            className="gap-2 text-xs"
+        
+        <div className="flex items-center space-x-2 ml-4">
+          <button
+            onClick={() => handleToggle('favorite')}
+            className={`p-2 rounded-full transition-colors ${
+              question.favorite 
+                ? 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20' 
+                : 'text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
+            }`}
           >
-            {expanded ? 'Less' : 'More'}
-            <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-          </Button>
+            <Star className={`h-5 w-5 ${question.favorite ? 'fill-current' : ''}`} />
+          </button>
+          
+          <button
+            onClick={() => handleToggle('review')}
+            className={`p-2 rounded-full transition-colors ${
+              question.review 
+                ? 'text-green-500 bg-green-50 dark:bg-green-900/20' 
+                : 'text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20'
+            }`}
+          >
+            <Bookmark className={`h-5 w-5 ${question.review ? 'fill-current' : ''}`} />
+          </button>
+          
+          <button
+            onClick={() => handleToggle('hot')}
+            className={`p-2 rounded-full transition-colors ${
+              question.hot 
+                ? 'text-red-500 bg-red-50 dark:bg-red-900/20' 
+                : 'text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
+            }`}
+          >
+            <Flame className={`h-5 w-5 ${question.hot ? 'fill-current' : ''}`} />
+          </button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-2 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <MoreVertical className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+              <DropdownMenuItem onClick={handleEdit} className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDelete} className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-red-600">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className={`p-2 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all ${
+              expanded ? 'rotate-180' : ''
+            }`}
+          >
+            <ChevronDown className="h-5 w-5" />
+          </button>
         </div>
-      </CardHeader>
+      </div>
 
+      {/* Expanded Content */}
       {expanded && (
-        <CardContent className="pt-0 px-4 pb-4">
-          <div className="space-y-3">
-            <div>
-              <h4 className="font-medium mb-2 text-sm">Answer</h4>
-              <p className="text-muted-foreground leading-relaxed text-sm">
-                {question.answer}
-              </p>
-            </div>
-
-            {question.code && (
-              <div>
-                <h4 className="font-medium mb-2 text-sm">Code</h4>
-                <CodeBlock code={question.code} />
-              </div>
-            )}
-
-            {question.images && question.images.length > 0 && (
-              <div>
-                <h4 className="font-medium mb-2 text-sm">Images</h4>
-                <div className="flex flex-wrap gap-2">
-                  {question.images.map((image, index) => (
-                    <div
-                      key={index}
-                      className="w-14 h-14 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => handleImageClick(image.data)}
-                    >
-                      <img
-                        src={image.data}
-                        alt={image.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {question.tags && question.tags.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Tag className="h-3 w-3" />
-                  <h4 className="font-medium text-sm">Tags</h4>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {question.tags.map((tag, index) => (
-                    <Badge key={index} variant="outline" className="text-xs px-2 py-1">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
+        <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div>
+            <h4 className="font-medium text-gray-900 dark:text-white mb-3">Answer</h4>
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+              {question.answer}
+            </p>
           </div>
-        </CardContent>
+
+          {question.code && (
+            <div>
+              <h4 className="font-medium text-gray-900 dark:text-white mb-3">Code</h4>
+              <CodeBlock code={question.code} />
+            </div>
+          )}
+
+          {question.images && question.images.length > 0 && (
+            <div>
+              <h4 className="font-medium text-gray-900 dark:text-white mb-3">Images</h4>
+              <div className="flex flex-wrap gap-3">
+                {question.images.map((image, index) => (
+                  <div
+                    key={index}
+                    className="w-20 h-20 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-gray-200 dark:border-gray-700"
+                    onClick={() => handleImageClick(image.data)}
+                  >
+                    <img
+                      src={image.data}
+                      alt={image.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {question.tags && question.tags.length > 0 && (
+            <div>
+              <h4 className="font-medium text-gray-900 dark:text-white mb-3">Tags</h4>
+              <div className="flex flex-wrap gap-2">
+                {question.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm rounded-full border border-blue-200 dark:border-blue-700"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       )}
-    </Card>
+    </div>
   );
 };
 

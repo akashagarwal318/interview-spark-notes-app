@@ -1,10 +1,8 @@
 
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Search, Filter, X, ChevronDown } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Search, ChevronDown } from 'lucide-react';
 import { Input } from '../ui/input';
-import { Badge } from '../ui/badge';
 import { 
   Select, 
   SelectContent, 
@@ -12,21 +10,14 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '../ui/select';
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from '../ui/popover';
-import { Card, CardContent } from '../ui/card';
 import { setCurrentRound, setSearchTerm, setSortBy, setFilters, setSelectedTags } from '../../store/slices/questionsSlice';
 
 const SearchFilters = () => {
   const dispatch = useDispatch();
   const { currentRound, searchTerm, sortBy, filters, items, selectedTags } = useSelector((state) => state.questions);
-  const [showFilters, setShowFilters] = useState(false);
 
   // Get all unique tags from questions
-  const allTags = [...new Set(items.flatMap(q => q.tags))].sort();
+  const allTags = [...new Set(items.flatMap(q => q.tags || []))].filter(Boolean).sort();
 
   const handleSearchChange = (e) => {
     dispatch(setSearchTerm(e.target.value));
@@ -51,170 +42,131 @@ const SearchFilters = () => {
     dispatch(setSelectedTags(newSelectedTags));
   };
 
-  const clearAllFilters = () => {
-    dispatch(setCurrentRound('all'));
-    dispatch(setSearchTerm(''));
-    dispatch(setFilters({ favorite: false, review: false, hot: false }));
-    dispatch(setSelectedTags([]));
-  };
-
-  const activeFiltersCount = 
-    (currentRound !== 'all' ? 1 : 0) +
-    (searchTerm ? 1 : 0) +
-    Object.values(filters).filter(Boolean).length +
-    selectedTags.length;
-
   return (
-    <Card className="mb-6">
-      <CardContent className="p-4">
-        <div className="flex flex-col md:flex-row gap-3 items-start md:items-center">
-          {/* Search Input */}
-          <div className="relative flex-1 min-w-0">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search questions, answers, or tags..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="pl-10 h-9"
-            />
-          </div>
+    <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
+      {/* Search Bar */}
+      <div className="relative mb-6">
+        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+        <Input
+          placeholder="Search questions"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          className="pl-12 py-3 text-lg border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700"
+        />
+        <Select value="questions" className="absolute right-2 top-1/2 transform -translate-y-1/2">
+          <SelectTrigger className="w-40 border-0 bg-transparent">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="questions">Search in Questions</SelectItem>
+            <SelectItem value="answers">Search in Answers</SelectItem>
+            <SelectItem value="code">Search in Code</SelectItem>
+            <SelectItem value="tags">Search in Tags</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-          {/* Quick Filters */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <Select value={currentRound} onValueChange={handleRoundChange}>
-              <SelectTrigger className="w-[140px] h-9">
-                <SelectValue placeholder="Round" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Rounds</SelectItem>
-                <SelectItem value="technical">Technical</SelectItem>
-                <SelectItem value="hr">HR</SelectItem>
-                <SelectItem value="telephonic">Telephonic</SelectItem>
-                <SelectItem value="introduction">Introduction</SelectItem>
-                <SelectItem value="behavioral">Behavioral</SelectItem>
-                <SelectItem value="system-design">System Design</SelectItem>
-                <SelectItem value="coding">Coding</SelectItem>
-              </SelectContent>
-            </Select>
+      {/* Dropdown for All Questions */}
+      <div className="mb-6">
+        <Select value={currentRound} onValueChange={handleRoundChange}>
+          <SelectTrigger className="w-48 bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded-lg">
+            <SelectValue placeholder="All Questions" />
+            <ChevronDown className="h-4 w-4" />
+          </SelectTrigger>
+          <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+            <SelectItem value="all">All Questions</SelectItem>
+            <SelectItem value="technical">Technical</SelectItem>
+            <SelectItem value="hr">HR Round</SelectItem>
+            <SelectItem value="telephonic">Telephonic</SelectItem>
+            <SelectItem value="introduction">Introduction</SelectItem>
+            <SelectItem value="behavioral">Behavioral</SelectItem>
+            <SelectItem value="system-design">System Design</SelectItem>
+            <SelectItem value="coding">Coding</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-            <Select value={sortBy} onValueChange={handleSortChange}>
-              <SelectTrigger className="w-[120px] h-9">
-                <SelectValue placeholder="Sort" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest</SelectItem>
-                <SelectItem value="oldest">Oldest</SelectItem>
-                <SelectItem value="alphabetical">A-Z</SelectItem>
-              </SelectContent>
-            </Select>
+      {/* Filter Buttons */}
+      <div className="flex flex-wrap gap-3 mb-6">
+        {[
+          { key: 'technical', label: 'Technical', active: currentRound === 'technical' },
+          { key: 'hr', label: 'HR Round', active: currentRound === 'hr' },
+          { key: 'telephonic', label: 'Telephonic', active: currentRound === 'telephonic' },
+          { key: 'introduction', label: 'Introduction', active: currentRound === 'introduction' }
+        ].map(round => (
+          <button
+            key={round.key}
+            onClick={() => handleRoundChange(round.key)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              round.active
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            {round.label}
+          </button>
+        ))}
+      </div>
 
-            <Button
-              variant={showFilters ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-              className="gap-2 h-9"
+      {/* Status Filters */}
+      <div className="flex flex-wrap gap-3 mb-6">
+        <button
+          onClick={() => dispatch(resetFilters())}
+          className="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+        >
+          All
+        </button>
+        {[
+          { key: 'favorite', label: '⭐ Favorites', active: filters.favorite },
+          { key: 'review', label: '📌 Review', active: filters.review },
+          { key: 'hot', label: '🔥 Hot List', active: filters.hot }
+        ].map(filter => (
+          <button
+            key={filter.key}
+            onClick={() => handleFilterToggle(filter.key)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              filter.active
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tag Filters */}
+      {allTags.length > 0 && (
+        <div>
+          <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Tags:</div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => dispatch(setSelectedTags([]))}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                selectedTags.length === 0
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
             >
-              <Filter className="h-4 w-4" />
-              Filters
-              {activeFiltersCount > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 text-xs">
-                  {activeFiltersCount}
-                </Badge>
-              )}
-            </Button>
-
-            {activeFiltersCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearAllFilters}
-                className="h-9 px-2"
+              All Tags
+            </button>
+            {allTags.map(tag => (
+              <button
+                key={tag}
+                onClick={() => handleTagToggle(tag)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  selectedTags.includes(tag)
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
               >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
+                {tag}
+              </button>
+            ))}
           </div>
         </div>
-
-        {/* Extended Filters */}
-        {showFilters && (
-          <div className="mt-4 pt-4 border-t space-y-3">
-            {/* Status Filters */}
-            <div className="flex flex-wrap gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Status:</span>
-              {[
-                { key: 'favorite', label: '⭐ Favorites' },
-                { key: 'review', label: '📌 Review' },
-                { key: 'hot', label: '🔥 Hot' }
-              ].map(filter => (
-                <Button
-                  key={filter.key}
-                  variant={filters[filter.key] ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleFilterToggle(filter.key)}
-                  className="h-8"
-                >
-                  {filter.label}
-                </Button>
-              ))}
-            </div>
-
-            {/* Tag Filters */}
-            {allTags.length > 0 && (
-              <div className="space-y-2">
-                <span className="text-sm font-medium text-muted-foreground">Tags:</span>
-                <div className="flex flex-wrap gap-2">
-                  {allTags.map(tag => (
-                    <Button
-                      key={tag}
-                      variant={selectedTags.includes(tag) ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handleTagToggle(tag)}
-                      className="h-8"
-                    >
-                      {tag}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Active Filters Display */}
-        {activeFiltersCount > 0 && (
-          <div className="mt-3 pt-3 border-t">
-            <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-sm text-muted-foreground">Active filters:</span>
-              {currentRound !== 'all' && (
-                <Badge variant="secondary" className="gap-1">
-                  Round: {currentRound}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => handleRoundChange('all')} />
-                </Badge>
-              )}
-              {searchTerm && (
-                <Badge variant="secondary" className="gap-1">
-                  Search: "{searchTerm}"
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => dispatch(setSearchTerm(''))} />
-                </Badge>
-              )}
-              {Object.entries(filters).filter(([_, value]) => value).map(([key, _]) => (
-                <Badge key={key} variant="secondary" className="gap-1">
-                  {key === 'favorite' ? '⭐' : key === 'review' ? '📌' : '🔥'} {key}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => handleFilterToggle(key)} />
-                </Badge>
-              ))}
-              {selectedTags.map(tag => (
-                <Badge key={tag} variant="secondary" className="gap-1">
-                  Tag: {tag}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => handleTagToggle(tag)} />
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };
 

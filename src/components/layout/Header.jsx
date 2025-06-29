@@ -49,105 +49,63 @@ const Header = () => {
   };
 
   return (
-    <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-      <div className="container flex h-12 items-center justify-between px-4">
-        <div className="flex items-center space-x-2">
-          <div className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            🚀 Interview Assistant
+    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center space-x-4">
+            <div className="text-xl font-bold text-gray-900 dark:text-white flex items-center space-x-2">
+              <span className="text-2xl">📚</span>
+              <span>Interview Prep</span>
+            </div>
           </div>
-        </div>
-        
-        <div className="flex items-center space-x-1">
-          {!isMobile && (
-            <>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleAddQuestion}
-                className="gap-2 h-8 px-3"
-              >
-                <Plus className="h-3 w-3" />
-                Add
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleShowAll}
-                className="gap-2 h-8 px-3"
-              >
-                <List className="h-3 w-3" />
-                All
-              </Button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 h-8 px-3"
-                  >
-                    <Download className="h-3 w-3" />
-                    Export
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleExportWord}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    Export as Word
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportPDF}>
-                    <FileDown className="h-4 w-4 mr-2" />
-                    Export as PDF
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
-          )}
           
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleToggleTheme}
-            className="h-8 w-8 p-0"
-          >
-            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={handleAddQuestion}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Add New Question</span>
+            </Button>
+            
+            <Button
+              onClick={handleShowAll}
+              variant="outline"
+              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+            >
+              📋 All Questions
+            </Button>
 
-          {isMobile && (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                  >
-                    <Download className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleExportWord}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    Word
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportPDF}>
-                    <FileDown className="h-4 w-4 mr-2" />
-                    PDF
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleAddQuestion}
-                className="h-8 w-8 p-0"
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-            </>
-          )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+                <DropdownMenuItem onClick={handleExportWord} className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Export as Word
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportPDF} className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <FileDown className="h-4 w-4 mr-2" />
+                  Export as PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            <Button
+              variant="ghost"
+              onClick={handleToggleTheme}
+              className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
