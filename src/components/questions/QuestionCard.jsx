@@ -15,8 +15,6 @@ import {
 import { Card, CardContent, CardHeader } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Avatar } from '../ui/avatar';
-import { Separator } from '../ui/separator';
 import { updateQuestion, deleteQuestion } from '../../store/slices/questionsSlice';
 import { setImageModal, setEditingQuestion } from '../../store/slices/uiSlice';
 import CodeBlock from '../ui/CodeBlock';
@@ -59,17 +57,33 @@ const QuestionCard = ({ question }) => {
     return colors[round] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
   };
 
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'Recently added';
+      }
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } catch (error) {
+      return 'Recently added';
+    }
+  };
+
   return (
-    <Card className="mb-4 overflow-hidden hover:shadow-lg transition-all duration-200">
-      <CardHeader className="pb-3">
+    <Card className="mb-3 overflow-hidden hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500">
+      <CardHeader className="pb-3 px-4 pt-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge className={`${getRoundColor(question.round)} font-medium`}>
-              {question.round.replace('-', ' ').toUpperCase()}
+            <Badge variant="secondary" className={`${getRoundColor(question.round)} font-medium text-xs`}>
+              {question.round?.replace('-', ' ').toUpperCase() || 'GENERAL'}
             </Badge>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Calendar className="h-3 w-3" />
-              {new Date(question.createdAt).toLocaleDateString()}
+              {formatDate(question.createdAt)}
             </div>
           </div>
           
@@ -78,22 +92,22 @@ const QuestionCard = ({ question }) => {
               variant="ghost"
               size="sm"
               onClick={handleEdit}
-              className="h-8 w-8 p-0"
+              className="h-7 w-7 p-0 hover:bg-blue-50"
             >
-              <Edit className="h-4 w-4" />
+              <Edit className="h-3 w-3" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleDelete}
-              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+              className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-red-50"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3 w-3" />
             </Button>
           </div>
         </div>
 
-        <h3 className="text-lg font-semibold leading-tight line-clamp-2">
+        <h3 className="text-base font-semibold leading-tight line-clamp-2 mt-2">
           {question.question}
         </h3>
 
@@ -104,7 +118,7 @@ const QuestionCard = ({ question }) => {
               variant="ghost"
               size="sm"
               onClick={() => handleToggle('favorite')}
-              className={`h-8 w-8 p-0 ${question.favorite ? 'text-yellow-500 hover:text-yellow-600' : 'text-muted-foreground'}`}
+              className={`h-7 w-7 p-0 ${question.favorite ? 'text-yellow-500 hover:text-yellow-600' : 'text-muted-foreground'}`}
             >
               <Star className={`h-4 w-4 ${question.favorite ? 'fill-current' : ''}`} />
             </Button>
@@ -112,7 +126,7 @@ const QuestionCard = ({ question }) => {
               variant="ghost"
               size="sm"
               onClick={() => handleToggle('review')}
-              className={`h-8 w-8 p-0 ${question.review ? 'text-green-500 hover:text-green-600' : 'text-muted-foreground'}`}
+              className={`h-7 w-7 p-0 ${question.review ? 'text-green-500 hover:text-green-600' : 'text-muted-foreground'}`}
             >
               <Bookmark className={`h-4 w-4 ${question.review ? 'fill-current' : ''}`} />
             </Button>
@@ -120,7 +134,7 @@ const QuestionCard = ({ question }) => {
               variant="ghost"
               size="sm"
               onClick={() => handleToggle('hot')}
-              className={`h-8 w-8 p-0 ${question.hot ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground'}`}
+              className={`h-7 w-7 p-0 ${question.hot ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground'}`}
             >
               <Flame className={`h-4 w-4 ${question.hot ? 'fill-current' : ''}`} />
             </Button>
@@ -130,41 +144,39 @@ const QuestionCard = ({ question }) => {
             variant="ghost"
             size="sm"
             onClick={() => setExpanded(!expanded)}
-            className="gap-2"
+            className="gap-2 text-xs"
           >
-            {expanded ? 'Show Less' : 'Show More'}
-            <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+            {expanded ? 'Less' : 'More'}
+            <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
           </Button>
         </div>
       </CardHeader>
 
       {expanded && (
-        <CardContent className="pt-0">
-          <Separator className="mb-4" />
-          
-          <div className="space-y-4">
+        <CardContent className="pt-0 px-4 pb-4">
+          <div className="space-y-3">
             <div>
-              <h4 className="font-medium mb-2">Answer</h4>
-              <p className="text-muted-foreground leading-relaxed">
+              <h4 className="font-medium mb-2 text-sm">Answer</h4>
+              <p className="text-muted-foreground leading-relaxed text-sm">
                 {question.answer}
               </p>
             </div>
 
             {question.code && (
               <div>
-                <h4 className="font-medium mb-2">Code</h4>
+                <h4 className="font-medium mb-2 text-sm">Code</h4>
                 <CodeBlock code={question.code} />
               </div>
             )}
 
             {question.images && question.images.length > 0 && (
               <div>
-                <h4 className="font-medium mb-2">Images</h4>
+                <h4 className="font-medium mb-2 text-sm">Images</h4>
                 <div className="flex flex-wrap gap-2">
                   {question.images.map((image, index) => (
                     <div
                       key={index}
-                      className="w-16 h-16 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                      className="w-14 h-14 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
                       onClick={() => handleImageClick(image.data)}
                     >
                       <img
@@ -181,12 +193,12 @@ const QuestionCard = ({ question }) => {
             {question.tags && question.tags.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Tag className="h-4 w-4" />
-                  <h4 className="font-medium">Tags</h4>
+                  <Tag className="h-3 w-3" />
+                  <h4 className="font-medium text-sm">Tags</h4>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1">
                   {question.tags.map((tag, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
+                    <Badge key={index} variant="outline" className="text-xs px-2 py-1">
                       {tag}
                     </Badge>
                   ))}

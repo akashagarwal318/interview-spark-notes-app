@@ -15,6 +15,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '../ui/select';
+import AdvancedCodeEditor from '../ui/AdvancedCodeEditor';
 import { addQuestion, updateQuestion } from '../../store/slices/questionsSlice';
 import { setFormVisible } from '../../store/slices/uiSlice';
 
@@ -37,15 +38,17 @@ const QuestionForm = () => {
   useEffect(() => {
     if (editingQuestion) {
       setFormData({
-        round: editingQuestion.round,
-        question: editingQuestion.question,
-        answer: editingQuestion.answer,
+        round: editingQuestion.round || 'technical',
+        question: editingQuestion.question || '',
+        answer: editingQuestion.answer || '',
         code: editingQuestion.code || '',
         tags: editingQuestion.tags ? editingQuestion.tags.join(', ') : ''
       });
       setImages(editingQuestion.images || []);
+    } else {
+      resetForm();
     }
-  }, [editingQuestion]);
+  }, [editingQuestion, currentRound]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,7 +78,8 @@ const QuestionForm = () => {
     const questionData = {
       ...formData,
       tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
-      images: processedImages
+      images: processedImages,
+      createdAt: editingQuestion?.createdAt || new Date().toISOString()
     };
 
     if (editingQuestion) {
@@ -144,10 +148,10 @@ const QuestionForm = () => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <CardHeader>
+      <Card className="w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+        <CardHeader className="sticky top-0 bg-white dark:bg-gray-900 z-10 border-b">
           <div className="flex items-center justify-between">
-            <CardTitle>
+            <CardTitle className="text-lg">
               {editingQuestion ? 'Edit Question' : 'Add New Question'}
             </CardTitle>
             <Button variant="ghost" size="sm" onClick={handleCancel}>
@@ -156,26 +160,58 @@ const QuestionForm = () => {
           </div>
         </CardHeader>
         
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="round">Interview Round</Label>
-            <Select 
-              value={formData.round} 
-              onValueChange={(value) => setFormData(prev => ({ ...prev, round: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select round" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="technical">Technical Round</SelectItem>
-                <SelectItem value="hr">HR Round</SelectItem>
-                <SelectItem value="telephonic">Telephonic Round</SelectItem>
-                <SelectItem value="introduction">Introduction Round</SelectItem>
-                <SelectItem value="behavioral">Behavioral Round</SelectItem>
-                <SelectItem value="system-design">System Design Round</SelectItem>
-                <SelectItem value="coding">Coding Round</SelectItem>
-              </SelectContent>
-            </Select>
+        <CardContent className="space-y-6 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="round">Interview Round</Label>
+              <Select 
+                value={formData.round} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, round: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select round" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="technical">Technical Round</SelectItem>
+                  <SelectItem value="hr">HR Round</SelectItem>
+                  <SelectItem value="telephonic">Telephonic Round</SelectItem>
+                  <SelectItem value="introduction">Introduction Round</SelectItem>
+                  <SelectItem value="behavioral">Behavioral Round</SelectItem>
+                  <SelectItem value="system-design">System Design Round</SelectItem>
+                  <SelectItem value="coding">Coding Round</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Tags</Label>
+              <div className="flex gap-2">
+                <Input
+                  name="tagInput"
+                  placeholder="Add a tag..."
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="flex-1"
+                />
+                <Button type="button" onClick={addTag} size="sm">
+                  Add
+                </Button>
+              </div>
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {tags.map((tag, index) => (
+                    <Badge key={index} variant="secondary" className="gap-1">
+                      {tag}
+                      <X 
+                        className="h-3 w-3 cursor-pointer" 
+                        onClick={() => removeTag(tag)} 
+                      />
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -185,7 +221,8 @@ const QuestionForm = () => {
               placeholder="Enter your interview question..."
               value={formData.question}
               onChange={(e) => setFormData(prev => ({ ...prev, question: e.target.value }))}
-              rows={3}
+              rows={2}
+              className="resize-none"
             />
           </div>
 
@@ -196,53 +233,19 @@ const QuestionForm = () => {
               placeholder="Enter the answer or key points..."
               value={formData.answer}
               onChange={(e) => setFormData(prev => ({ ...prev, answer: e.target.value }))}
-              rows={6}
+              rows={4}
+              className="resize-none"
             />
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Code className="h-4 w-4" />
-              <Label htmlFor="code">Code Snippet (Optional)</Label>
-            </div>
-            <Textarea
-              id="code"
-              placeholder="// Your code here..."
-              value={formData.code}
+            <Label htmlFor="code">Code Snippet (Optional)</Label>
+            <AdvancedCodeEditor
+              code={formData.code}
               onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
-              rows={8}
-              className="font-mono text-sm bg-gray-50 dark:bg-gray-900"
+              language="javascript"
+              placeholder="// Your code here..."
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Tags</Label>
-            <div className="flex gap-2">
-              <Input
-                name="tagInput"
-                placeholder="Add a tag..."
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="flex-1"
-              />
-              <Button type="button" onClick={addTag} size="sm">
-                Add
-              </Button>
-            </div>
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {tags.map((tag, index) => (
-                  <Badge key={index} variant="secondary" className="gap-1">
-                    {tag}
-                    <X 
-                      className="h-3 w-3 cursor-pointer" 
-                      onClick={() => removeTag(tag)} 
-                    />
-                  </Badge>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className="space-y-2">
@@ -262,7 +265,7 @@ const QuestionForm = () => {
               <div className="flex flex-wrap gap-2 mt-2">
                 {images.map((image, index) => (
                   <div key={index} className="relative">
-                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
                       {image.data ? (
                         <img 
                           src={image.data} 
@@ -270,8 +273,8 @@ const QuestionForm = () => {
                           className="w-full h-full object-cover" 
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
-                          {image.name}
+                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground p-1">
+                          {image.name?.substring(0, 10)}...
                         </div>
                       )}
                     </div>
@@ -279,7 +282,7 @@ const QuestionForm = () => {
                       type="button"
                       variant="destructive"
                       size="sm"
-                      className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full"
+                      className="absolute -top-2 -right-2 h-5 w-5 p-0 rounded-full"
                       onClick={() => removeImage(index)}
                     >
                       <X className="h-3 w-3" />
@@ -290,7 +293,7 @@ const QuestionForm = () => {
             )}
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-4 sticky bottom-0 bg-white dark:bg-gray-900 border-t -mx-6 px-6 py-4">
             <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">
               Cancel
             </Button>

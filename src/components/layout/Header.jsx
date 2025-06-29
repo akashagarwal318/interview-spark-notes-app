@@ -1,15 +1,23 @@
 
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Plus, List, Sun, Moon, Download } from 'lucide-react';
+import { Plus, List, Sun, Moon, Download, FileText, FileDown } from 'lucide-react';
 import { Button } from '../ui/button';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 import { setFormVisible, toggleTheme } from '../../store/slices/uiSlice';
 import { resetFilters } from '../../store/slices/questionsSlice';
+import { exportToWord, exportToPDF } from '../../utils/exportUtils';
 import { useIsMobile } from '../../hooks/use-mobile';
 
 const Header = () => {
   const dispatch = useDispatch();
   const { theme } = useSelector((state) => state.ui);
+  const { filteredItems } = useSelector((state) => state.questions);
   const isMobile = useIsMobile();
 
   const handleAddQuestion = () => {
@@ -24,52 +32,76 @@ const Header = () => {
     dispatch(toggleTheme());
   };
 
-  const handleExport = () => {
-    // TODO: Implement export functionality
-    console.log('Export functionality to be implemented');
+  const handleExportWord = () => {
+    if (filteredItems.length === 0) {
+      alert('No questions to export');
+      return;
+    }
+    exportToWord(filteredItems);
+  };
+
+  const handleExportPDF = () => {
+    if (filteredItems.length === 0) {
+      alert('No questions to export');
+      return;
+    }
+    exportToPDF(filteredItems);
   };
 
   return (
     <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-      <div className="container flex h-14 items-center justify-between">
+      <div className="container flex h-12 items-center justify-between px-4">
         <div className="flex items-center space-x-2">
-          <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <div className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             🚀 Interview Assistant
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1">
           {!isMobile && (
             <>
               <Button
                 variant="default"
                 size="sm"
                 onClick={handleAddQuestion}
-                className="gap-2"
+                className="gap-2 h-8 px-3"
               >
-                <Plus className="h-4 w-4" />
-                Add Question
+                <Plus className="h-3 w-3" />
+                Add
               </Button>
               
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleShowAll}
-                className="gap-2"
+                className="gap-2 h-8 px-3"
               >
-                <List className="h-4 w-4" />
-                All Questions
+                <List className="h-3 w-3" />
+                All
               </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExport}
-                className="gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Export
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 h-8 px-3"
+                  >
+                    <Download className="h-3 w-3" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportWord}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Export as Word
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportPDF}>
+                    <FileDown className="h-4 w-4 mr-2" />
+                    Export as PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           )}
           
@@ -77,20 +109,44 @@ const Header = () => {
             variant="ghost"
             size="sm"
             onClick={handleToggleTheme}
-            className="px-2"
+            className="h-8 w-8 p-0"
           >
             {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
 
           {isMobile && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleAddQuestion}
-              className="px-2"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                  >
+                    <Download className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportWord}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Word
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportPDF}>
+                    <FileDown className="h-4 w-4 mr-2" />
+                    PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleAddQuestion}
+                className="h-8 w-8 p-0"
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            </>
           )}
         </div>
       </div>
