@@ -8,7 +8,6 @@ import {
   ChevronDown, 
   Edit, 
   Trash2, 
-  Image as ImageIcon,
   MoreVertical
 } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -63,9 +62,9 @@ const QuestionCard = ({ question }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-4 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-4 hover:shadow-md transition-shadow">
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 leading-relaxed">
             {question.question}
@@ -83,6 +82,7 @@ const QuestionCard = ({ question }) => {
                 ? 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20' 
                 : 'text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
             }`}
+            title="Add to Favorites"
           >
             <Star className={`h-5 w-5 ${question.favorite ? 'fill-current' : ''}`} />
           </button>
@@ -94,6 +94,7 @@ const QuestionCard = ({ question }) => {
                 ? 'text-green-500 bg-green-50 dark:bg-green-900/20' 
                 : 'text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20'
             }`}
+            title="Mark for Review"
           >
             <Bookmark className={`h-5 w-5 ${question.review ? 'fill-current' : ''}`} />
           </button>
@@ -105,17 +106,18 @@ const QuestionCard = ({ question }) => {
                 ? 'text-red-500 bg-red-50 dark:bg-red-900/20' 
                 : 'text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
             }`}
+            title="Add to Hot List"
           >
             <Flame className={`h-5 w-5 ${question.hot ? 'fill-current' : ''}`} />
           </button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-2 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              <button className="p-2 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 <MoreVertical className="h-5 w-5" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+            <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
               <DropdownMenuItem onClick={handleEdit} className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
@@ -129,9 +131,10 @@ const QuestionCard = ({ question }) => {
 
           <button
             onClick={() => setExpanded(!expanded)}
-            className={`p-2 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all ${
+            className={`p-2 rounded-full text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all ${
               expanded ? 'rotate-180' : ''
             }`}
+            title="Expand/Collapse"
           >
             <ChevronDown className="h-5 w-5" />
           </button>
@@ -140,7 +143,7 @@ const QuestionCard = ({ question }) => {
 
       {/* Expanded Content */}
       {expanded && (
-        <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="p-6 space-y-6">
           <div>
             <h4 className="font-medium text-gray-900 dark:text-white mb-3">Answer</h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">

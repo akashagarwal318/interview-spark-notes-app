@@ -27,46 +27,47 @@ const QuickStats = () => {
     { 
       label: 'Total Questions', 
       value: stats.total, 
-      color: 'text-blue-600 dark:text-blue-400',
-      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+      color: 'text-blue-600',
+      icon: '📊',
       filterType: 'total'
     },
     { 
-      label: '⭐ Favorites', 
+      label: 'Favorites', 
       value: stats.favorites, 
-      color: 'text-yellow-600 dark:text-yellow-400',
-      bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
+      color: 'text-yellow-600',
+      icon: '⭐',
       filterType: 'favorites'
     },
     { 
-      label: '📌 Review', 
+      label: 'Review', 
       value: stats.review, 
-      color: 'text-green-600 dark:text-green-400',
-      bgColor: 'bg-green-50 dark:bg-green-900/20',
+      color: 'text-green-600',
+      icon: '📌',
       filterType: 'review'
     },
     { 
-      label: '🔥 Hot List', 
+      label: 'Hot List', 
       value: stats.hot, 
-      color: 'text-red-600 dark:text-red-400',
-      bgColor: 'bg-red-50 dark:bg-red-900/20',
+      color: 'text-red-600',
+      icon: '🔥',
       filterType: 'hot'
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-4 gap-6 mb-8">
       {statItems.map((item, index) => (
         <div 
           key={index} 
-          className={`${item.bgColor} rounded-xl p-6 cursor-pointer transition-all duration-200 hover:shadow-md border border-gray-100 dark:border-gray-700`}
+          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-105"
           onClick={() => handleStatClick(item.filterType)}
         >
           <div className="text-center">
+            <div className="text-2xl mb-2">{item.icon}</div>
             <div className={`text-3xl font-bold ${item.color} mb-1`}>
               {item.value}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
               {item.label}
             </div>
           </div>

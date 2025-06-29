@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Plus, List, Sun, Moon, Download, FileText, FileDown } from 'lucide-react';
+import { Plus, Download, Sun, Moon, FileText, FileDown } from 'lucide-react';
 import { Button } from '../ui/button';
 import { 
   DropdownMenu,
@@ -12,13 +12,11 @@ import {
 import { setFormVisible, toggleTheme } from '../../store/slices/uiSlice';
 import { resetFilters } from '../../store/slices/questionsSlice';
 import { exportToWord, exportToPDF } from '../../utils/exportUtils';
-import { useIsMobile } from '../../hooks/use-mobile';
 
 const Header = () => {
   const dispatch = useDispatch();
   const { theme } = useSelector((state) => state.ui);
   const { filteredItems } = useSelector((state) => state.questions);
-  const isMobile = useIsMobile();
 
   const handleAddQuestion = () => {
     dispatch(setFormVisible(true));
@@ -49,31 +47,30 @@ const Header = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-4">
-            <div className="text-xl font-bold text-gray-900 dark:text-white flex items-center space-x-2">
-              <span className="text-2xl">📚</span>
-              <span>Interview Prep</span>
-            </div>
+    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <span className="text-2xl">🚀</span>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              Interview Assistant
+            </h1>
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             <Button
               onClick={handleAddQuestion}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 font-medium"
             >
               <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Add New Question</span>
+              <span>Add New Question</span>
             </Button>
             
             <Button
               onClick={handleShowAll}
-              variant="outline"
-              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium"
             >
-              📋 All Questions
+              All Questions
             </Button>
 
             <DropdownMenu>
@@ -86,7 +83,7 @@ const Header = () => {
                   Export
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+              <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
                 <DropdownMenuItem onClick={handleExportWord} className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
                   <FileText className="h-4 w-4 mr-2" />
                   Export as Word
