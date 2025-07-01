@@ -1,20 +1,21 @@
 
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Search } from 'lucide-react';
+import { Search, Download, FileText, FileDown } from 'lucide-react';
 import { Input } from '../ui/input';
+import { Button } from '../ui/button';
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '../ui/select';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 import { setCurrentRound, setSearchTerm, setFilters, setSelectedTags, resetFilters } from '../../store/slices/questionsSlice';
+import { exportToWord, exportToPDF } from '../../utils/exportUtils';
 
 const SearchFilters = () => {
   const dispatch = useDispatch();
-  const { currentRound, searchTerm, filters, items, selectedTags } = useSelector((state) => state.questions);
+  const { currentRound, searchTerm, filters, items, selectedTags, filteredItems } = useSelector((state) => state.questions);
 
   // Get all unique tags from questions
   const allTags = [...new Set(items.flatMap(q => q.tags || []))].filter(Boolean).sort();
@@ -42,47 +43,80 @@ const SearchFilters = () => {
     dispatch(resetFilters());
   };
 
+  const handleExportWord = () => {
+    if (filteredItems.length === 0) {
+      alert('No questions to export');
+      return;
+    }
+    exportToWord(filteredItems);
+  };
+
+  const handleExportPDF = () => {
+    if (filteredItems.length === 0) {
+      alert('No questions to export');
+      return;
+    }
+    exportToPDF(filteredItems);
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
-      {/* Search Bar */}
-      <div className="flex gap-4 mb-6">
+    <div className="space-y-4 mb-6">
+      {/* Search and Export Row */}
+      <div className="flex gap-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
-            placeholder="Search your questions..."
+            placeholder="Search questions..."
             value={searchTerm}
             onChange={handleSearchChange}
-            className="pl-12 py-3 text-base border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:bg-white dark:focus:bg-gray-600"
+            className="pl-10 h-10 border-gray-300 dark:border-gray-600"
           />
         </div>
-        <Select defaultValue="questions">
-          <SelectTrigger className="w-48 bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-lg">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
-            <SelectItem value="questions">Search in Questions</SelectItem>
-            <SelectItem value="answers">Search in Answers</SelectItem>
-            <SelectItem value="code">Search in Code</SelectItem>
-            <SelectItem value="tags">Search in Tags</SelectItem>
-          </SelectContent>
-        </Select>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="px-4 py-2 h-10 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-50">
+            <DropdownMenuItem onClick={handleExportWord} className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+              <FileText className="h-4 w-4 mr-2" />
+              Export as Word
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportPDF} className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+              <FileDown className="h-4 w-4 mr-2" />
+              Export as PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        <Button
+          onClick={handleResetFilters}
+          variant="outline"
+          className="px-4 py-2 h-10 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+        >
+          Show All
+        </Button>
       </div>
 
-      {/* Round Filter Buttons */}
-      <div className="flex flex-wrap gap-3 mb-6">
+      {/* Filter Tabs */}
+      <div className="flex flex-wrap gap-2">
         {[
-          { key: 'all', label: 'Technical', active: currentRound === 'technical' || currentRound === 'all' },
+          { key: 'technical', label: 'Technical', active: currentRound === 'technical' },
           { key: 'hr', label: 'HR Round', active: currentRound === 'hr' },
           { key: 'telephonic', label: 'Telephonic', active: currentRound === 'telephonic' },
           { key: 'introduction', label: 'Introduction', active: currentRound === 'introduction' }
         ].map(round => (
           <button
             key={round.key}
-            onClick={() => handleRoundChange(round.key === 'all' ? 'technical' : round.key)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              round.active && round.key !== 'all'
-                ? 'bg-blue-600 text-white'
-                : round.key === 'all' && (currentRound === 'technical' || currentRound === 'all')
+            onClick={() => handleRoundChange(round.key)}
+            className={`px-3 py-1 rounded-full text-sm transition-colors ${
+              round.active
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
@@ -90,25 +124,16 @@ const SearchFilters = () => {
             {round.label}
           </button>
         ))}
-      </div>
-
-      {/* Status Filters */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <button
-          onClick={handleResetFilters}
-          className="px-4 py-2 rounded-full text-sm font-medium bg-gray-600 text-white hover:bg-gray-700 transition-colors"
-        >
-          All
-        </button>
+        
         {[
-          { key: 'favorite', label: '⭐ Favorites', active: filters.favorite },
-          { key: 'review', label: '📌 Review', active: filters.review },
-          { key: 'hot', label: '🔥 Hot List', active: filters.hot }
+          { key: 'favorite', label: 'Favorites', active: filters.favorite },
+          { key: 'review', label: 'Review', active: filters.review },
+          { key: 'hot', label: 'Hot List', active: filters.hot }
         ].map(filter => (
           <button
             key={filter.key}
             onClick={() => handleFilterToggle(filter.key)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            className={`px-3 py-1 rounded-full text-sm transition-colors ${
               filter.active
                 ? filter.key === 'favorite' ? 'bg-yellow-600 text-white' 
                 : filter.key === 'review' ? 'bg-green-600 text-white'
@@ -123,33 +148,30 @@ const SearchFilters = () => {
 
       {/* Tag Filters */}
       {allTags.length > 0 && (
-        <div>
-          <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Tags:</div>
-          <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => dispatch(setSelectedTags([]))}
+            className={`px-3 py-1 rounded-full text-xs transition-colors ${
+              selectedTags.length === 0
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            All Tags
+          </button>
+          {allTags.map(tag => (
             <button
-              onClick={() => dispatch(setSelectedTags([]))}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                selectedTags.length === 0
+              key={tag}
+              onClick={() => handleTagToggle(tag)}
+              className={`px-3 py-1 rounded-full text-xs transition-colors ${
+                selectedTags.includes(tag)
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
-              All Tags
+              {tag}
             </button>
-            {allTags.map(tag => (
-              <button
-                key={tag}
-                onClick={() => handleTagToggle(tag)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                  selectedTags.includes(tag)
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
       )}
     </div>
