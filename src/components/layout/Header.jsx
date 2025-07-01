@@ -18,14 +18,14 @@ const Header = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-      <div className="max-w-6xl mx-auto px-4 py-4">
+    <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 border-b border-purple-300 shadow-lg">
+      <div className="max-w-6xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">IA</span>
+          <div className="flex items-center space-x-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-white to-purple-100 rounded-xl flex items-center justify-center shadow-md">
+              <span className="text-purple-600 font-bold text-lg">IA</span>
             </div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-white drop-shadow-sm">
               Interview Assistant
             </h1>
           </div>
@@ -33,18 +33,18 @@ const Header = () => {
           <div className="flex items-center space-x-3">
             <Button
               onClick={handleAddQuestion}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-6 py-3 rounded-xl flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-emerald-400"
             >
-              <Plus className="h-4 w-4" />
-              <span>Add Question</span>
+              <Plus className="h-5 w-5" />
+              <span className="font-medium">Add Question</span>
             </Button>
             
             <Button
               variant="ghost"
               onClick={handleToggleTheme}
-              className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="p-3 rounded-xl text-white hover:bg-white/20 hover:text-white transition-all duration-300 shadow-md hover:shadow-lg"
             >
-              {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+              {theme === 'light' ? <Moon className="h-6 w-6" /> : <Sun className="h-6 w-6" />}
             </Button>
           </div>
         </div>
