@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { X, Upload, Code } from 'lucide-react';
@@ -59,7 +60,7 @@ const QuestionForm = () => {
 
     const processedImages = await Promise.all(
       images.map(file => {
-        if (file.data) return Promise.resolve(file);
+        if (file.data) return Promise.resolve(file); // Already processed
         return new Promise((resolve) => {
           const reader = new FileReader();
           reader.onload = (e) => {
@@ -146,18 +147,20 @@ const QuestionForm = () => {
   const tags = formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(t => t) : [];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b sticky top-0 bg-white dark:bg-gray-900 z-10">
-          <CardTitle className="text-lg">
-            {editingQuestion ? 'Edit Question' : 'Add New Question'}
-          </CardTitle>
-          <Button variant="ghost" size="sm" onClick={handleCancel} className="h-8 w-8 p-0">
-            <X className="h-4 w-4" />
-          </Button>
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
+      <Card className="w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+        <CardHeader className="sticky top-0 bg-white dark:bg-gray-900 z-10 border-b">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">
+              {editingQuestion ? 'Edit Question' : 'Add New Question'}
+            </CardTitle>
+            <Button variant="ghost" size="sm" onClick={handleCancel}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
         
-        <CardContent className="space-y-4 p-6">
+        <CardContent className="space-y-6 p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="round">Interview Round</Label>
@@ -218,7 +221,7 @@ const QuestionForm = () => {
               placeholder="Enter your interview question..."
               value={formData.question}
               onChange={(e) => setFormData(prev => ({ ...prev, question: e.target.value }))}
-              rows={3}
+              rows={2}
               className="resize-none"
             />
           </div>
@@ -290,7 +293,7 @@ const QuestionForm = () => {
             )}
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-4 sticky bottom-0 bg-white dark:bg-gray-900 border-t -mx-6 px-6 py-4">
             <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">
               Cancel
             </Button>
