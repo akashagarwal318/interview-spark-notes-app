@@ -44,17 +44,17 @@ const InterviewAssistant = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-200 border-t-purple-600 mx-auto mb-6 shadow-lg"></div>
-          <p className="text-gray-700 dark:text-gray-300 text-lg font-medium">Loading questions...</p>
+          <div className="animate-spin rounded-full h-20 w-20 border-4 border-gradient-to-r from-purple-400 to-pink-400 border-t-transparent mx-auto mb-6 shadow-2xl"></div>
+          <p className="text-gray-700 dark:text-gray-300 text-xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Loading questions...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-25 to-pink-50 dark:from-gray-900 dark:via-gray-850 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-indigo-900/20">
       <Header />
       
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -63,15 +63,15 @@ const InterviewAssistant = () => {
 
         <div className="mb-8">
           {filteredItems.length === 0 ? (
-            <div className="text-center py-16 bg-gradient-to-br from-white to-slate-50 dark:from-gray-800 dark:to-gray-850 rounded-2xl border-2 border-slate-200 dark:border-gray-700 shadow-xl">
-              <div className="text-6xl mb-6">🔍</div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">No questions found</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-lg">
+            <div className="text-center py-20 bg-gradient-to-br from-white via-purple-50 to-pink-50 dark:from-gray-800 dark:via-purple-800/30 dark:to-pink-800/30 rounded-3xl border-4 border-gradient-to-r from-purple-200 to-pink-200 dark:border-purple-700 shadow-2xl">
+              <div className="text-8xl mb-8 animate-bounce">🔍</div>
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-4 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 bg-clip-text text-transparent">No questions found</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-xl font-medium">
                 Try adjusting your search terms or add a new question to get started.
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {paginatedQuestions.map(question => (
                 <QuestionCard key={question.id} question={question} />
               ))}
