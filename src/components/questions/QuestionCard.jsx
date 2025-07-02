@@ -61,111 +61,107 @@ const QuestionCard = ({ question }) => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-white via-purple-50/30 to-pink-50/30 dark:from-gray-800 dark:via-purple-900/20 dark:to-pink-900/20 border-3 border-gradient-to-r from-purple-200 to-pink-200 dark:border-purple-600 rounded-2xl mb-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:border-purple-400 dark:hover:border-purple-400 transform hover:-translate-y-1">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mb-4">
       {/* Header */}
-      <div className="flex items-start justify-between p-6 border-b-2 border-gradient-to-r from-purple-100 to-pink-100 dark:border-purple-700/50">
+      <div className="flex items-start justify-between p-4 border-b border-gray-100 dark:border-gray-700">
         <div className="flex-1 min-w-0">
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 leading-snug bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1 leading-snug">
             {question.question}
           </h3>
-          <div className="flex items-center text-sm text-slate-600 dark:text-gray-400 space-x-6">
-            <span className="capitalize bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-bold text-base px-3 py-1 rounded-full border-2 border-gradient-to-r from-blue-200 to-purple-200">
-              {question.round?.replace('-', ' ') || 'General'}
-            </span>
-            <span className="text-slate-500 font-medium">{formatDate(question.createdAt)}</span>
+          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 space-x-4">
+            <span className="capitalize">{question.round?.replace('-', ' ') || 'General'}</span>
+            <span>{formatDate(question.createdAt)}</span>
           </div>
         </div>
         
-        <div className="flex items-center space-x-3 ml-4 flex-shrink-0">
+        <div className="flex items-center space-x-1 ml-4 flex-shrink-0">
           <button
             onClick={() => handleToggle('favorite')}
-            className={`p-4 rounded-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 ${
+            className={`p-2 rounded-md transition-colors ${
               question.favorite 
-                ? 'text-amber-600 bg-gradient-to-br from-amber-100 via-yellow-100 to-orange-100 dark:from-amber-900/40 dark:to-yellow-900/40 shadow-xl border-3 border-amber-300 hover:shadow-2xl' 
-                : 'text-gray-400 hover:text-amber-600 hover:bg-gradient-to-br hover:from-amber-50 hover:to-yellow-50 dark:hover:from-amber-900/30 dark:hover:to-yellow-900/30 hover:shadow-lg border-2 border-gray-200 hover:border-amber-300'
+                ? 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20' 
+                : 'text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
             }`}
           >
-            <Star className={`h-6 w-6 ${question.favorite ? 'fill-current' : ''}`} />
+            <Star className={`h-4 w-4 ${question.favorite ? 'fill-current' : ''}`} />
           </button>
           
           <button
             onClick={() => handleToggle('review')}
-            className={`p-4 rounded-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 ${
+            className={`p-2 rounded-md transition-colors ${
               question.review 
-                ? 'text-emerald-600 bg-gradient-to-br from-emerald-100 via-green-100 to-teal-100 dark:from-emerald-900/40 dark:to-green-900/40 shadow-xl border-3 border-emerald-300 hover:shadow-2xl' 
-                : 'text-gray-400 hover:text-emerald-600 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-green-50 dark:hover:from-emerald-900/30 dark:hover:to-green-900/30 hover:shadow-lg border-2 border-gray-200 hover:border-emerald-300'
+                ? 'text-green-600 bg-green-50 dark:bg-green-900/20' 
+                : 'text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
             }`}
           >
-            <Bookmark className={`h-6 w-6 ${question.review ? 'fill-current' : ''}`} />
+            <Bookmark className={`h-4 w-4 ${question.review ? 'fill-current' : ''}`} />
           </button>
           
           <button
             onClick={() => handleToggle('hot')}
-            className={`p-4 rounded-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 ${
+            className={`p-2 rounded-md transition-colors ${
               question.hot 
-                ? 'text-rose-600 bg-gradient-to-br from-rose-100 via-red-100 to-pink-100 dark:from-rose-900/40 dark:to-red-900/40 shadow-xl border-3 border-rose-300 hover:shadow-2xl' 
-                : 'text-gray-400 hover:text-rose-600 hover:bg-gradient-to-br hover:from-rose-50 hover:to-red-50 dark:hover:from-rose-900/30 dark:hover:to-red-900/30 hover:shadow-lg border-2 border-gray-200 hover:border-rose-300'
+                ? 'text-red-600 bg-red-50 dark:bg-red-900/20' 
+                : 'text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20'
             }`}
           >
-            <Flame className={`h-6 w-6 ${question.hot ? 'fill-current' : ''}`} />
+            <Flame className={`h-4 w-4 ${question.hot ? 'fill-current' : ''}`} />
           </button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-4 rounded-2xl text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-gradient-to-br hover:from-purple-50 hover:to-indigo-50 dark:hover:from-purple-900/30 dark:hover:to-indigo-900/30 transition-all duration-300 hover:shadow-lg border-2 border-gray-200 hover:border-purple-300 transform hover:scale-110 hover:-translate-y-1">
-                <MoreVertical className="h-6 w-6" />
+              <button className="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <MoreVertical className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 border-3 border-purple-200 dark:border-purple-700 z-50 shadow-2xl rounded-2xl">
-              <DropdownMenuItem onClick={handleEdit} className="flex items-center px-4 py-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/20 rounded-xl mx-2 my-1">
-                <Edit className="h-5 w-5 mr-3 text-blue-600" />
-                <span className="text-blue-600 font-semibold">Edit</span>
+            <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-50">
+              <DropdownMenuItem onClick={handleEdit} className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDelete} className="flex items-center px-4 py-3 hover:bg-gradient-to-r hover:from-red-50 hover:to-rose-50 dark:hover:from-red-900/20 dark:hover:to-rose-900/20 rounded-xl mx-2 my-1">
-                <Trash2 className="h-5 w-5 mr-3 text-red-600" />
-                <span className="text-red-600 font-semibold">Delete</span>
+              <DropdownMenuItem onClick={handleDelete} className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-red-600">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           <button
             onClick={() => setExpanded(!expanded)}
-            className={`p-4 rounded-2xl text-gray-400 hover:text-indigo-600 hover:bg-gradient-to-br hover:from-indigo-50 hover:to-purple-50 dark:hover:from-indigo-900/30 dark:hover:to-purple-900/30 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 hover:shadow-lg border-2 border-gray-200 hover:border-indigo-300 ${
-              expanded ? 'rotate-180 text-indigo-600 bg-gradient-to-br from-indigo-100 to-purple-100 shadow-lg border-indigo-300' : ''
+            className={`p-2 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all ${
+              expanded ? 'rotate-180' : ''
             }`}
           >
-            <ChevronDown className="h-6 w-6" />
+            <ChevronDown className="h-4 w-4" />
           </button>
         </div>
       </div>
 
       {/* Expanded Content */}
       {expanded && (
-        <div className="p-6 space-y-8 bg-gradient-to-br from-slate-50 via-purple-50/50 to-pink-50/50 dark:from-gray-900/50 dark:via-purple-900/30 dark:to-pink-900/30">
+        <div className="p-4 space-y-4 bg-gray-50 dark:bg-gray-900/50">
           <div>
-            <h4 className="font-bold text-gray-900 dark:text-white mb-4 text-lg bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">Answer</h4>
-            <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed bg-gradient-to-br from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/30 p-6 rounded-2xl border-l-4 border-blue-400 shadow-lg">
+            <h4 className="font-medium text-gray-900 dark:text-white mb-2 text-sm">Answer</h4>
+            <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
               {question.answer}
             </p>
           </div>
 
           {question.code && (
             <div>
-              <h4 className="font-bold text-gray-900 dark:text-white mb-4 text-lg bg-gradient-to-r from-green-600 via-teal-600 to-emerald-600 bg-clip-text text-transparent">Code</h4>
-              <div className="border-l-4 border-green-400 rounded-2xl overflow-hidden shadow-lg">
-                <CodeBlock code={question.code} />
-              </div>
+              <h4 className="font-medium text-gray-900 dark:text-white mb-2 text-sm">Code</h4>
+              <CodeBlock code={question.code} />
             </div>
           )}
 
           {question.images && question.images.length > 0 && (
             <div>
-              <h4 className="font-bold text-gray-900 dark:text-white mb-4 text-lg bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 bg-clip-text text-transparent">Images</h4>
-              <div className="flex flex-wrap gap-4">
+              <h4 className="font-medium text-gray-900 dark:text-white mb-2 text-sm">Images</h4>
+              <div className="flex flex-wrap gap-2">
                 {question.images.map((image, index) => (
                   <div
                     key={index}
-                    className="w-24 h-24 rounded-2xl overflow-hidden cursor-pointer hover:opacity-80 transition-all duration-300 hover:scale-110 hover:-translate-y-1 border-3 border-purple-200 dark:border-purple-700 shadow-lg hover:shadow-xl"
+                    className="w-16 h-16 rounded-md overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-gray-200 dark:border-gray-700"
                     onClick={() => handleImageClick(image.data)}
                   >
                     <img
@@ -181,12 +177,12 @@ const QuestionCard = ({ question }) => {
 
           {question.tags && question.tags.length > 0 && (
             <div>
-              <h4 className="font-bold text-gray-900 dark:text-white mb-4 text-lg bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent">Tags</h4>
-              <div className="flex flex-wrap gap-3">
+              <h4 className="font-medium text-gray-900 dark:text-white mb-2 text-sm">Tags</h4>
+              <div className="flex flex-wrap gap-1">
                 {question.tags.map((tag, index) => (
                   <span
                     key={index}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white text-sm font-semibold rounded-full border-2 border-blue-300 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:-translate-y-1"
+                    className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded border border-blue-200 dark:border-blue-700"
                   >
                     {tag}
                   </span>
