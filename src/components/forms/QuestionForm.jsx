@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { X, Upload, Code } from 'lucide-react';
+import { X, Upload, Code, ImageIcon } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
@@ -33,6 +33,9 @@ const QuestionForm = () => {
   });
   const [images, setImages] = useState([]);
   const [tagInput, setTagInput] = useState('');
+  const [dragActive, setDragActive] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('javascript');
+  const dropRef = useRef(null);
 
   // Initialize form when editing
   useEffect(() => {
@@ -114,6 +117,27 @@ const QuestionForm = () => {
     setImages(prev => [...prev, ...files]);
   };
 
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+      setImages(prev => [...prev, ...files]);
+    }
+  };
+
   const removeImage = (index) => {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
@@ -148,7 +172,7 @@ const QuestionForm = () => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
-      <Card className="w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+      <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-fade-in animate-scale-in">
         <CardHeader className="sticky top-0 bg-white dark:bg-gray-900 z-10 border-b">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">
@@ -230,11 +254,12 @@ const QuestionForm = () => {
             <Label htmlFor="answer">Answer *</Label>
             <Textarea
               id="answer"
-              placeholder="Enter the answer or key points..."
+              placeholder="Enter the answer or key points... (Supports bullets: • Use Alt+8 or copy-paste formatted text)"
               value={formData.answer}
               onChange={(e) => setFormData(prev => ({ ...prev, answer: e.target.value }))}
-              rows={4}
-              className="resize-none"
+              rows={6}
+              className="resize-none font-mono text-sm leading-relaxed"
+              style={{ whiteSpace: 'pre-wrap' }}
             />
           </div>
 
@@ -243,38 +268,55 @@ const QuestionForm = () => {
             <AdvancedCodeEditor
               code={formData.code}
               onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
-              language="javascript"
+              language={selectedLanguage}
+              onLanguageChange={setSelectedLanguage}
               placeholder="// Your code here..."
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="images">Images (Optional)</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="images"
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleImageChange}
-                className="flex-1"
-              />
-              <Upload className="h-4 w-4 text-muted-foreground" />
+            <div 
+              ref={dropRef}
+              className={`border-2 border-dashed rounded-lg p-4 transition-colors ${
+                dragActive 
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                  : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+              }`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+            >
+              <div className="text-center">
+                <ImageIcon className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  Drag & drop images here, or click to select
+                </p>
+                <Input
+                  id="images"
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full"
+                />
+              </div>
             </div>
             {images.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3">
                 {images.map((image, index) => (
-                  <div key={index} className="relative">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
+                  <div key={index} className="relative group">
+                    <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-200 dark:border-gray-700">
                       {image.data ? (
                         <img 
                           src={image.data} 
                           alt={image.name} 
-                          className="w-full h-full object-cover" 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground p-1">
-                          {image.name?.substring(0, 10)}...
+                          {image.name?.substring(0, 8)}...
                         </div>
                       )}
                     </div>
@@ -282,7 +324,7 @@ const QuestionForm = () => {
                       type="button"
                       variant="destructive"
                       size="sm"
-                      className="absolute -top-2 -right-2 h-5 w-5 p-0 rounded-full"
+                      className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => removeImage(index)}
                     >
                       <X className="h-3 w-3" />

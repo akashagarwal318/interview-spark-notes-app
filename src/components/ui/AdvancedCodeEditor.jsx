@@ -2,17 +2,43 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Copy, Check, Download, Upload, Code, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from './button';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from './select';
 
 const AdvancedCodeEditor = ({ 
   code = '', 
   onChange, 
   language = 'javascript',
+  onLanguageChange,
   placeholder = '// Start coding...',
   readOnly = false 
 }) => {
   const [copied, setCopied] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState(language);
   const textareaRef = useRef(null);
+
+  const languages = [
+    { value: 'javascript', label: 'JavaScript', ext: 'js', comment: '//' },
+    { value: 'typescript', label: 'TypeScript', ext: 'ts', comment: '//' },
+    { value: 'react', label: 'React/JSX', ext: 'jsx', comment: '//' },
+    { value: 'html', label: 'HTML', ext: 'html', comment: '<!--' },
+    { value: 'css', label: 'CSS', ext: 'css', comment: '/*' },
+    { value: 'python', label: 'Python', ext: 'py', comment: '#' },
+    { value: 'java', label: 'Java', ext: 'java', comment: '//' },
+    { value: 'cpp', label: 'C++', ext: 'cpp', comment: '//' },
+    { value: 'c', label: 'C', ext: 'c', comment: '//' },
+    { value: 'json', label: 'JSON', ext: 'json', comment: '' },
+    { value: 'sql', label: 'SQL', ext: 'sql', comment: '--' },
+    { value: 'bash', label: 'Bash', ext: 'sh', comment: '#' },
+  ];
+
+  const getCurrentLanguage = () => languages.find(lang => lang.value === currentLanguage) || languages[0];
 
   const handleCopy = async () => {
     try {
@@ -28,10 +54,18 @@ const AdvancedCodeEditor = ({
     const element = document.createElement('a');
     const file = new Blob([code], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
-    element.download = `code.${language === 'javascript' ? 'js' : language}`;
+    const ext = getCurrentLanguage().ext;
+    element.download = `code.${ext}`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+  };
+
+  const handleLanguageChange = (newLanguage) => {
+    setCurrentLanguage(newLanguage);
+    if (onLanguageChange) {
+      onLanguageChange(newLanguage);
+    }
   };
 
   const handleFileUpload = (e) => {
@@ -113,23 +147,64 @@ const AdvancedCodeEditor = ({
   };
 
   const highlightSyntax = (code) => {
-    return code
-      .replace(/(\/\/.*$)/gm, '<span class="text-green-600 dark:text-green-400">$1</span>')
-      .replace(/(\/\*[\s\S]*?\*\/)/gm, '<span class="text-green-600 dark:text-green-400">$1</span>')
-      .replace(/\b(function|const|let|var|if|else|for|while|return|class|import|export|from|default|async|await|try|catch|finally)\b/g, '<span class="text-blue-600 dark:text-blue-400 font-semibold">$1</span>')
-      .replace(/\b(true|false|null|undefined)\b/g, '<span class="text-purple-600 dark:text-purple-400">$1</span>')
-      .replace(/(['"`])((?:(?!\1)[^\\]|\\.)*)(\1)/g, '<span class="text-orange-600 dark:text-orange-400">$1$2$3</span>')
-      .replace(/\b(\d+)\b/g, '<span class="text-red-600 dark:text-red-400">$1</span>')
-      .replace(/([{}[\]();,.])/g, '<span class="text-gray-600 dark:text-gray-400">$1</span>');
+    if (!code) return '';
+    const lang = getCurrentLanguage();
+    
+    let highlighted = code;
+    
+    // Comments
+    if (lang.comment === '//') {
+      highlighted = highlighted.replace(/(\/\/.*$)/gm, '<span style="color: #10b981">$1</span>');
+      highlighted = highlighted.replace(/(\/\*[\s\S]*?\*\/)/gm, '<span style="color: #10b981">$1</span>');
+    } else if (lang.comment === '#') {
+      highlighted = highlighted.replace(/(#.*$)/gm, '<span style="color: #10b981">$1</span>');
+    } else if (lang.comment === '<!--') {
+      highlighted = highlighted.replace(/(<!--[\s\S]*?-->)/gm, '<span style="color: #10b981">$1</span>');
+    } else if (lang.comment === '/*') {
+      highlighted = highlighted.replace(/(\/\*[\s\S]*?\*\/)/gm, '<span style="color: #10b981">$1</span>');
+    }
+    
+    // Keywords based on language
+    if (['javascript', 'typescript', 'react'].includes(lang.value)) {
+      highlighted = highlighted.replace(/\b(function|const|let|var|if|else|for|while|return|class|import|export|from|default|async|await|try|catch|finally|typeof|instanceof)\b/g, '<span style="color: #3b82f6; font-weight: 600">$1</span>');
+    } else if (lang.value === 'python') {
+      highlighted = highlighted.replace(/\b(def|class|if|else|elif|for|while|return|import|from|as|try|except|finally|with|lambda|and|or|not|in|is)\b/g, '<span style="color: #3b82f6; font-weight: 600">$1</span>');
+    } else if (lang.value === 'html') {
+      highlighted = highlighted.replace(/(<\/?[^>]+>)/g, '<span style="color: #dc2626">$1</span>');
+    } else if (lang.value === 'css') {
+      highlighted = highlighted.replace(/([a-zA-Z-]+)(\s*:\s*)/g, '<span style="color: #dc2626">$1</span>$2');
+    }
+    
+    // Strings
+    highlighted = highlighted.replace(/(['"`])((?:(?!\1)[^\\]|\\.)*)(\1)/g, '<span style="color: #ea580c">$1$2$3</span>');
+    
+    // Numbers
+    highlighted = highlighted.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span style="color: #dc2626">$1</span>');
+    
+    // Boolean values
+    highlighted = highlighted.replace(/\b(true|false|null|undefined|None|True|False)\b/g, '<span style="color: #8b5cf6">$1</span>');
+    
+    return highlighted;
   };
 
   return (
     <div className={`relative bg-gray-50 dark:bg-gray-900 rounded-lg border ${isFullscreen ? 'fixed inset-0 z-50' : 'h-64'}`}>
       <div className="flex items-center justify-between px-3 py-2 border-b bg-gray-100 dark:bg-gray-800 rounded-t-lg">
-        <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-          <Code className="h-4 w-4" />
-          {language}
-        </span>
+        <div className="flex items-center gap-2">
+          <Code className="h-4 w-4 text-muted-foreground" />
+          <Select value={currentLanguage} onValueChange={handleLanguageChange} disabled={readOnly}>
+            <SelectTrigger className="h-7 w-32 text-xs border-none bg-transparent">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {languages.map((lang) => (
+                <SelectItem key={lang.value} value={lang.value}>
+                  {lang.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex items-center gap-1">
           {!readOnly && (
             <>
@@ -193,13 +268,23 @@ const AdvancedCodeEditor = ({
       <div className="relative flex-1 overflow-hidden">
         {readOnly ? (
           <div className="p-3 overflow-auto h-full">
-            <pre className="text-sm font-mono">
-              <code 
-                dangerouslySetInnerHTML={{ 
-                  __html: highlightSyntax(code) 
-                }}
-              />
-            </pre>
+            <div className="flex">
+              <div className="flex flex-col text-xs text-gray-400 pr-2 select-none">
+                {code.split('\n').map((_, index) => (
+                  <div key={index} className="leading-5 text-right min-w-[2rem]">
+                    {index + 1}
+                  </div>
+                ))}
+              </div>
+              <pre className="text-sm font-mono flex-1 overflow-x-auto">
+                <code 
+                  dangerouslySetInnerHTML={{ 
+                    __html: highlightSyntax(code) 
+                  }}
+                  className="leading-5"
+                />
+              </pre>
+            </div>
           </div>
         ) : (
           <textarea
