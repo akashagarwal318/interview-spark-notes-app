@@ -64,8 +64,8 @@ const SearchFilters = () => {
       {/* Search and Export Row */}
       <div className="flex gap-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
+            type="text"
             placeholder="Search questions..."
             value={searchTerm}
             onChange={handleSearchChange}
@@ -105,46 +105,49 @@ const SearchFilters = () => {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex flex-wrap gap-2">
-        {[
-          { key: 'technical', label: 'Technical', active: currentRound === 'technical' },
-          { key: 'hr', label: 'HR Round', active: currentRound === 'hr' },
-          { key: 'telephonic', label: 'Telephonic', active: currentRound === 'telephonic' },
-          { key: 'introduction', label: 'Introduction', active: currentRound === 'introduction' }
-        ].map(round => (
-          <button
-            key={round.key}
-            onClick={() => handleRoundChange(round.key)}
-            className={`px-3 py-1 rounded-full text-sm transition-colors ${
-              round.active
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            {round.label}
-          </button>
-        ))}
-        
-        {[
-          { key: 'favorite', label: 'Favorites', active: filters.favorite },
-          { key: 'review', label: 'Review', active: filters.review },
-          { key: 'hot', label: 'Hot List', active: filters.hot }
-        ].map(filter => (
-          <button
-            key={filter.key}
-            onClick={() => handleFilterToggle(filter.key)}
-            className={`px-3 py-1 rounded-full text-sm transition-colors ${
-              filter.active
-                ? filter.key === 'favorite' ? 'bg-yellow-600 text-white' 
-                : filter.key === 'review' ? 'bg-green-600 text-white'
-                : 'bg-red-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            {filter.label}
-          </button>
-        ))}
-      </div>
+<div className="flex flex-wrap gap-2">
+  {[
+    { key: 'technical', label: 'Technical', active: currentRound === 'technical' },
+    { key: 'hr', label: 'HR Round', active: currentRound === 'hr' },
+    { key: 'telephonic', label: 'Telephonic', active: currentRound === 'telephonic' },
+    { key: 'introduction', label: 'Introduction', active: currentRound === 'introduction' }
+  ].map(round => (
+    <button
+      key={round.key}
+      onClick={() => handleRoundChange(round.key)}
+      className={`px-3 py-1 rounded-full text-sm transition-colors ${
+        round.active
+          ? 'bg-blue-600 text-white'
+          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+      }`}
+    >
+      {round.label}
+    </button>
+  ))}
+</div>
+
+{/* Filters on next line */}
+<div className="flex flex-wrap gap-2 mt-2">
+  {[
+    { key: 'favorite', label: 'Favorites', active: filters.favorite },
+    { key: 'review', label: 'Review', active: filters.review },
+    { key: 'hot', label: 'Hot List', active: filters.hot }
+  ].map(filter => (
+    <button
+      key={filter.key}
+      onClick={() => handleFilterToggle(filter.key)}
+      className={`px-3 py-1 rounded-full text-sm transition-colors ${
+        filter.active
+          ? filter.key === 'favorite' ? 'bg-yellow-600 text-white' 
+          : filter.key === 'review' ? 'bg-green-600 text-white'
+          : 'bg-red-600 text-white'
+          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+      }`}
+    >
+      {filter.label}
+    </button>
+  ))}
+</div>
 
       {/* Tag Filters */}
       {allTags.length > 0 && (
