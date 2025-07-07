@@ -188,8 +188,8 @@ const AdvancedCodeEditor = ({
   };
 
   return (
-    <div className={`relative bg-gray-50 dark:bg-gray-900 rounded-lg border ${isFullscreen ? 'fixed inset-0 z-50' : 'h-64'}`}>
-      <div className="flex items-center justify-between px-3 py-2 border-b bg-gray-100 dark:bg-gray-800 rounded-t-lg">
+    <div className={`relative bg-muted rounded-lg border border-border ${isFullscreen ? 'fixed inset-0 z-50' : 'h-64'}`}>
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-card rounded-t-lg">
         <div className="flex items-center gap-2">
           <Code className="h-4 w-4 text-muted-foreground" />
           <Select value={currentLanguage} onValueChange={handleLanguageChange} disabled={readOnly}>
@@ -293,7 +293,7 @@ const AdvancedCodeEditor = ({
             onChange={onChange}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="w-full h-full p-3 bg-transparent border-none outline-none resize-none font-mono text-sm leading-relaxed"
+            className="w-full h-full p-3 bg-transparent border-none outline-none resize-none font-mono text-sm leading-relaxed text-foreground placeholder:text-muted-foreground"
             style={{ 
               minHeight: isFullscreen ? 'calc(100vh - 60px)' : '200px',
               tabSize: 2

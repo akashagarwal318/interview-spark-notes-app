@@ -117,32 +117,21 @@ const QuestionCard = ({ question }) => {
             <Flame className={`h-4 w-4 ${question.hot ? 'fill-current' : ''}`} />
           </button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button 
-                onClick={(e) => e.stopPropagation()}
-                className="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all hover:scale-110"
-              >
-                <MoreVertical className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 z-50">
-              <DropdownMenuItem onClick={(e) => {e.stopPropagation(); handleEdit();}} className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => {e.stopPropagation(); handleDelete();}} className="flex items-center px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-red-600">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <button
+            onClick={(e) => {e.stopPropagation(); handleEdit();}}
+            className="p-2 rounded-md text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all hover:scale-110"
+            title="Edit question"
+          >
+            <Edit className="h-4 w-4" />
+          </button>
 
-          <div className={`p-2 rounded-md text-gray-400 transition-all ${
-            expanded ? 'rotate-180 text-blue-600' : 'text-gray-400'
-          }`}>
-            <ChevronDown className="h-4 w-4" />
-          </div>
+          <button
+            onClick={(e) => {e.stopPropagation(); handleDelete();}}
+            className="p-2 rounded-md text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all hover:scale-110"
+            title="Delete question"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
@@ -166,18 +155,25 @@ const QuestionCard = ({ question }) => {
           {question.images && question.images.length > 0 && (
             <div>
               <h4 className="font-medium text-gray-900 dark:text-white mb-2 text-sm">Images</h4>
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {question.images.map((image, index) => (
                   <div
                     key={index}
-                    className="aspect-square rounded-md overflow-hidden cursor-pointer hover:scale-105 transition-all border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md"
+                    className="relative group cursor-pointer"
                     onClick={(e) => {e.stopPropagation(); handleImageClick(image.data);}}
                   >
-                    <img
-                      src={image.data}
-                      alt={image.name}
-                      className="w-full h-full object-cover"
-                    />
+                    <div className="aspect-video rounded-md overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all bg-gray-100 dark:bg-gray-800">
+                      <img
+                        src={image.data}
+                        alt={image.name}
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                      />
+                    </div>
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-md flex items-center justify-center">
+                      <div className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-black/50 px-2 py-1 rounded">
+                        Click to enlarge
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>

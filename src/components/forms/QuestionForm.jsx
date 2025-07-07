@@ -36,6 +36,7 @@ const QuestionForm = () => {
   const [dragActive, setDragActive] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('javascript');
   const dropRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Initialize form when editing
   useEffect(() => {
@@ -138,6 +139,32 @@ const QuestionForm = () => {
     }
   };
 
+  const handlePaste = (e) => {
+    const items = e.clipboardData?.items;
+    if (items) {
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const blob = items[i].getAsFile();
+          if (blob) {
+            const file = new File([blob], `pasted-image-${Date.now()}.png`, { type: blob.type });
+            setImages(prev => [...prev, file]);
+          }
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleGlobalPaste = (e) => {
+      if (isFormVisible && e.target.closest('[data-paste-area]')) {
+        handlePaste(e);
+      }
+    };
+    
+    document.addEventListener('paste', handleGlobalPaste);
+    return () => document.removeEventListener('paste', handleGlobalPaste);
+  }, [isFormVisible]);
+
   const removeImage = (index) => {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
@@ -172,14 +199,14 @@ const QuestionForm = () => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
-      <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-fade-in animate-scale-in">
-        <CardHeader className="sticky top-0 bg-white dark:bg-gray-900 z-10 border-b">
+      <Card className="w-full max-w-4xl max-h-[95vh] overflow-y-auto animate-fade-in animate-scale-in shadow-2xl" data-paste-area>
+        <CardHeader className="sticky top-0 bg-white dark:bg-gray-900 z-10 border-b border-border">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">
+            <CardTitle className="text-xl font-semibold text-foreground">
               {editingQuestion ? 'Edit Question' : 'Add New Question'}
             </CardTitle>
-            <Button variant="ghost" size="sm" onClick={handleCancel}>
-              <X className="h-4 w-4" />
+            <Button variant="ghost" size="sm" onClick={handleCancel} className="hover:bg-accent">
+              <X className="h-5 w-5" />
             </Button>
           </div>
         </CardHeader>
@@ -278,10 +305,10 @@ const QuestionForm = () => {
             <Label htmlFor="images">Images (Optional)</Label>
             <div 
               ref={dropRef}
-              className={`border-2 border-dashed rounded-lg p-4 transition-colors ${
+              className={`border-2 border-dashed rounded-lg p-6 transition-colors ${
                 dragActive 
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                  : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                  ? 'border-primary bg-primary/10' 
+                  : 'border-border hover:border-primary/50'
               }`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
@@ -289,34 +316,41 @@ const QuestionForm = () => {
               onDrop={handleDrop}
             >
               <div className="text-center">
-                <ImageIcon className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Drag & drop images here, or click to select
+                <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
+                <p className="text-sm text-muted-foreground mb-2">
+                  Drag & drop images here, paste with Ctrl+V, or click to select
+                </p>
+                <p className="text-xs text-muted-foreground/70 mb-3">
+                  Supports JPG, PNG, GIF, WebP formats
                 </p>
                 <Input
+                  ref={fileInputRef}
                   id="images"
                   type="file"
                   multiple
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="w-full"
+                  className="w-full max-w-xs mx-auto"
                 />
               </div>
             </div>
             {images.length > 0 && (
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-4">
                 {images.map((image, index) => (
                   <div key={index} className="relative group">
-                    <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-200 dark:border-gray-700">
+                    <div className="aspect-video rounded-lg overflow-hidden bg-muted border border-border">
                       {image.data ? (
                         <img 
                           src={image.data} 
                           alt={image.name} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform" 
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground p-1">
-                          {image.name?.substring(0, 8)}...
+                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground p-2">
+                          <div className="text-center">
+                            <ImageIcon className="h-6 w-6 mx-auto mb-1" />
+                            <div className="truncate">{image.name?.substring(0, 12) || 'Image'}...</div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -324,7 +358,7 @@ const QuestionForm = () => {
                       type="button"
                       variant="destructive"
                       size="sm"
-                      className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                       onClick={() => removeImage(index)}
                     >
                       <X className="h-3 w-3" />
@@ -335,7 +369,7 @@ const QuestionForm = () => {
             )}
           </div>
 
-          <div className="flex gap-3 pt-4 sticky bottom-0 bg-white dark:bg-gray-900 border-t -mx-6 px-6 py-4">
+          <div className="flex gap-3 pt-4 sticky bottom-0 bg-background border-t border-border -mx-6 px-6 py-4">
             <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">
               Cancel
             </Button>
