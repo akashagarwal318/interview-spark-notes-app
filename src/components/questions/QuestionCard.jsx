@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { 
   Star, 
   Bookmark, 
@@ -11,7 +11,7 @@ import {
   MoreVertical
 } from 'lucide-react';
 import { updateQuestion, deleteQuestion } from '../../store/slices/questionsSlice';
-import { setImageModal, setEditingQuestion } from '../../store/slices/uiSlice';
+import { setImageModal, setEditingQuestion, setExpandedQuestionId } from '../../store/slices/uiSlice';
 import CodeBlock from '../ui/CodeBlock';
 import { 
   DropdownMenu,
@@ -22,7 +22,8 @@ import {
 
 const QuestionCard = ({ question }) => {
   const dispatch = useDispatch();
-  const [expanded, setExpanded] = useState(false);
+  const { expandedQuestionId } = useSelector((state) => state.ui);
+  const expanded = expandedQuestionId === question.id;
 
   const handleToggle = (field) => {
     dispatch(updateQuestion({
@@ -50,7 +51,7 @@ const QuestionCard = ({ question }) => {
     if (e.target.closest('button') || e.target.closest('[role="button"]')) {
       return;
     }
-    setExpanded(!expanded);
+    dispatch(setExpandedQuestionId(expanded ? null : question.id));
   };
 
   const formatDate = (dateString) => {
@@ -69,15 +70,15 @@ const QuestionCard = ({ question }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mb-4 transition-all hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer"
+    <div className="bg-card border border-border rounded-lg mb-4 transition-all hover:shadow-md hover:border-primary/20 cursor-pointer"
          onClick={handleCardClick}>
       {/* Header */}
-      <div className="flex items-start justify-between p-4 border-b border-gray-100 dark:border-gray-700">
+      <div className="flex items-start justify-between p-4 border-b border-border">
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1 leading-snug hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+          <h3 className="text-lg font-medium text-card-foreground mb-1 leading-snug hover:text-primary transition-colors">
             {question.question}
           </h3>
-          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 space-x-4">
+          <div className="flex items-center text-sm text-muted-foreground space-x-4">
             <span className="capitalize">{question.round?.replace('-', ' ') || 'General'}</span>
             <span>{formatDate(question.createdAt)}</span>
           </div>
@@ -137,24 +138,24 @@ const QuestionCard = ({ question }) => {
 
       {/* Expanded Content */}
       {expanded && (
-        <div className="p-4 space-y-4 bg-gray-50 dark:bg-gray-900/50 animate-accordion-down">
+        <div className="p-4 space-y-4 bg-muted/50 animate-accordion-down">
           <div>
-            <h4 className="font-medium text-gray-900 dark:text-white mb-2 text-sm">Answer</h4>
-            <pre className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap font-sans">
+            <h4 className="font-medium text-card-foreground mb-2 text-sm">Answer</h4>
+            <pre className="text-card-foreground/80 text-sm leading-relaxed whitespace-pre-wrap font-sans">
               {question.answer}
             </pre>
           </div>
 
           {question.code && (
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2 text-sm">Code</h4>
+              <h4 className="font-medium text-card-foreground mb-2 text-sm">Code</h4>
               <CodeBlock code={question.code} />
             </div>
           )}
 
           {question.images && question.images.length > 0 && (
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2 text-sm">Images</h4>
+              <h4 className="font-medium text-card-foreground mb-2 text-sm">Images</h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {question.images.map((image, index) => (
                   <div
@@ -162,7 +163,7 @@ const QuestionCard = ({ question }) => {
                     className="relative group cursor-pointer"
                     onClick={(e) => {e.stopPropagation(); handleImageClick(image.data);}}
                   >
-                    <div className="aspect-video rounded-md overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all bg-gray-100 dark:bg-gray-800">
+                    <div className="aspect-video rounded-md overflow-hidden border border-border shadow-sm hover:shadow-md transition-all bg-muted">
                       <img
                         src={image.data}
                         alt={image.name}
@@ -182,12 +183,12 @@ const QuestionCard = ({ question }) => {
 
           {question.tags && question.tags.length > 0 && (
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2 text-sm">Tags</h4>
+              <h4 className="font-medium text-card-foreground mb-2 text-sm">Tags</h4>
               <div className="flex flex-wrap gap-1">
                 {question.tags.map((tag, index) => (
                   <span
                     key={index}
-                    className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded border border-blue-200 dark:border-blue-700"
+                    className="px-2 py-1 bg-primary/10 text-primary text-xs rounded border border-primary/20"
                   >
                     {tag}
                   </span>

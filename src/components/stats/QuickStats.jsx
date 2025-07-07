@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setFilters, resetFilters } from '../../store/slices/questionsSlice';
+import { collapseAllQuestions } from '../../store/slices/uiSlice';
 
 const QuickStats = () => {
   const dispatch = useDispatch();
@@ -14,6 +15,7 @@ const QuickStats = () => {
   };
 
   const handleStatClick = (filterType) => {
+    dispatch(collapseAllQuestions());
     if (filterType === 'total') {
       dispatch(resetFilters());
     } else {

@@ -199,13 +199,13 @@ const QuestionForm = () => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
-      <Card className="w-full max-w-4xl max-h-[95vh] overflow-y-auto animate-fade-in animate-scale-in shadow-2xl" data-paste-area>
-        <CardHeader className="sticky top-0 bg-white dark:bg-gray-900 z-10 border-b border-border">
+      <Card className="w-full max-w-3xl max-h-[85vh] overflow-y-auto animate-fade-in animate-scale-in shadow-2xl" data-paste-area>
+        <CardHeader className="sticky top-0 bg-card z-10 border-b border-border">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-semibold text-foreground">
               {editingQuestion ? 'Edit Question' : 'Add New Question'}
             </CardTitle>
-            <Button variant="ghost" size="sm" onClick={handleCancel} className="hover:bg-accent">
+            <Button variant="ghost" size="sm" onClick={handleCancel} className="hover:bg-accent hover:text-accent-foreground">
               <X className="h-5 w-5" />
             </Button>
           </div>

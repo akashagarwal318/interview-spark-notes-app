@@ -8,7 +8,8 @@ const initialState = {
   imageModal: {
     isOpen: false,
     imageSrc: ''
-  }
+  },
+  expandedQuestionId: null
 };
 
 const uiSlice = createSlice({
@@ -35,6 +36,12 @@ const uiSlice = createSlice({
     },
     setImageModal: (state, action) => {
       state.imageModal = action.payload;
+    },
+    setExpandedQuestionId: (state, action) => {
+      state.expandedQuestionId = action.payload;
+    },
+    collapseAllQuestions: (state) => {
+      state.expandedQuestionId = null;
     }
   }
 });
@@ -44,7 +51,9 @@ export const {
   toggleTheme,
   setFormVisible,
   setEditingQuestion,
-  setImageModal
+  setImageModal,
+  setExpandedQuestionId,
+  collapseAllQuestions
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

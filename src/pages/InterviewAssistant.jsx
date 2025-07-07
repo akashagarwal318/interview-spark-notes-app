@@ -44,17 +44,17 @@ const InterviewAssistant = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading questions...</p>
+          <p className="text-muted-foreground">Loading questions...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <Header />
       
       <div className="max-w-6xl mx-auto px-4 py-6">
@@ -63,10 +63,10 @@ const InterviewAssistant = () => {
 
         <div className="mb-8">
           {filteredItems.length === 0 ? (
-            <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="text-center py-12 bg-card rounded-lg border border-border">
               <div className="text-4xl mb-4">🔍</div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No questions found</h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <h3 className="text-lg font-medium text-card-foreground mb-2">No questions found</h3>
+              <p className="text-muted-foreground">
                 Try adjusting your search terms or add a new question to get started.
               </p>
             </div>
