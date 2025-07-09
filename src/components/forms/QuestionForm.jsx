@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { X, Upload, Code, ImageIcon } from 'lucide-react';
@@ -198,8 +197,8 @@ const QuestionForm = () => {
   const tags = formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(t => t) : [];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
-      <Card className="w-full max-w-3xl max-h-[85vh] overflow-y-auto animate-fade-in animate-scale-in shadow-2xl" data-paste-area>
+    <div className="fixed inset-0 z-50 bg-black/50 flex p-4 justify-center items-center overflow-y-auto">
+      <Card style={{ width: '100%', maxWidth: '75vw', height: '85vh' }} className="overflow-y-auto animate-fade-in animate-scale-in shadow-2xl" data-paste-area>
         <CardHeader className="sticky top-0 bg-card z-10 border-b border-border">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-semibold text-foreground">
