@@ -18,7 +18,12 @@ const SearchFilters = () => {
   const { currentRound, searchTerm, filters, items, selectedTags, filteredItems } = useSelector((state) => state.questions);
 
   // Get all unique tags from questions
-  const allTags = [...new Set(items.flatMap(q => q.tags || []))].filter(Boolean).sort();
+  const allTags = [...new Map(
+    items.flatMap(q => q.tags || [])
+      .filter(Boolean)
+      .map(tag => typeof tag === 'string' ? { _id: tag, name: tag, color: '#6B7280' } : tag)
+      .map(tag => [tag._id, tag])
+  ).values()].sort((a, b) => a.name.localeCompare(b.name));
 
   const handleSearchChange = (e) => {
     dispatch(setSearchTerm(e.target.value));
@@ -33,9 +38,10 @@ const SearchFilters = () => {
   };
 
   const handleTagToggle = (tag) => {
-    const newSelectedTags = selectedTags.includes(tag)
-      ? selectedTags.filter(t => t !== tag)
-      : [...selectedTags, tag];
+    const tagId = typeof tag === 'string' ? tag : tag._id;
+    const newSelectedTags = selectedTags.includes(tagId)
+      ? selectedTags.filter(t => t !== tagId)
+      : [...selectedTags, tagId];
     dispatch(setSelectedTags(newSelectedTags));
   };
 
@@ -164,15 +170,19 @@ const SearchFilters = () => {
           </button>
           {allTags.map(tag => (
             <button
-              key={tag}
+              key={tag._id}
               onClick={() => handleTagToggle(tag)}
+              style={{ 
+                backgroundColor: selectedTags.includes(tag._id) ? tag.color : undefined,
+                color: selectedTags.includes(tag._id) ? 'white' : undefined 
+              }}
               className={`px-3 py-1 rounded-full text-xs transition-colors ${
-                selectedTags.includes(tag)
-                  ? 'bg-blue-600 text-white'
+                selectedTags.includes(tag._id)
+                  ? 'text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
-              {tag}
+              {tag.name}
             </button>
           ))}
         </div>

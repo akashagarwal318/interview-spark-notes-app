@@ -10,7 +10,7 @@ import {
   Trash2, 
   MoreVertical
 } from 'lucide-react';
-import { updateQuestion, deleteQuestion } from '../../store/slices/questionsSlice';
+import { updateQuestionAsync, deleteQuestionAsync } from '../../store/slices/questionsSlice';
 import { setImageModal, setEditingQuestion, setExpandedQuestionId } from '../../store/slices/uiSlice';
 import CodeBlock from '../ui/CodeBlock';
 import { 
@@ -26,7 +26,7 @@ const QuestionCard = ({ question }) => {
   const expanded = expandedQuestionId === question.id;
 
   const handleToggle = (field) => {
-    dispatch(updateQuestion({
+    dispatch(updateQuestionAsync({
       id: question.id,
       [field]: !question[field]
     }));
@@ -34,7 +34,7 @@ const QuestionCard = ({ question }) => {
 
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this question?')) {
-      dispatch(deleteQuestion(question.id));
+      dispatch(deleteQuestionAsync(question.id));
     }
   };
 
@@ -185,12 +185,13 @@ const QuestionCard = ({ question }) => {
             <div>
               <h4 className="font-medium text-card-foreground mb-2 text-sm">Tags</h4>
               <div className="flex flex-wrap gap-1">
-                {question.tags.map((tag, index) => (
+                {question.tags.map((tag) => (
                   <span
-                    key={index}
+                    key={tag._id || tag.name || tag}
                     className="px-2 py-1 bg-primary/10 text-primary text-xs rounded border border-primary/20"
+                    style={tag.color ? { backgroundColor: `${tag.color}20`, borderColor: `${tag.color}40`, color: tag.color } : {}}
                   >
-                    {tag}
+                    {tag.name || tag}
                   </span>
                 ))}
               </div>

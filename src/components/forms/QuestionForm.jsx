@@ -15,7 +15,7 @@ import {
   SelectValue 
 } from '../ui/select';
 import AdvancedCodeEditor from '../ui/AdvancedCodeEditor';
-import { addQuestion, updateQuestion } from '../../store/slices/questionsSlice';
+import { createQuestionAsync, updateQuestionAsync } from '../../store/slices/questionsSlice';
 import { setFormVisible } from '../../store/slices/uiSlice';
 
 const QuestionForm = () => {
@@ -86,9 +86,9 @@ const QuestionForm = () => {
     };
 
     if (editingQuestion) {
-      dispatch(updateQuestion({ ...questionData, id: editingQuestion.id }));
+      dispatch(updateQuestionAsync({ ...questionData, id: editingQuestion.id }));
     } else {
-      dispatch(addQuestion(questionData));
+      dispatch(createQuestionAsync(questionData));
     }
     
     dispatch(setFormVisible(false));

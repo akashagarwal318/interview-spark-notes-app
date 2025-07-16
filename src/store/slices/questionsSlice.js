@@ -1,13 +1,81 @@
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import QuestionService from '../../services/questionService.js';
 
-import { createSlice } from '@reduxjs/toolkit';
+// Async thunks for API calls
+export const fetchQuestions = createAsyncThunk(
+  'questions/fetchQuestions',
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const data = await QuestionService.getQuestions(params);
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const createQuestionAsync = createAsyncThunk(
+  'questions/createQuestion',
+  async (questionData, { rejectWithValue }) => {
+    try {
+      const question = await QuestionService.createQuestion(questionData);
+      return question;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const updateQuestionAsync = createAsyncThunk(
+  'questions/updateQuestion',
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const question = await QuestionService.updateQuestion(id, data);
+      return question;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const deleteQuestionAsync = createAsyncThunk(
+  'questions/deleteQuestion',
+  async (id, { rejectWithValue }) => {
+    try {
+      await QuestionService.deleteQuestion(id);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const toggleQuestionStatusAsync = createAsyncThunk(
+  'questions/toggleQuestionStatus',
+  async ({ id, field }, { rejectWithValue }) => {
+    try {
+      const question = await QuestionService.toggleQuestionStatus(id, field);
+      return question;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
 
 const initialState = {
   items: [],
   filteredItems: [],
+  pagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalQuestions: 0,
+    hasNext: false,
+    hasPrev: false
+  },
   loading: false,
+  error: null,
   currentRound: 'all',
   searchTerm: '',
-  currentPage: 1,
   questionsPerPage: 10,
   sortBy: 'newest',
   filters: {
@@ -15,86 +83,41 @@ const initialState = {
     review: false,
     hot: false
   },
-  selectedTags: []
+  selectedTags: [],
+  lastFetch: null,
+  isOnline: navigator.onLine
 };
 
 const questionsSlice = createSlice({
   name: 'questions',
   initialState,
   reducers: {
-    loadQuestions: (state) => {
-      state.loading = true;
-      try {
-        const saved = localStorage.getItem('interviewQuestions');
-        if (saved) {
-          state.items = JSON.parse(saved);
-        }
-        state.filteredItems = state.items;
-      } catch (error) {
-        console.error('Error loading questions:', error);
-      }
-      state.loading = false;
-    },
-    saveQuestions: (state, action) => {
-      try {
-        localStorage.setItem('interviewQuestions', JSON.stringify(action.payload));
-      } catch (error) {
-        console.error('Error saving questions:', error);
-      }
-    },
-    addQuestion: (state, action) => {
-      const newQuestion = {
-        id: Date.now().toString(),
-        ...action.payload,
-        createdAt: new Date().toISOString(),
-        favorite: false,
-        review: false,
-        hot: false
-      };
-      state.items.unshift(newQuestion);
-      questionsSlice.caseReducers.applyFilters(state);
-    },
-    updateQuestion: (state, action) => {
-      const index = state.items.findIndex(q => q.id === action.payload.id);
-      if (index !== -1) {
-        state.items[index] = { ...state.items[index], ...action.payload };
-        questionsSlice.caseReducers.applyFilters(state);
-      }
-    },
-    deleteQuestion: (state, action) => {
-      state.items = state.items.filter(q => q.id !== action.payload);
-      questionsSlice.caseReducers.applyFilters(state);
-    },
+    // Local state management reducers
     setCurrentRound: (state, action) => {
       state.currentRound = action.payload;
-      state.currentPage = 1;
-      questionsSlice.caseReducers.applyFilters(state);
+      state.pagination.currentPage = 1;
     },
     setSearchTerm: (state, action) => {
       state.searchTerm = action.payload;
-      state.currentPage = 1;
-      questionsSlice.caseReducers.applyFilters(state);
+      state.pagination.currentPage = 1;
     },
     setCurrentPage: (state, action) => {
-      state.currentPage = action.payload;
+      state.pagination.currentPage = action.payload;
     },
     setQuestionsPerPage: (state, action) => {
       state.questionsPerPage = action.payload;
-      state.currentPage = 1;
+      state.pagination.currentPage = 1;
     },
     setSortBy: (state, action) => {
       state.sortBy = action.payload;
-      questionsSlice.caseReducers.applyFilters(state);
     },
     setFilters: (state, action) => {
       state.filters = { ...state.filters, ...action.payload };
-      state.currentPage = 1;
-      questionsSlice.caseReducers.applyFilters(state);
+      state.pagination.currentPage = 1;
     },
     setSelectedTags: (state, action) => {
       state.selectedTags = action.payload;
-      state.currentPage = 1;
-      questionsSlice.caseReducers.applyFilters(state);
+      state.pagination.currentPage = 1;
     },
     resetFilters: (state) => {
       state.currentRound = 'all';
@@ -105,70 +128,142 @@ const questionsSlice = createSlice({
         hot: false
       };
       state.selectedTags = [];
-      state.currentPage = 1;
-      questionsSlice.caseReducers.applyFilters(state);
+      state.pagination.currentPage = 1;
     },
-    applyFilters: (state) => {
-      let filtered = [...state.items];
-      
-      // Round filter
-      if (state.currentRound !== 'all') {
-        filtered = filtered.filter(q => q.round === state.currentRound);
+    setOnlineStatus: (state, action) => {
+      state.isOnline = action.payload;
+    },
+    clearError: (state) => {
+      state.error = null;
+    },
+    // Local question management (for offline support)
+    addQuestionLocal: (state, action) => {
+      const newQuestion = {
+        id: `temp_${Date.now()}`,
+        ...action.payload,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        favorite: false,
+        review: false,
+        hot: false,
+        isLocal: true // Mark as local until synced
+      };
+      state.items.unshift(newQuestion);
+      state.pagination.totalQuestions += 1;
+    },
+    updateQuestionLocal: (state, action) => {
+      const index = state.items.findIndex(q => q.id === action.payload.id || q._id === action.payload.id);
+      if (index !== -1) {
+        state.items[index] = { 
+          ...state.items[index], 
+          ...action.payload,
+          updatedAt: new Date().toISOString()
+        };
       }
-      
-      // Search filter
-      if (state.searchTerm) {
-        const term = state.searchTerm.toLowerCase();
-        filtered = filtered.filter(q => 
-          q.question.toLowerCase().includes(term) ||
-          q.answer.toLowerCase().includes(term) ||
-          q.tags.some(tag => tag.toLowerCase().includes(term))
-        );
-      }
-      
-      // Tag filters
-      if (state.selectedTags.length > 0) {
-        filtered = filtered.filter(q => 
-          state.selectedTags.some(tag => q.tags.includes(tag))
-        );
-      }
-      
-      // Status filters
-      if (state.filters.favorite) {
-        filtered = filtered.filter(q => q.favorite);
-      }
-      if (state.filters.review) {
-        filtered = filtered.filter(q => q.review);
-      }
-      if (state.filters.hot) {
-        filtered = filtered.filter(q => q.hot);
-      }
-      
-      // Sort
-      filtered.sort((a, b) => {
-        switch (state.sortBy) {
-          case 'newest':
-            return new Date(b.createdAt) - new Date(a.createdAt);
-          case 'oldest':
-            return new Date(a.createdAt) - new Date(b.createdAt);
-          case 'alphabetical':
-            return a.question.localeCompare(b.question);
-          default:
-            return 0;
-        }
-      });
-      
-      state.filteredItems = filtered;
+    },
+    deleteQuestionLocal: (state, action) => {
+      const id = action.payload;
+      state.items = state.items.filter(q => q.id !== id && q._id !== id);
+      state.pagination.totalQuestions = Math.max(0, state.pagination.totalQuestions - 1);
     }
+  },
+  extraReducers: (builder) => {
+    // Fetch questions
+    builder
+      .addCase(fetchQuestions.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchQuestions.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload.questions || [];
+        state.pagination = action.payload.pagination || state.pagination;
+        state.lastFetch = new Date().toISOString();
+        state.error = null;
+      })
+      .addCase(fetchQuestions.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+    // Create question
+    builder
+      .addCase(createQuestionAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createQuestionAsync.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items.unshift(action.payload);
+        state.pagination.totalQuestions += 1;
+        state.error = null;
+      })
+      .addCase(createQuestionAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+    // Update question
+    builder
+      .addCase(updateQuestionAsync.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(updateQuestionAsync.fulfilled, (state, action) => {
+        const index = state.items.findIndex(q => 
+          q.id === action.payload.id || 
+          q._id === action.payload._id || 
+          q._id === action.payload.id
+        );
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+        state.error = null;
+      })
+      .addCase(updateQuestionAsync.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+
+    // Delete question
+    builder
+      .addCase(deleteQuestionAsync.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(deleteQuestionAsync.fulfilled, (state, action) => {
+        const id = action.payload;
+        state.items = state.items.filter(q => 
+          q.id !== id && 
+          q._id !== id
+        );
+        state.pagination.totalQuestions = Math.max(0, state.pagination.totalQuestions - 1);
+        state.error = null;
+      })
+      .addCase(deleteQuestionAsync.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+
+    // Toggle question status
+    builder
+      .addCase(toggleQuestionStatusAsync.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(toggleQuestionStatusAsync.fulfilled, (state, action) => {
+        const index = state.items.findIndex(q => 
+          q.id === action.payload.id || 
+          q._id === action.payload._id || 
+          q._id === action.payload.id
+        );
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+        state.error = null;
+      })
+      .addCase(toggleQuestionStatusAsync.rejected, (state, action) => {
+        state.error = action.payload;
+      });
   }
 });
 
 export const {
-  loadQuestions,
-  saveQuestions,
-  addQuestion,
-  updateQuestion,
-  deleteQuestion,
   setCurrentRound,
   setSearchTerm,
   setCurrentPage,
@@ -177,7 +272,11 @@ export const {
   setFilters,
   setSelectedTags,
   resetFilters,
-  applyFilters
+  setOnlineStatus,
+  clearError,
+  addQuestionLocal,
+  updateQuestionLocal,
+  deleteQuestionLocal
 } = questionsSlice.actions;
 
 export default questionsSlice.reducer;
