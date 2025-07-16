@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { store } from './store/index.ts';
+import { store } from './store/index.js';
 import InterviewAssistant from './pages/InterviewAssistant.jsx';
 
 const AppContent = () => {
