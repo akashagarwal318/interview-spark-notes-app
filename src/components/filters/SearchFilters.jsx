@@ -21,8 +21,13 @@ const SearchFilters = () => {
   const allTags = [...new Map(
     items.flatMap(q => q.tags || [])
       .filter(Boolean)
-      .map(tag => typeof tag === 'string' ? { _id: tag, name: tag, color: '#6B7280' } : tag)
-      .map(tag => [tag._id, tag])
+      .map(tag => {
+        if (typeof tag === 'string') {
+          return { _id: tag, name: tag, color: '#6B7280' };
+        }
+        return tag;
+      })
+      .map(tag => [tag._id || tag.id, tag])
   ).values()].sort((a, b) => a.name.localeCompare(b.name));
 
   const handleSearchChange = (e) => {
@@ -38,7 +43,7 @@ const SearchFilters = () => {
   };
 
   const handleTagToggle = (tag) => {
-    const tagId = typeof tag === 'string' ? tag : tag._id;
+    const tagId = typeof tag === 'string' ? tag : (tag._id || tag.id);
     const newSelectedTags = selectedTags.includes(tagId)
       ? selectedTags.filter(t => t !== tagId)
       : [...selectedTags, tagId];
@@ -70,6 +75,7 @@ const SearchFilters = () => {
       {/* Search and Export Row */}
       <div className="flex gap-4">
         <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             type="text"
             placeholder="Search questions..."
@@ -168,23 +174,27 @@ const SearchFilters = () => {
           >
             All Tags
           </button>
-          {allTags.map(tag => (
-            <button
-              key={tag._id}
-              onClick={() => handleTagToggle(tag)}
-              style={{ 
-                backgroundColor: selectedTags.includes(tag._id) ? tag.color : undefined,
-                color: selectedTags.includes(tag._id) ? 'white' : undefined 
-              }}
-              className={`px-3 py-1 rounded-full text-xs transition-colors ${
-                selectedTags.includes(tag._id)
-                  ? 'text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-            >
-              {tag.name}
-            </button>
-          ))}
+          {allTags.map(tag => {
+            const tagId = tag._id || tag.id;
+            const isSelected = selectedTags.includes(tagId);
+            return (
+              <button
+                key={tagId}
+                onClick={() => handleTagToggle(tag)}
+                style={{ 
+                  backgroundColor: isSelected ? tag.color : undefined,
+                  color: isSelected ? 'white' : undefined 
+                }}
+                className={`px-3 py-1 rounded-full text-xs transition-colors ${
+                  isSelected
+                    ? 'text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                {tag.name}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

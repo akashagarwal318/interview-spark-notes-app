@@ -26,8 +26,9 @@ const QuestionCard = ({ question }) => {
   const expanded = expandedQuestionId === (question._id || question.id);
 
   const handleToggle = (field) => {
+    const questionId = question._id || question.id;
     dispatch(updateQuestionAsync({
-      id: question._id || question.id,
+      id: questionId,
       data: { [field]: !question[field] }
     }));
   };
@@ -185,15 +186,20 @@ const QuestionCard = ({ question }) => {
             <div>
               <h4 className="font-medium text-card-foreground mb-2 text-sm">Tags</h4>
               <div className="flex flex-wrap gap-1">
-                {question.tags.map((tag) => (
-                  <span
-                    key={tag._id || tag.name || tag}
-                    className="px-2 py-1 bg-primary/10 text-primary text-xs rounded border border-primary/20"
-                    style={tag.color ? { backgroundColor: `${tag.color}20`, borderColor: `${tag.color}40`, color: tag.color } : {}}
-                  >
-                    {tag.name || tag}
-                  </span>
-                ))}
+                {question.tags.map((tag) => {
+                  const tagId = tag._id || tag.id || tag;
+                  const tagName = tag.name || tag;
+                  const tagColor = tag.color;
+                  return (
+                    <span
+                      key={tagId}
+                      className="px-2 py-1 bg-primary/10 text-primary text-xs rounded border border-primary/20"
+                      style={tagColor ? { backgroundColor: `${tagColor}20`, borderColor: `${tagColor}40`, color: tagColor } : {}}
+                    >
+                      {tagName}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}
