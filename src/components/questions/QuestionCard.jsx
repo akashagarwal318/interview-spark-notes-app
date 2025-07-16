@@ -23,18 +23,18 @@ import {
 const QuestionCard = ({ question }) => {
   const dispatch = useDispatch();
   const { expandedQuestionId } = useSelector((state) => state.ui);
-  const expanded = expandedQuestionId === question.id;
+  const expanded = expandedQuestionId === (question._id || question.id);
 
   const handleToggle = (field) => {
     dispatch(updateQuestionAsync({
-      id: question.id,
-      [field]: !question[field]
+      id: question._id || question.id,
+      data: { [field]: !question[field] }
     }));
   };
 
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this question?')) {
-      dispatch(deleteQuestionAsync(question.id));
+      dispatch(deleteQuestionAsync(question._id || question.id));
     }
   };
 
@@ -51,7 +51,7 @@ const QuestionCard = ({ question }) => {
     if (e.target.closest('button') || e.target.closest('[role="button"]')) {
       return;
     }
-    dispatch(setExpandedQuestionId(expanded ? null : question.id));
+    dispatch(setExpandedQuestionId(expanded ? null : (question._id || question.id)));
   };
 
   const formatDate = (dateString) => {
