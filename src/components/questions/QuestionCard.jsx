@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   Star, 
@@ -93,8 +93,12 @@ const QuestionCard = ({ question }) => {
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg mb-4 transition-all hover:shadow-md hover:border-primary/20 cursor-pointer"
-         onClick={handleCardClick}>
+    <div
+      className="bg-card border border-border rounded-lg mb-4 transition-all hover:shadow-md hover:border-primary/20 cursor-pointer"
+      onClick={handleCardClick}
+      data-question-card
+      data-expanded={expanded ? 'true' : 'false'}
+    >
       {/* Header */}
       <div className="flex items-start justify-between p-4 border-b border-border">
         <div className="flex-1 min-w-0">
@@ -182,6 +186,7 @@ const QuestionCard = ({ question }) => {
               <h4 className="font-medium text-card-foreground mb-2 text-sm">Code</h4>
               <CodeBlock 
                 code={question.code} 
+                language={question.codeLanguage || 'javascript'}
                 isMatch={lowerSearch && (searchScope === 'all' || searchScope === 'code') && question.code.toLowerCase().includes(lowerSearch)}
               />
             </div>
@@ -202,6 +207,8 @@ const QuestionCard = ({ question }) => {
                       <img
                         src={image.data}
                         alt={image.name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                       />
                     </div>

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Copy, Check, Download, Upload, Code, Maximize2, Minimize2 } from 'lucide-react';
+import ReactDOM from 'react-dom';
+import { Copy, Check, Download, Upload, Code, Maximize2, Minimize2, X } from 'lucide-react';
 import { Button } from './button';
 import { 
   Select, 
@@ -221,25 +222,51 @@ const AdvancedCodeEditor = ({
     return html;
   };
 
-  // Scroll lock for fullscreen
+  // Scroll lock for fullscreen portal
   useEffect(() => {
-    if (isFullscreen) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = prev; };
-    }
+    if (!isFullscreen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
   }, [isFullscreen]);
 
-  return (
-    <div
-      className={`relative bg-muted rounded-lg border border-border flex flex-col ${
-        isFullscreen
-          ? 'fixed inset-0 z-50 p-4 md:p-6 bg-background/95 backdrop-blur'
-          : ''
-      }`}
-      style={!isFullscreen ? { maxHeight, overflow: 'hidden' } : {}}
-    >
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-card/80 backdrop-blur rounded-t-lg sticky top-0 z-10">
+  const FullscreenPortal = ({ children }) => {
+    const elRef = useRef(null);
+    if (!elRef.current) {
+      elRef.current = document.createElement('div');
+    }
+    useEffect(() => {
+      const el = elRef.current;
+      document.body.appendChild(el);
+      return () => { document.body.removeChild(el); };
+    }, []);
+    return ReactDOM.createPortal(children, elRef.current);
+  };
+
+  const CodeView = ({ fs }) => {
+    const displayCode = code.endsWith('\n') ? code : code + '\n';
+    const lines = displayCode.split('\n');
+    return (
+      <div className={`flex ${fs ? 'min-h-0' : ''}`}>        
+        <div className="flex flex-col text-xs text-gray-400 pr-2 select-none flex-shrink-0">
+          {lines.map((_, index) => (
+            <div key={index} className="leading-5 text-right min-w-[2.25rem] px-1">
+              {index + 1}
+            </div>
+          ))}
+        </div>
+        <pre className="text-sm font-mono flex-1 overflow-x-auto pb-6">
+          <code
+            dangerouslySetInnerHTML={{ __html: highlightSyntax(displayCode) }}
+            className="leading-5"
+          />
+        </pre>
+      </div>
+    );
+  };
+
+  const baseHeader = (
+    <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-card/80 backdrop-blur rounded-t-lg sticky top-0 z-10">
         <div className="flex items-center gap-2">
           <Code className="h-5 w-5 text-muted-foreground" />
           <Select value={currentLanguage} onValueChange={handleLanguageChange} disabled={readOnly}>
@@ -306,35 +333,23 @@ const AdvancedCodeEditor = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setIsFullscreen(!isFullscreen)}
+            onClick={() => setIsFullscreen(true)}
             className="h-8 w-8 p-0"
-            title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+            title="Fullscreen"
           >
-            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            <Maximize2 className="h-4 w-4" />
           </Button>
         </div>
-      </div>
-      
-      <div className="relative flex-1 overflow-hidden">
+    </div>
+  );
+
+  return (
+    <>
+      <div className="relative bg-muted rounded-lg border border-border flex flex-col" style={{ maxHeight }}>
+        {baseHeader}
         {readOnly ? (
-          <div className={`p-3 overflow-auto ${isFullscreen ? 'h-[calc(100vh-6rem)]' : 'h-full'}`}>
-            <div className="flex">
-              <div className="flex flex-col text-xs text-gray-400 pr-2 select-none">
-                {code.split('\n').map((_, index) => (
-                  <div key={index} className="leading-5 text-right min-w-[2rem]">
-                    {index + 1}
-                  </div>
-                ))}
-              </div>
-              <pre className="text-sm font-mono flex-1 overflow-x-auto">
-                <code 
-                  dangerouslySetInnerHTML={{ 
-                    __html: highlightSyntax(code) 
-                  }}
-                  className="leading-5"
-                />
-              </pre>
-            </div>
+          <div className="p-3 overflow-auto" style={{ maxHeight: `calc(${maxHeight} - 44px)` }}>
+            <CodeView />
           </div>
         ) : (
           <textarea
@@ -344,15 +359,63 @@ const AdvancedCodeEditor = ({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             className="w-full h-full p-3 bg-transparent border-none outline-none resize-none font-mono text-sm leading-relaxed text-foreground placeholder:text-muted-foreground"
-            style={{ 
-              minHeight: isFullscreen ? 'calc(100vh - 120px)' : '200px',
-              tabSize: 2
-            }}
+            style={{ minHeight: '200px', tabSize: 2 }}
             spellCheck={false}
           />
         )}
       </div>
-    </div>
+      {isFullscreen && (
+        <FullscreenPortal>
+          <div className="fixed inset-0 z-[100] bg-black/70 flex items-start md:items-center justify-center p-4 overflow-y-auto" data-code-fullscreen>
+            <div className="bg-background rounded-lg shadow-2xl w-full max-w-6xl flex flex-col max-h-[90vh]">
+              <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card rounded-t-lg sticky top-0 z-10">
+                <div className="flex items-center gap-2">
+                  <Code className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm font-medium">Code Viewer</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Select value={currentLanguage} onValueChange={handleLanguageChange} disabled={readOnly}>
+                    <SelectTrigger className="h-8 w-40 text-sm">
+                      <SelectValue>{languages.find(l => l.value === currentLanguage)?.label || 'JavaScript'}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {languages.map((lang) => (
+                        <SelectItem key={lang.value} value={lang.value}>
+                          {lang.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button variant="ghost" size="icon" onClick={handleDownload} className="h-8 w-8 p-0" title="Download">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={handleCopy} className="h-8 w-8 p-0" title="Copy">
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => setIsFullscreen(false)} className="h-8 w-8 p-0" title="Close">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="p-4 overflow-auto flex-1">
+                {readOnly ? <CodeView fs /> : (
+                  <textarea
+                    ref={textareaRef}
+                    value={code}
+                    onChange={onChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder={placeholder}
+                    className="w-full h-full p-3 bg-muted border border-border rounded-md resize-none font-mono text-sm leading-relaxed text-foreground"
+                    style={{ minHeight: '60vh', tabSize: 2 }}
+                    spellCheck={false}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </FullscreenPortal>
+      )}
+    </>
   );
 };
 

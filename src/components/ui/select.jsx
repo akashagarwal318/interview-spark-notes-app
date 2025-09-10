@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 export const Select = ({ children, value, onValueChange, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState(value);
+  const rootRef = useRef(null);
 
   const handleSelect = (newValue) => {
     setSelectedValue(newValue);
@@ -10,8 +11,32 @@ export const Select = ({ children, value, onValueChange, disabled }) => {
     setIsOpen(false);
   };
 
+  // Close on outside click
+  useEffect(() => {
+    const onDocMouseDown = (e) => {
+      if (!rootRef.current) return;
+      if (!rootRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    const onDocKey = (e) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('mousedown', onDocMouseDown);
+    document.addEventListener('keydown', onDocKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocMouseDown);
+      document.removeEventListener('keydown', onDocKey);
+    };
+  }, []);
+
+  // keep internal selectedValue in sync when parent updates value
+  useEffect(() => {
+    setSelectedValue(value);
+  }, [value]);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={rootRef}>
       {React.Children.map(children, child => 
         React.cloneElement(child, { 
           isOpen, 

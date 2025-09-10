@@ -247,6 +247,7 @@ const questionsSlice = createSlice({
       .addCase(createQuestionAsync.fulfilled, (state, action) => {
         state.loading = false;
         state.items.unshift(action.payload);
+  state.items = [...state.items]; // force reference change for selectors
         state.pagination.totalQuestions += 1;
         // auto-register round if new
         if (action.payload?.round && !state.rounds.includes(action.payload.round)) {
@@ -272,6 +273,7 @@ const questionsSlice = createSlice({
         );
         if (index !== -1) {
           state.items[index] = action.payload;
+          state.items = [...state.items]; // force reference change
         }
         if (action.payload?.round && !state.rounds.includes(action.payload.round)) {
           state.rounds.push(action.payload.round);
@@ -311,6 +313,7 @@ const questionsSlice = createSlice({
           const idx = state.items.findIndex(q => q.id === optimisticId || q._id === optimisticId);
           if (idx !== -1) {
             state.items[idx] = { ...state.items[idx], [field]: !state.items[idx][field] };
+            state.items = [...state.items];
           }
         }
         state.error = null;
@@ -323,6 +326,7 @@ const questionsSlice = createSlice({
         );
         if (index !== -1) {
           state.items[index] = action.payload;
+          state.items = [...state.items];
         }
         state.error = null;
       })

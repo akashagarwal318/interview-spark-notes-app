@@ -265,18 +265,18 @@ const SearchFilters = () => {
       <div key={r} className="relative group">
         <button
           onClick={() => handleRoundChange(r)}
-          className={`pl-3 pr-2 py-1 rounded-full text-sm flex items-center gap-2 transition-colors ${
+          className={`pl-3 pr-2 py-1 rounded-full text-sm flex items-center transition-all ${
             currentRound === r
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
           }`}
         >
-          <span>{r.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')}</span>
+          <span className="mr-2">{r.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')}</span>
           <span className={`text-xs px-2 py-0.5 rounded-full ${currentRound === r ? 'bg-white/20' : 'bg-black/10 dark:bg-white/10'}`}>{count}</span>
           {!isProtected && (
             <span
               onClick={(e) => { e.stopPropagation(); if (confirm('Delete this round? Questions will be moved to technical.')) dispatch(deleteRoundAsync(r)); }}
-              className="ml-1 text-xs opacity-0 group-hover:opacity-100 cursor-pointer hover:text-red-500"
+              className="overflow-hidden w-0 group-hover:w-4 group-hover:ml-1 opacity-0 group-hover:opacity-100 cursor-pointer hover:text-red-500 transition-all duration-200 flex justify-center text-xs"
               title="Delete round"
             >✕</span>
           )}

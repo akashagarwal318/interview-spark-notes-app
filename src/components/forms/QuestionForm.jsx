@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { X, Upload, Code, ImageIcon } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -14,7 +14,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '../ui/select';
-import AdvancedCodeEditor from '../ui/AdvancedCodeEditor';
+const AdvancedCodeEditor = lazy(() => import('../ui/AdvancedCodeEditor'));
 import { createQuestionAsync, updateQuestionAsync, createRoundAsync } from '../../store/slices/questionsSlice';
 import { setFormVisible } from '../../store/slices/uiSlice';
 
@@ -29,7 +29,8 @@ const QuestionForm = () => {
     question: '',
     answer: '',
     code: '',
-    tags: []
+  tags: [],
+  codeLanguage: 'javascript'
   });
   const [images, setImages] = useState([]);
   const [tagInput, setTagInput] = useState('');
@@ -46,9 +47,11 @@ const QuestionForm = () => {
         question: editingQuestion.question || '',
         answer: editingQuestion.answer || '',
         code: editingQuestion.code || '',
-        tags: Array.isArray(editingQuestion.tags) ? editingQuestion.tags : []
+  tags: Array.isArray(editingQuestion.tags) ? editingQuestion.tags : [],
+  codeLanguage: editingQuestion.codeLanguage || 'javascript'
       });
-      setImages(Array.isArray(editingQuestion.images) ? editingQuestion.images : []);
+  setImages(Array.isArray(editingQuestion.images) ? editingQuestion.images : []);
+  setSelectedLanguage(editingQuestion.codeLanguage || 'javascript');
     } else {
       resetForm();
     }
@@ -74,14 +77,24 @@ const QuestionForm = () => {
     // Process images to base64
     const processedImages = await Promise.all(
       images.map(file => {
-        if (file.data) return Promise.resolve(file);
+        // If already processed (has data AND maybe mimeType) keep but ensure mimeType exists
+        if (file.data) {
+          if (!file.mimeType) {
+            const match = file.data.match(/^data:(image\/[^;]+);base64,/);
+            return Promise.resolve({ ...file, mimeType: match?.[1] || 'image/png' });
+          }
+          return Promise.resolve(file);
+        }
         return new Promise((resolve) => {
           const reader = new FileReader();
           reader.onload = (ev) => {
+            const dataUrl = ev.target?.result;
+            const match = typeof dataUrl === 'string' ? dataUrl.match(/^data:(image\/[^;]+);base64,/) : null;
             resolve({
               name: file.name,
-              data: ev.target?.result,
-              size: file.size
+              data: dataUrl,
+              size: file.size,
+              mimeType: match?.[1] || file.type || 'image/png'
             });
           };
           reader.readAsDataURL(file);
@@ -94,6 +107,7 @@ const QuestionForm = () => {
       question: formData.question.trim(),
       answer: formData.answer.trim(),
       code: formData.code,
+      codeLanguage: formData.codeLanguage,
       tags: tagsArr,
       images: processedImages,
       createdAt: editingQuestion?.createdAt || new Date().toISOString()
@@ -120,7 +134,8 @@ const QuestionForm = () => {
       question: '',
       answer: '',
       code: '',
-      tags: []
+  tags: [],
+  codeLanguage: 'javascript'
     });
     setImages([]);
     setTagInput('');
@@ -331,13 +346,15 @@ const QuestionForm = () => {
 
           <div className="space-y-2">
             <Label htmlFor="code">Code Snippet (Optional)</Label>
-            <AdvancedCodeEditor
-              code={formData.code}
-              onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
-              language={selectedLanguage}
-              onLanguageChange={setSelectedLanguage}
-              placeholder="// Your code here..."
-            />
+            <Suspense fallback={<div className="text-xs text-muted-foreground">Loading editor...</div>}>
+              <AdvancedCodeEditor
+                code={formData.code}
+                onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
+                language={selectedLanguage || formData.codeLanguage}
+                onLanguageChange={(lang) => { setSelectedLanguage(lang); setFormData(prev => ({ ...prev, codeLanguage: lang })); }}
+                placeholder="// Your code here..."
+              />
+            </Suspense>
           </div>
 
           <div className="space-y-2">
