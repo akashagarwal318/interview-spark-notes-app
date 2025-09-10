@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, Suspense, lazy } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   fetchQuestions, 
@@ -8,15 +8,15 @@ import {
   setCurrentPage,
   selectFilteredQuestions
 } from '../store/slices/questionsSlice.js';
-import { setTheme } from '../store/slices/uiSlice.js';
+import { setTheme, collapseAllQuestions } from '../store/slices/uiSlice.js';
 import { useDebounce } from '../hooks/useDebounce.js';
 import Header from '../components/layout/Header.jsx';
-import QuickStats from '../components/stats/QuickStats.jsx';
-import SearchFilters from '../components/filters/SearchFilters.jsx';
-import QuestionForm from '../components/forms/QuestionForm.jsx';
-import QuestionCard from '../components/questions/QuestionCard.jsx';
-import ImageModal from '../components/modals/ImageModal.jsx';
-import PaginationControls from '../components/pagination/PaginationControls.jsx';
+const QuickStats = lazy(() => import('../components/stats/QuickStats.jsx'));
+const SearchFilters = lazy(() => import('../components/filters/SearchFilters.jsx'));
+const QuestionForm = lazy(() => import('../components/forms/QuestionForm.jsx'));
+const QuestionCard = lazy(() => import('../components/questions/QuestionCard.jsx'));
+const ImageModal = lazy(() => import('../components/modals/ImageModal.jsx'));
+const PaginationControls = lazy(() => import('../components/pagination/PaginationControls.jsx'));
 
 const InterviewAssistant = () => {
   const dispatch = useDispatch();
@@ -34,6 +34,7 @@ const InterviewAssistant = () => {
     selectedTags,
     isOnline
   } = useSelector((state) => state.questions);
+  const { expandedQuestionId } = useSelector(state => state.ui);
   
   // Get filtered questions using selector
   const filteredItems = useSelector(selectFilteredQuestions);
@@ -63,6 +64,41 @@ const InterviewAssistant = () => {
       window.removeEventListener('offline', handleOffline);
     };
   }, [dispatch]);
+
+  // Auto-collapse expanded question when contextual filters change
+  useEffect(() => {
+    if (expandedQuestionId) {
+      dispatch(collapseAllQuestions());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentRound, searchTerm, searchScope, filters.favorite, filters.review, filters.hot, selectedTags, pagination.currentPage, questionsPerPage, sortBy]);
+
+  // Collapse on outside click or Escape key
+  useEffect(() => {
+    if (!expandedQuestionId) return;
+
+    const handleClick = (e) => {
+      // Ignore clicks inside fullscreen code modal
+      if (e.target.closest('[data-code-fullscreen]')) return;
+      const card = e.target.closest('[data-question-card]');
+      if (!card || card.getAttribute('data-expanded') !== 'true') {
+        dispatch(collapseAllQuestions());
+      }
+    };
+
+    const handleKey = (e) => {
+      if (e.key === 'Escape') {
+        dispatch(collapseAllQuestions());
+      }
+    };
+
+    document.addEventListener('click', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('click', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [expandedQuestionId, dispatch]);
 
   const fetchQuestionsData = () => {
     // Fetch all questions for client-side filtering.
@@ -159,8 +195,10 @@ const InterviewAssistant = () => {
           </div>
         )}
 
-        <QuickStats />
-        <SearchFilters />
+        <Suspense fallback={<div className="text-sm text-muted-foreground mb-4">Loading UI...</div>}>
+          <QuickStats />
+          <SearchFilters />
+        </Suspense>
 
         {/* Error message */}
         {error && isOnline && (
@@ -190,9 +228,11 @@ const InterviewAssistant = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {paginatedItems.map(question => (
-                <QuestionCard key={question._id || question.id} question={question} />
-              ))}
+              <Suspense fallback={<div className="text-sm text-muted-foreground">Loading questions...</div>}>
+                {paginatedItems.map(question => (
+                  <QuestionCard key={question._id || question.id} question={question} />
+                ))}
+              </Suspense>
               
               {loading && (
                 <div className="text-center py-4">
@@ -203,14 +243,18 @@ const InterviewAssistant = () => {
           )}
         </div>
 
-        <PaginationControls 
-          pagination={paginationInfo}
-          onPageChange={handlePageChange}
-        />
+        <Suspense fallback={<div className="text-sm text-muted-foreground">Loading pagination...</div>}>
+          <PaginationControls 
+            pagination={paginationInfo}
+            onPageChange={handlePageChange}
+          />
+        </Suspense>
       </div>
 
-      <QuestionForm />
-      <ImageModal />
+      <Suspense fallback={null}>
+        <QuestionForm />
+        <ImageModal />
+      </Suspense>
     </div>
   );
 };

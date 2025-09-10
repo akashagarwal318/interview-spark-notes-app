@@ -203,6 +203,18 @@ router.put('/:id', validateQuestionUpdate, async (req, res) => {
     const oldTags = oldQuestion.tags || [];
     const newTags = req.body.tags || [];
     
+    // Normalize images to ensure mimeType present (findByIdAndUpdate skips pre-save middleware)
+    if (Array.isArray(req.body.images)) {
+      req.body.images = req.body.images.map(img => {
+        if (!img) return img;
+        if (!img.mimeType && typeof img.data === 'string') {
+          const m = img.data.match(/^data:(image\/[^;]+);base64,/);
+          return { ...img, mimeType: m?.[1] || 'image/png' };
+        }
+        return img;
+      });
+    }
+
     const question = await Question.findByIdAndUpdate(
       req.params.id,
       req.body,

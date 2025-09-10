@@ -73,8 +73,8 @@ export const validateQuestion = [
   
   body('images.*.data')
     .optional()
-    .matches(/^data:image\/(jpeg|jpg|png|gif|webp);base64,/)
-    .withMessage('Image data must be a valid base64 encoded image'),
+    .matches(/^data:image\/[a-zA-Z0-9.+-]+;base64,/)
+    .withMessage('Image data must be a valid base64 encoded image (data:image/<type>;base64,...)'),
   
   body('images.*.size')
     .optional()
@@ -185,8 +185,8 @@ export const validateQuestionUpdate = [
   
   body('images.*.data')
     .optional()
-    .matches(/^data:image\/(jpeg|jpg|png|gif|webp);base64,/)
-    .withMessage('Image data must be a valid base64 encoded image'),
+    .matches(/^data:image\/[a-zA-Z0-9.+-]+;base64,/)
+    .withMessage('Image data must be a valid base64 encoded image (data:image/<type>;base64,...)'),
   
   body('images.*.size')
     .optional()

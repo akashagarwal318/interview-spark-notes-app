@@ -15,7 +15,8 @@ const imageSchema = new mongoose.Schema({
   },
   mimeType: {
     type: String,
-    required: true
+    required: false,
+    default: 'image/png'
   }
 }, { _id: false });
 
@@ -45,6 +46,13 @@ const questionSchema = new mongoose.Schema({
     trim: true,
     maxlength: 5000,
     default: ''
+  },
+  codeLanguage: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    default: 'javascript',
+    maxlength: 30
   },
   // Store tag names as strings to keep tag management simple (seed data and routes use names)
   tags: [{
@@ -133,7 +141,7 @@ questionSchema.pre('save', function(next) {
   if (this.images) {
     this.images = this.images.map(img => ({
       ...img,
-      mimeType: img.mimeType || (img.data?.match(/^data:(image\/[^;]+);base64,/)?.[1] || 'image/png')
+  mimeType: img.mimeType || (img.data?.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/)?.[1] || 'image/png')
     }));
   }
   next();
