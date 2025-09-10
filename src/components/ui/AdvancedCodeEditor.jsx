@@ -15,7 +15,8 @@ const AdvancedCodeEditor = ({
   language = 'javascript',
   onLanguageChange,
   placeholder = '// Start coding...',
-  readOnly = false 
+  readOnly = false,
+  maxHeight = '32rem'
 }) => {
   const [copied, setCopied] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -220,13 +221,29 @@ const AdvancedCodeEditor = ({
     return html;
   };
 
+  // Scroll lock for fullscreen
+  useEffect(() => {
+    if (isFullscreen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = prev; };
+    }
+  }, [isFullscreen]);
+
   return (
-    <div className={`relative bg-muted rounded-lg border border-border ${isFullscreen ? 'fixed inset-0 z-50' : 'h-64'}`}>
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-card rounded-t-lg">
+    <div
+      className={`relative bg-muted rounded-lg border border-border flex flex-col ${
+        isFullscreen
+          ? 'fixed inset-0 z-50 p-4 md:p-6 bg-background/95 backdrop-blur'
+          : ''
+      }`}
+      style={!isFullscreen ? { maxHeight, overflow: 'hidden' } : {}}
+    >
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-card/80 backdrop-blur rounded-t-lg sticky top-0 z-10">
         <div className="flex items-center gap-2">
-          <Code className="h-4 w-4 text-muted-foreground" />
+          <Code className="h-5 w-5 text-muted-foreground" />
           <Select value={currentLanguage} onValueChange={handleLanguageChange} disabled={readOnly}>
-            <SelectTrigger className="h-7 w-32 text-xs border-none bg-transparent">
+            <SelectTrigger className="h-8 w-40 text-sm border-none bg-transparent">
               <SelectValue>{languages.find(l => l.value === currentLanguage)?.label || 'JavaScript'}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -250,18 +267,18 @@ const AdvancedCodeEditor = ({
               />
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => document.getElementById('code-upload')?.click()}
-                className="h-7 w-7 p-0"
+                className="h-8 w-8 p-0"
                 title="Upload file"
               >
-                <Upload className="h-3 w-3" />
+                <Upload className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={formatCode}
-                className="h-7 w-7 p-0 text-xs"
+                className="h-8 w-8 p-0 text-sm"
                 title="Format code"
               >
                 {'{}'}
@@ -270,37 +287,37 @@ const AdvancedCodeEditor = ({
           )}
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={handleDownload}
-            className="h-7 w-7 p-0"
+            className="h-8 w-8 p-0"
             title="Download"
           >
-            <Download className="h-3 w-3" />
+            <Download className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={handleCopy}
-            className="h-7 w-7 p-0"
+            className="h-8 w-8 p-0"
             title="Copy"
           >
-            {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
           </Button>
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="h-7 w-7 p-0"
+            className="h-8 w-8 p-0"
             title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
           >
-            {isFullscreen ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
+            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </Button>
         </div>
       </div>
       
       <div className="relative flex-1 overflow-hidden">
         {readOnly ? (
-          <div className="p-3 overflow-auto h-full">
+          <div className={`p-3 overflow-auto ${isFullscreen ? 'h-[calc(100vh-6rem)]' : 'h-full'}`}>
             <div className="flex">
               <div className="flex flex-col text-xs text-gray-400 pr-2 select-none">
                 {code.split('\n').map((_, index) => (
@@ -328,7 +345,7 @@ const AdvancedCodeEditor = ({
             placeholder={placeholder}
             className="w-full h-full p-3 bg-transparent border-none outline-none resize-none font-mono text-sm leading-relaxed text-foreground placeholder:text-muted-foreground"
             style={{ 
-              minHeight: isFullscreen ? 'calc(100vh - 60px)' : '200px',
+              minHeight: isFullscreen ? 'calc(100vh - 120px)' : '200px',
               tabSize: 2
             }}
             spellCheck={false}

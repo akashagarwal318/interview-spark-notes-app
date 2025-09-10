@@ -20,14 +20,20 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
-      
+      const contentType = response.headers.get('content-type') || '';
+      const payload = contentType.includes('application/json') ? await response.json().catch(() => ({})) : await response.text();
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Network error' }));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        const message = (payload && payload.message) || (typeof payload === 'string' ? payload : `HTTP ${response.status}`);
+        const error = new Error(message);
+        error.status = response.status;
+        error.payload = payload;
+        throw error;
       }
-
-      return await response.json();
+      return payload;
     } catch (error) {
+      if (error.name === 'TypeError' && /Failed to fetch/i.test(error.message)) {
+        error.message = 'Cannot reach server. Is backend running?';
+      }
       console.error('API request failed:', error);
       throw error;
     }

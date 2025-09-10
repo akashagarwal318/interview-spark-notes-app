@@ -1,7 +1,17 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
+import RoundService from '../../services/roundService.js';
 import QuestionService from '../../services/questionService.js';
 
 // Async thunks for API calls
+export const fetchRounds = createAsyncThunk('questions/fetchRounds', async () => {
+  try {
+    const data = await RoundService.getRounds();
+    return data;
+  } catch (e) {
+    return [];
+  }
+});
+
 export const fetchQuestions = createAsyncThunk(
   'questions/fetchQuestions',
   async (params = {}, { rejectWithValue }) => {
@@ -13,6 +23,17 @@ export const fetchQuestions = createAsyncThunk(
     }
   }
 );
+
+export const createRoundAsync = createAsyncThunk('questions/createRound', async (label) => {
+  const slug = label.toLowerCase().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-');
+  const round = await RoundService.createRound(slug, label);
+  return round;
+});
+
+export const deleteRoundAsync = createAsyncThunk('questions/deleteRound', async (name) => {
+  await RoundService.deleteRound(name);
+  return name;
+});
 
 export const createQuestionAsync = createAsyncThunk(
   'questions/createQuestion',
@@ -65,6 +86,8 @@ export const toggleQuestionStatusAsync = createAsyncThunk(
 const initialState = {
   items: [],
   filteredItems: [],
+  // Central list of interview rounds (string keys stored on each question)
+  rounds: ['technical','hr','telephonic','introduction','behavioral','system-design','coding'],
   pagination: {
     currentPage: 1,
     totalPages: 1,
@@ -76,6 +99,7 @@ const initialState = {
   error: null,
   currentRound: 'all',
   searchTerm: '',
+  searchScope: 'all', // 'all', 'question', 'answer', 'code'
   questionsPerPage: 10,
   sortBy: 'newest',
   filters: {
@@ -97,8 +121,35 @@ const questionsSlice = createSlice({
       state.currentRound = action.payload;
       state.pagination.currentPage = 1;
     },
+    addCustomRound: (state, action) => {
+      const raw = (action.payload || '').trim();
+      if (!raw) return;
+      const slug = raw
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+      if (!slug) return;
+      if (!state.rounds.includes(slug)) {
+        state.rounds.push(slug);
+      }
+    },
+    deleteCustomRound: (state, action) => {
+      const round = action.payload;
+      const protectedRounds = ['technical','hr','telephonic','introduction','behavioral','system-design','coding'];
+      if (protectedRounds.includes(round)) return; // don't remove default
+      state.rounds = state.rounds.filter(r => r !== round);
+      // If currently viewing deleted round, reset to 'all'
+      if (state.currentRound === round) state.currentRound = 'all';
+      // Optionally reassign questions of deleted round to 'technical'
+      state.items = state.items.map(q => q.round === round ? { ...q, round: 'technical' } : q);
+    },
     setSearchTerm: (state, action) => {
       state.searchTerm = action.payload;
+      state.pagination.currentPage = 1;
+    },
+    setSearchScope: (state, action) => {
+      state.searchScope = action.payload;
       state.pagination.currentPage = 1;
     },
     setCurrentPage: (state, action) => {
@@ -122,6 +173,7 @@ const questionsSlice = createSlice({
     resetFilters: (state) => {
       state.currentRound = 'all';
       state.searchTerm = '';
+      state.searchScope = 'all';
       state.filters = {
         favorite: false,
         review: false,
@@ -196,6 +248,10 @@ const questionsSlice = createSlice({
         state.loading = false;
         state.items.unshift(action.payload);
         state.pagination.totalQuestions += 1;
+        // auto-register round if new
+        if (action.payload?.round && !state.rounds.includes(action.payload.round)) {
+          state.rounds.push(action.payload.round);
+        }
         state.error = null;
       })
       .addCase(createQuestionAsync.rejected, (state, action) => {
@@ -216,6 +272,9 @@ const questionsSlice = createSlice({
         );
         if (index !== -1) {
           state.items[index] = action.payload;
+        }
+        if (action.payload?.round && !state.rounds.includes(action.payload.round)) {
+          state.rounds.push(action.payload.round);
         }
         state.error = null;
       })
@@ -243,7 +302,17 @@ const questionsSlice = createSlice({
 
     // Toggle question status
     builder
-      .addCase(toggleQuestionStatusAsync.pending, (state) => {
+      .addCase(toggleQuestionStatusAsync.pending, (state, action) => {
+        // Optimistic toggle
+        const { arg } = action.meta || {};
+        const optimisticId = arg?.id;
+        const field = arg?.field;
+        if (optimisticId && field) {
+          const idx = state.items.findIndex(q => q.id === optimisticId || q._id === optimisticId);
+          if (idx !== -1) {
+            state.items[idx] = { ...state.items[idx], [field]: !state.items[idx][field] };
+          }
+        }
         state.error = null;
       })
       .addCase(toggleQuestionStatusAsync.fulfilled, (state, action) => {
@@ -260,12 +329,142 @@ const questionsSlice = createSlice({
       .addCase(toggleQuestionStatusAsync.rejected, (state, action) => {
         state.error = action.payload;
       });
+
+    // Rounds
+    builder
+      .addCase(fetchRounds.fulfilled, (state, action) => {
+        const protectedRounds = ['technical','hr','telephonic','introduction','behavioral','system-design','coding'];
+        const incoming = action.payload.map(r => r.name);
+        state.rounds = Array.from(new Set([...protectedRounds, ...incoming]));
+      })
+      .addCase(createRoundAsync.fulfilled, (state, action) => {
+        if (action.payload?.name && !state.rounds.includes(action.payload.name)) {
+          state.rounds.push(action.payload.name);
+        }
+      })
+      .addCase(deleteRoundAsync.fulfilled, (state, action) => {
+        const name = action.payload;
+        const protectedRounds = ['technical','hr','telephonic','introduction','behavioral','system-design','coding'];
+        if (!protectedRounds.includes(name)) {
+          state.rounds = state.rounds.filter(r => r !== name);
+          state.items = state.items.map(q => q.round === name ? { ...q, round: 'technical' } : q);
+          if (state.currentRound === name) state.currentRound = 'all';
+        }
+      });
   }
 });
+
+// Selector functions for computed values
+export const selectFilteredQuestions = createSelector(
+  [(state) => state.questions.items,
+   (state) => state.questions.searchTerm,
+   (state) => state.questions.searchScope,
+   (state) => state.questions.currentRound,
+   (state) => state.questions.filters,
+   (state) => state.questions.selectedTags],
+  (items, searchTerm, searchScope, currentRound, filters, selectedTags) => {
+    // Normalize tags to always be objects with _id and name
+    const normalizeTags = (tags) =>
+      (tags || []).map(tag => typeof tag === 'string' ? { _id: tag, name: tag, color: '#6B7280' } : tag);
+
+    let filtered = items.map(item => ({
+      ...item,
+      tags: normalizeTags(item.tags)
+    }));
+
+    // Apply search filter based on scope
+    if (searchTerm && searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase().trim();
+      const extractCodeBlocks = (text = '') => {
+        const blocks = [];
+        const regex = /```[a-zA-Z0-9_-]*\n([\s\S]*?)```/g;
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+          blocks.push(match[1]);
+        }
+        return blocks.join('\n');
+      };
+      filtered = filtered.filter(item => {
+        const q = item.question?.toLowerCase() || '';
+        const a = item.answer?.toLowerCase() || '';
+        const codeField = item.code?.toLowerCase() || '';
+        const codeInAnswer = extractCodeBlocks(item.answer || '').toLowerCase();
+        const tagString = (item.tags || []).map(t => t.name?.toLowerCase()).join(' ');
+        switch (searchScope) {
+          case 'question':
+            return q.includes(lowerSearch);
+          case 'answer':
+            return a.includes(lowerSearch);
+          case 'code':
+            return codeField.includes(lowerSearch) || codeInAnswer.includes(lowerSearch);
+          case 'all':
+          default:
+            return (
+              q.includes(lowerSearch) ||
+              a.includes(lowerSearch) ||
+              codeField.includes(lowerSearch) ||
+              codeInAnswer.includes(lowerSearch) ||
+              tagString.includes(lowerSearch)
+            );
+        }
+      });
+    }
+
+    // Apply round filter
+    if (currentRound !== 'all') {
+      filtered = filtered.filter(item => item.round === currentRound);
+    }
+
+
+
+    // Apply status filters
+    if (filters.favorite) {
+      filtered = filtered.filter(item => item.favorite === true);
+    }
+    if (filters.review) {
+      filtered = filtered.filter(item => item.review === true);
+    }
+    if (filters.hot) {
+      filtered = filtered.filter(item => item.hot === true);
+    }
+
+    // Apply tag filters
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter(item => {
+        if (!item.tags || item.tags.length === 0) return false;
+        return selectedTags.some(tagId =>
+          item.tags.some(tag => tag._id === tagId)
+        );
+      });
+    }
+
+    return filtered;
+  }
+);
+
+export const selectQuestionStats = createSelector(
+  [(state) => state.questions.items],
+  (items) => {
+    const stats = {
+      total: items.length,
+      favorites: items.filter(q => q.favorite).length,
+      review: items.filter(q => q.review).length,
+      hot: items.filter(q => q.hot).length,
+      byRound: {
+        technical: items.filter(q => q.round === 'technical').length,
+        hr: items.filter(q => q.round === 'hr').length,
+        telephonic: items.filter(q => q.round === 'telephonic').length,
+        introduction: items.filter(q => q.round === 'introduction').length,
+      }
+    };
+    return stats;
+  }
+);
 
 export const {
   setCurrentRound,
   setSearchTerm,
+  setSearchScope,
   setCurrentPage,
   setQuestionsPerPage,
   setSortBy,
@@ -276,7 +475,9 @@ export const {
   clearError,
   addQuestionLocal,
   updateQuestionLocal,
-  deleteQuestionLocal
+  deleteQuestionLocal,
+  addCustomRound,
+  deleteCustomRound
 } = questionsSlice.actions;
 
 export default questionsSlice.reducer;

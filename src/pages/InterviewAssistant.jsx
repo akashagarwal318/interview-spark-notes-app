@@ -3,10 +3,13 @@ import React, { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   fetchQuestions, 
+  fetchRounds,
   setOnlineStatus,
-  setCurrentPage
+  setCurrentPage,
+  selectFilteredQuestions
 } from '../store/slices/questionsSlice.js';
 import { setTheme } from '../store/slices/uiSlice.js';
+import { useDebounce } from '../hooks/useDebounce.js';
 import Header from '../components/layout/Header.jsx';
 import QuickStats from '../components/stats/QuickStats.jsx';
 import SearchFilters from '../components/filters/SearchFilters.jsx';
@@ -24,12 +27,19 @@ const InterviewAssistant = () => {
     error,
     currentRound,
     searchTerm,
+    searchScope,
     questionsPerPage,
     sortBy,
     filters,
     selectedTags,
     isOnline
   } = useSelector((state) => state.questions);
+  
+  // Get filtered questions using selector
+  const filteredItems = useSelector(selectFilteredQuestions);
+  
+  // Debounce search term to avoid excessive re-renders, but API calls are not triggered by it.
+  const debouncedSearchTerm = useDebounce(searchTerm, 50);
 
   // Initialize data and theme
   useEffect(() => {
@@ -44,8 +54,9 @@ const InterviewAssistant = () => {
     const savedTheme = localStorage.getItem('interviewAssistantTheme') || 'light';
     dispatch(setTheme(savedTheme));
     
-    // Initial data fetch
+  // Initial data fetch
     fetchQuestionsData();
+  dispatch(fetchRounds());
     
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -53,39 +64,37 @@ const InterviewAssistant = () => {
     };
   }, [dispatch]);
 
-  // Fetch questions when filters change
-  useEffect(() => {
-    fetchQuestionsData();
-  }, [
-    pagination.currentPage,
-    questionsPerPage,
-    currentRound,
-    searchTerm,
-    sortBy,
-    filters,
-    selectedTags
-  ]);
-
   const fetchQuestionsData = () => {
+    // Fetch all questions for client-side filtering.
+    // The 'search' parameter is removed to prevent API-side filtering conflicts.
     const params = {
-      page: pagination.currentPage,
-      limit: questionsPerPage,
-      round: currentRound,
-      search: searchTerm,
-      sortBy,
-      ...filters,
-      tags: selectedTags.length > 0 ? selectedTags.join(',') : undefined
+      page: 1,
+      limit: 1000, // Fetch a large set for client-side filtering
+      sortBy
     };
-
-    // Clean up undefined values
-    Object.keys(params).forEach(key => {
-      if (params[key] === undefined || params[key] === '' || params[key] === 'all') {
-        delete params[key];
-      }
-    });
 
     dispatch(fetchQuestions(params));
   };
+
+  // Compute paginated items from filtered results
+  const paginatedItems = useMemo(() => {
+    const startIndex = (pagination.currentPage - 1) * questionsPerPage;
+    const endIndex = startIndex + questionsPerPage;
+    return filteredItems.slice(startIndex, endIndex);
+  }, [filteredItems, pagination.currentPage, questionsPerPage]);
+
+  // Compute pagination info for filtered results
+  const paginationInfo = useMemo(() => {
+    const totalFiltered = filteredItems.length;
+    const totalPages = Math.ceil(totalFiltered / questionsPerPage);
+    return {
+      currentPage: pagination.currentPage,
+      totalPages,
+      totalQuestions: totalFiltered,
+      hasNext: pagination.currentPage < totalPages,
+      hasPrev: pagination.currentPage > 1
+    };
+  }, [filteredItems.length, pagination.currentPage, questionsPerPage]);
 
   // Handle pagination
   const handlePageChange = (newPage) => {
@@ -167,12 +176,12 @@ const InterviewAssistant = () => {
         )}
 
         <div className="mb-8">
-          {items.length === 0 && !loading ? (
+          {paginatedItems.length === 0 && !loading ? (
             <div className="text-center py-12 bg-card rounded-lg border border-border">
               <div className="text-4xl mb-4">🔍</div>
               <h3 className="text-lg font-medium text-card-foreground mb-2">No questions found</h3>
               <p className="text-muted-foreground">
-                {searchTerm || currentRound !== 'all' || filters.favorite || filters.review || filters.hot ? (
+                {searchTerm || currentRound !== 'all' || filters.favorite || filters.review || filters.hot || selectedTags.length > 0 ? (
                   'Try adjusting your search terms or filters.'
                 ) : (
                   'Add your first question to get started.'
@@ -181,7 +190,7 @@ const InterviewAssistant = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {items.map(question => (
+              {paginatedItems.map(question => (
                 <QuestionCard key={question._id || question.id} question={question} />
               ))}
               
@@ -195,7 +204,7 @@ const InterviewAssistant = () => {
         </div>
 
         <PaginationControls 
-          pagination={pagination}
+          pagination={paginationInfo}
           onPageChange={handlePageChange}
         />
       </div>

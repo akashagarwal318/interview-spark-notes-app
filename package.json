@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"npm run backend:dev\" \"vite\"",
+  "dev:with-db": "docker-compose up -d && npm run dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",

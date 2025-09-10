@@ -3,8 +3,13 @@ import { body, validationResult } from 'express-validator';
 // Validation rules for creating a question
 export const validateQuestion = [
   body('round')
-    .isIn(['technical', 'hr', 'telephonic', 'introduction', 'behavioral', 'system-design', 'coding'])
-    .withMessage('Round must be one of: technical, hr, telephonic, introduction, behavioral, system-design, coding'),
+    .custom(value => {
+      const predefined = ['technical', 'hr', 'telephonic', 'introduction', 'behavioral', 'system-design', 'coding'];
+      if (predefined.includes(value)) return true;
+      // allow custom slug: lowercase letters, numbers, hyphens, 2-40 chars
+      return /^[a-z0-9-]{2,40}$/.test(value || '');
+    })
+    .withMessage('Round must be predefined or a custom slug (lowercase letters, numbers, hyphens, 2-40 chars).'),
   
   body('question')
     .trim()
@@ -94,8 +99,12 @@ export const validateQuestion = [
 export const validateQuestionUpdate = [
   body('round')
     .optional()
-    .isIn(['technical', 'hr', 'telephonic', 'introduction', 'behavioral', 'system-design', 'coding'])
-    .withMessage('Round must be one of: technical, hr, telephonic, introduction, behavioral, system-design, coding'),
+    .custom(value => {
+      const predefined = ['technical', 'hr', 'telephonic', 'introduction', 'behavioral', 'system-design', 'coding'];
+      if (predefined.includes(value)) return true;
+      return /^[a-z0-9-]{2,40}$/.test(value || '');
+    })
+    .withMessage('Round must be predefined or a custom slug (lowercase letters, numbers, hyphens, 2-40 chars).'),
   
   body('question')
     .optional()

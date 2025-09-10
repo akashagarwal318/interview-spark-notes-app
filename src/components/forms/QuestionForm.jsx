@@ -15,20 +15,21 @@ import {
   SelectValue 
 } from '../ui/select';
 import AdvancedCodeEditor from '../ui/AdvancedCodeEditor';
-import { createQuestionAsync, updateQuestionAsync } from '../../store/slices/questionsSlice';
+import { createQuestionAsync, updateQuestionAsync, createRoundAsync } from '../../store/slices/questionsSlice';
 import { setFormVisible } from '../../store/slices/uiSlice';
 
 const QuestionForm = () => {
   const dispatch = useDispatch();
   const { isFormVisible, editingQuestion } = useSelector((state) => state.ui);
-  const { currentRound } = useSelector((state) => state.questions);
+  const { currentRound, rounds } = useSelector((state) => state.questions);
+  const [customRoundInput, setCustomRoundInput] = useState('');
 
   const [formData, setFormData] = useState({
     round: currentRound === 'all' ? 'technical' : currentRound,
     question: '',
     answer: '',
     code: '',
-    tags: ''
+    tags: []
   });
   const [images, setImages] = useState([]);
   const [tagInput, setTagInput] = useState('');
@@ -39,15 +40,15 @@ const QuestionForm = () => {
 
   // Initialize form when editing
   useEffect(() => {
-    if (editingQuestion) {
+    if (editingQuestion && typeof editingQuestion === 'object') {
       setFormData({
         round: editingQuestion.round || 'technical',
         question: editingQuestion.question || '',
         answer: editingQuestion.answer || '',
         code: editingQuestion.code || '',
-        tags: editingQuestion.tags ? editingQuestion.tags.join(', ') : ''
+        tags: Array.isArray(editingQuestion.tags) ? editingQuestion.tags : []
       });
-      setImages(editingQuestion.images || []);
+      setImages(Array.isArray(editingQuestion.images) ? editingQuestion.images : []);
     } else {
       resetForm();
     }
@@ -55,21 +56,31 @@ const QuestionForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!formData.question.trim() || !formData.answer.trim()) {
       alert('Please fill in both question and answer fields.');
       return;
     }
+    if (!formData.round) {
+      alert('Please select an interview round.');
+      return;
+    }
+    // Ensure tags is always an array
+  const tagsArr = Array.isArray(formData.tags)
+    ? formData.tags
+      .filter(tag => tag && (typeof tag === 'string' ? tag.trim() : tag.name && tag.name.trim()))
+      .map(tag => (typeof tag === 'string' ? tag.trim() : tag.name.trim()))
+    : (formData.tags || '').split(',').map(tag => tag.trim()).filter(tag => tag);
 
+    // Process images to base64
     const processedImages = await Promise.all(
       images.map(file => {
-        if (file.data) return Promise.resolve(file); // Already processed
+        if (file.data) return Promise.resolve(file);
         return new Promise((resolve) => {
           const reader = new FileReader();
-          reader.onload = (e) => {
+          reader.onload = (ev) => {
             resolve({
               name: file.name,
-              data: e.target?.result,
+              data: ev.target?.result,
               size: file.size
             });
           };
@@ -79,18 +90,21 @@ const QuestionForm = () => {
     );
 
     const questionData = {
-      ...formData,
-      tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
+      round: formData.round,
+      question: formData.question.trim(),
+      answer: formData.answer.trim(),
+      code: formData.code,
+      tags: tagsArr,
       images: processedImages,
       createdAt: editingQuestion?.createdAt || new Date().toISOString()
     };
 
     if (editingQuestion) {
-      dispatch(updateQuestionAsync({ ...questionData, id: editingQuestion.id }));
+      const id = editingQuestion._id || editingQuestion.id;
+      dispatch(updateQuestionAsync({ id, data: questionData }));
     } else {
       dispatch(createQuestionAsync(questionData));
     }
-    
     dispatch(setFormVisible(false));
     resetForm();
   };
@@ -106,7 +120,7 @@ const QuestionForm = () => {
       question: '',
       answer: '',
       code: '',
-      tags: ''
+      tags: []
     });
     setImages([]);
     setTagInput('');
@@ -170,19 +184,21 @@ const QuestionForm = () => {
 
   const addTag = () => {
     if (tagInput.trim()) {
-      const currentTags = formData.tags ? formData.tags.split(',').map(t => t.trim()) : [];
+      const currentTags = Array.isArray(formData.tags)
+        ? formData.tags
+        : (formData.tags || '').split(',').map(t => t.trim());
       if (!currentTags.includes(tagInput.trim())) {
-        const newTags = [...currentTags, tagInput.trim()];
-        setFormData(prev => ({ ...prev, tags: newTags.join(', ') }));
+        setFormData(prev => ({ ...prev, tags: [...currentTags, tagInput.trim()] }));
       }
       setTagInput('');
     }
   };
 
   const removeTag = (tagToRemove) => {
-    const currentTags = formData.tags.split(',').map(t => t.trim());
-    const newTags = currentTags.filter(tag => tag !== tagToRemove);
-    setFormData(prev => ({ ...prev, tags: newTags.join(', ') }));
+    const currentTags = Array.isArray(formData.tags)
+      ? formData.tags
+      : (formData.tags || '').split(',').map(t => t.trim());
+    setFormData(prev => ({ ...prev, tags: currentTags.filter(tag => tag !== tagToRemove) }));
   };
 
   const handleKeyPress = (e) => {
@@ -194,7 +210,7 @@ const QuestionForm = () => {
 
   if (!isFormVisible) return null;
 
-  const tags = formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(t => t) : [];
+  const tags = Array.isArray(formData.tags) ? formData.tags : (formData.tags || '').split(',').map(t => t.trim()).filter(t => t);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex p-4 justify-center items-center overflow-y-auto">
@@ -214,23 +230,47 @@ const QuestionForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="round">Interview Round</Label>
-              <Select 
-                value={formData.round} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, round: value }))}
+              <Select
+                value={formData.round}
+                onValueChange={(value) => {
+                  if (value === '__custom__') {
+                    setFormData(prev => ({ ...prev, round: '' }));
+                  } else {
+                    setFormData(prev => ({ ...prev, round: value }));
+                  }
+                }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select round" />
+                  <SelectValue>{formData.round ? formData.round.charAt(0).toUpperCase() + formData.round.slice(1).replace('-', ' ') + ' Round' : 'Select round'}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="technical">Technical Round</SelectItem>
-                  <SelectItem value="hr">HR Round</SelectItem>
-                  <SelectItem value="telephonic">Telephonic Round</SelectItem>
-                  <SelectItem value="introduction">Introduction Round</SelectItem>
-                  <SelectItem value="behavioral">Behavioral Round</SelectItem>
-                  <SelectItem value="system-design">System Design Round</SelectItem>
-                  <SelectItem value="coding">Coding Round</SelectItem>
+                  {rounds.map(r => (
+                    <SelectItem key={r} value={r}>{r.replace('-', ' ')} Round</SelectItem>
+                  ))}
+                  <SelectItem value="__custom__">+ Custom Round...</SelectItem>
                 </SelectContent>
               </Select>
+              {formData.round === '' && (
+                <div className="mt-2 flex gap-2">
+                  <Input
+                    placeholder="Enter custom round name"
+                    value={customRoundInput}
+                    onChange={(e) => setCustomRoundInput(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button type="button" variant="secondary" onClick={() => {
+                    const name = customRoundInput.trim();
+                    if (!name) return;
+                    // generate slug similar to slice logic
+                    const slug = name.toLowerCase().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-');
+                    if (!rounds.includes(slug)) {
+                      dispatch(createRoundAsync(name));
+                    }
+                    setFormData(prev => ({ ...prev, round: slug }));
+                    setCustomRoundInput('');
+                  }}>Add</Button>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -252,7 +292,7 @@ const QuestionForm = () => {
                 <div className="flex flex-wrap gap-2 mt-2">
                   {tags.map((tag, index) => (
                     <Badge key={index} variant="secondary" className="gap-1">
-                      {tag}
+                      {typeof tag === 'object' ? tag.name : tag}
                       <X 
                         className="h-3 w-3 cursor-pointer" 
                         onClick={() => removeTag(tag)} 

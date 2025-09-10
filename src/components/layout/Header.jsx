@@ -33,7 +33,7 @@ const Header = () => {
           <div className="flex items-center space-x-3">
             <Button
               onClick={handleAddQuestion}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 dark:bg-blue-500 dark:hover:bg-blue-600"
             >
               <Plus className="h-4 w-4" />
               <span>Add Question</span>

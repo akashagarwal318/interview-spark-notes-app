@@ -5,7 +5,17 @@ class QuestionService {
   async getQuestions(params = {}) {
     try {
       const response = await ApiService.get('/questions', params);
-      return response.data;
+      // Expected shape: { status: 'success', data: { questions, pagination } }
+      // Fallbacks added in case backend shape differs
+      const dataLayer = response?.data || response;
+      if (!dataLayer.questions && response?.data?.data?.questions) {
+        // Extremely nested case (if double wrapped)
+        return response.data.data;
+      }
+      if (!dataLayer.questions) {
+        console.warn('[QuestionService] No questions array found in response. Raw response:', response);
+      }
+      return dataLayer;
     } catch (error) {
       console.error('Error fetching questions:', error);
       throw error;

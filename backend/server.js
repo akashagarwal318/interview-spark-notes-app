@@ -11,6 +11,7 @@ import dotenv from 'dotenv';
 import questionRoutes from './routes/questions.js';
 import tagRoutes from './routes/tags.js';
 import statsRoutes from './routes/stats.js';
+import roundsRoutes from './routes/rounds.js';
 
 // Load environment variables
 dotenv.config();
@@ -48,25 +49,58 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('combined'));
 }
 
-// Database connection
+// Database connection with fallback logic
 const connectDB = async () => {
+  const primaryURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/interview-assistant';
+  const fallbackURI = 'mongodb://127.0.0.1:27017/interview-assistant';
+
+  const tryConnect = async (uri, label) => {
+    console.log(`Attempting MongoDB connection (${label}): ${uri}`);
+    const conn = await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 5000
+    });
+    console.log(`✅ MongoDB Connected (${label}): host=${conn.connection.host} db=${conn.connection.name}`);
+    return conn;
+  };
+
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/interview-spark-notes');
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-    console.log(`Connected to database: ${conn.connection.name}`);
-  } catch (error) {
-    console.error('Database connection error:', error);
+    try {
+      await tryConnect(primaryURI, 'primary');
+    } catch (primaryErr) {
+      console.warn(`Primary MongoDB connection failed: ${primaryErr.message}`);
+      if (primaryURI.includes('mongo') || primaryURI.includes('mongodb://mongo')) {
+        console.log('Detected docker hostname "mongo" – attempting localhost fallback...');
+      } else {
+        console.log('Attempting localhost fallback...');
+      }
+      await tryConnect(fallbackURI, 'fallback');
+    }
+  } catch (finalErr) {
+    console.error('❌ All MongoDB connection attempts failed. Exiting.');
+    console.error(finalErr);
     process.exit(1);
   }
 };
 
-// Connect to database
-connectDB();
+// Start server only after DB connection (or after fallback succeeds)
+const startServer = async () => {
+  await connectDB();
+  if (!app.listening) {
+    app.listen(PORT, () => {
+      app.listening = true; // custom flag to avoid double start
+      console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+      console.log(`📊 API Documentation: http://localhost:${PORT}/api/health`);
+    });
+  }
+};
+
+startServer();
 
 // Routes
 app.use('/api/questions', questionRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/rounds', roundsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -114,7 +148,4 @@ process.on('SIGINT', () => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-  console.log(`📊 API Documentation: http://localhost:${PORT}/api/health`);
-});
+// (Removed immediate listen; handled in startServer())

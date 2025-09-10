@@ -10,9 +10,10 @@ import {
   Trash2, 
   MoreVertical
 } from 'lucide-react';
-import { updateQuestionAsync, deleteQuestionAsync } from '../../store/slices/questionsSlice';
+import { updateQuestionAsync, deleteQuestionAsync, toggleQuestionStatusAsync } from '../../store/slices/questionsSlice';
 import { setImageModal, setEditingQuestion, setExpandedQuestionId } from '../../store/slices/uiSlice';
 import CodeBlock from '../ui/CodeBlock';
+import { extractCodeBlocks } from '../../utils/codeUtils';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -22,19 +23,19 @@ import {
 
 const QuestionCard = ({ question }) => {
   const dispatch = useDispatch();
-  const { expandedQuestionId } = useSelector((state) => state.ui);
-  const expanded = expandedQuestionId === question.id;
+  const { expandedQuestionId } = useSelector(state => state.ui);
+  const { searchTerm, searchScope } = useSelector(state => state.questions);
+  const questionId = question._id || question.id;
+  const lowerSearch = searchTerm?.toLowerCase().trim() || '';
+  const expanded = expandedQuestionId === questionId;
 
   const handleToggle = (field) => {
-    dispatch(updateQuestionAsync({
-      id: question.id,
-      [field]: !question[field]
-    }));
+    dispatch(toggleQuestionStatusAsync({ id: questionId, field }));
   };
 
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this question?')) {
-      dispatch(deleteQuestionAsync(question.id));
+      dispatch(deleteQuestionAsync(questionId));
     }
   };
 
@@ -51,7 +52,7 @@ const QuestionCard = ({ question }) => {
     if (e.target.closest('button') || e.target.closest('[role="button"]')) {
       return;
     }
-    dispatch(setExpandedQuestionId(expanded ? null : question.id));
+    dispatch(setExpandedQuestionId(expanded ? null : questionId));
   };
 
   const formatDate = (dateString) => {
@@ -69,6 +70,28 @@ const QuestionCard = ({ question }) => {
     }
   };
 
+  // Extract code blocks from answer markdown if they exist
+  const codeBlocks = extractCodeBlocks(question.answer || '');
+  
+  // Helper to highlight matching text
+  const highlightMatches = (text, searchText) => {
+    if (!searchText || !text) return text;
+    
+    const parts = [];
+    let lastIndex = 0;
+    const lowerText = text.toLowerCase();
+    
+    while (lastIndex < text.length) {
+      const indexOf = lowerText.indexOf(searchText, lastIndex);
+      if (indexOf === -1) break;
+      parts.push(text.substring(lastIndex, indexOf));
+      parts.push(<mark key={indexOf} className="bg-yellow-200 dark:bg-yellow-900 rounded-sm px-0.5">{text.substring(indexOf, indexOf + searchText.length)}</mark>);
+      lastIndex = indexOf + searchText.length;
+    }
+    parts.push(text.substring(lastIndex));
+    return parts;
+  };
+
   return (
     <div className="bg-card border border-border rounded-lg mb-4 transition-all hover:shadow-md hover:border-primary/20 cursor-pointer"
          onClick={handleCardClick}>
@@ -76,7 +99,11 @@ const QuestionCard = ({ question }) => {
       <div className="flex items-start justify-between p-4 border-b border-border">
         <div className="flex-1 min-w-0">
           <h3 className="text-lg font-medium text-card-foreground mb-1 leading-snug hover:text-primary transition-colors">
-            {question.question}
+            {lowerSearch && searchScope !== 'code' && searchScope !== 'answer' ? (
+              <>{highlightMatches(question.question, lowerSearch)}</>
+            ) : (
+              <>{question.question}</>
+            )}
           </h3>
           <div className="flex items-center text-sm text-muted-foreground space-x-4">
             <span className="capitalize">{question.round?.replace('-', ' ') || 'General'}</span>
@@ -141,17 +168,25 @@ const QuestionCard = ({ question }) => {
         <div className="p-4 space-y-4 bg-muted/50 animate-accordion-down">
           <div>
             <h4 className="font-medium text-card-foreground mb-2 text-sm">Answer</h4>
-            <pre className="text-card-foreground/80 text-sm leading-relaxed whitespace-pre-wrap font-sans">
-              {question.answer}
-            </pre>
+            <div className="text-card-foreground/80 text-sm leading-relaxed whitespace-pre-wrap break-words font-sans max-h-96 overflow-y-auto border border-gray-100 dark:border-gray-800 rounded-md p-4">
+              {lowerSearch && (searchScope === 'all' || searchScope === 'answer') ? (
+                <>{highlightMatches(question.answer, lowerSearch)}</>
+              ) : (
+                <>{question.answer}</>
+              )}
+            </div>
           </div>
 
           {question.code && (
             <div>
               <h4 className="font-medium text-card-foreground mb-2 text-sm">Code</h4>
-              <CodeBlock code={question.code} />
+              <CodeBlock 
+                code={question.code} 
+                isMatch={lowerSearch && (searchScope === 'all' || searchScope === 'code') && question.code.toLowerCase().includes(lowerSearch)}
+              />
             </div>
           )}
+
 
           {question.images && question.images.length > 0 && (
             <div>

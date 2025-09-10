@@ -23,15 +23,10 @@ const questionSchema = new mongoose.Schema({
   round: {
     type: String,
     required: true,
-    enum: [
-      'technical',
-      'hr', 
-      'telephonic',
-      'introduction',
-      'behavioral',
-      'system-design',
-      'coding'
-    ]
+    trim: true,
+    lowercase: true,
+    // Accept predefined or custom slug (validated in middleware already)
+    match: /^[a-z0-9-]{2,40}$/
   },
   question: {
     type: String,
@@ -51,9 +46,11 @@ const questionSchema = new mongoose.Schema({
     maxlength: 5000,
     default: ''
   },
+  // Store tag names as strings to keep tag management simple (seed data and routes use names)
   tags: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Tag'
+    type: String,
+    trim: true,
+    lowercase: true
   }],
   images: [imageSchema],
   favorite: {
@@ -124,11 +121,20 @@ questionSchema.virtual('searchText').get(function() {
 
 // Middleware to clean tags before saving
 questionSchema.pre('save', function(next) {
+  if (this.round) {
+    this.round = this.round.toLowerCase().trim();
+  }
   if (this.tags) {
     this.tags = this.tags
       .filter(tag => tag && tag.trim())
       .map(tag => tag.trim().toLowerCase())
-      .filter((tag, index, arr) => arr.indexOf(tag) === index); // Remove duplicates
+      .filter((tag, index, arr) => arr.indexOf(tag) === index);
+  }
+  if (this.images) {
+    this.images = this.images.map(img => ({
+      ...img,
+      mimeType: img.mimeType || (img.data?.match(/^data:(image\/[^;]+);base64,/)?.[1] || 'image/png')
+    }));
   }
   next();
 });

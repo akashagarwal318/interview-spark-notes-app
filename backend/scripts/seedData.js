@@ -110,6 +110,155 @@ function reverseString3(str) {
     favorite: false,
     review: false,
     hot: false
+  },
+  // Additional sample questions to test all features
+  {
+    round: 'telephonic',
+    question: 'How do you prioritize tasks when everything is urgent?',
+    answer: 'Use impact vs effort, communicate with stakeholders, break tasks into smaller chunks and negotiate deadlines. Keep a running prioritized backlog and focus on delivering the highest value items first.',
+    tags: ['communication', 'time-management'],
+    difficulty: 'medium',
+    favorite: true,
+    review: false,
+    hot: false
+  },
+  {
+    round: 'technical',
+    question: 'Explain the JavaScript event loop and microtasks vs macrotasks',
+    answer: 'The event loop processes the call stack and the task queue. Microtasks (promises, mutation observers) run after the current task and before rendering; macrotasks (setTimeout, setInterval, I/O) are scheduled in the task queue.',
+    tags: ['javascript', 'event-loop', 'async'],
+    difficulty: 'hard',
+    favorite: false,
+    review: true,
+    hot: true
+  },
+  {
+    round: 'behavioral',
+    question: 'Describe a time you resolved a conflict in a team',
+    answer: 'Explain the context, actions you took to mediate, how you listened and proposed a compromise, and the outcome. Focus on communication and collaboration skills.',
+    tags: ['behavioral', 'conflict', 'communication'],
+    difficulty: 'easy',
+    favorite: false,
+    review: true,
+    hot: false
+  },
+  {
+    round: 'coding',
+    question: 'Two Sum problem — return indices of the two numbers that add up to target',
+    answer: 'Use a hashmap to store complements and return indices when found. O(n) time, O(n) space.',
+    code: `function twoSum(nums, target) {
+  const map = new Map();
+  for (let i = 0; i < nums.length; i++) {
+    const complement = target - nums[i];
+    if (map.has(complement)) return [map.get(complement), i];
+    map.set(nums[i], i);
+  }
+  return null;
+}`,
+    tags: ['algorithms', 'hashmap', 'array'],
+    difficulty: 'easy',
+    favorite: true,
+    review: false,
+    hot: false,
+    company: 'Google',
+    position: 'Software Engineer'
+  },
+  {
+    round: 'system-design',
+    question: 'Design a real-time chat system',
+    answer: 'Consider WebSocket connections, presence, message delivery guarantees, sharding by conversation, and using caches for recent messages. Think about scaling, persistence, and fan-out strategies.',
+    tags: ['system-design', 'websocket', 'scalability'],
+    difficulty: 'hard',
+    favorite: true,
+    review: true,
+    hot: true
+  },
+  {
+    round: 'technical',
+    question: 'Render a diagram image for architecture review',
+    answer: 'This question contains an image to inspect how the Image Modal behaves in the UI.',
+    images: [
+      {
+        name: 'diagram.png',
+        data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=',
+        size: 67,
+        mimeType: 'image/png'
+      }
+    ],
+    tags: ['diagram', 'image', 'ui'],
+    difficulty: 'easy',
+    favorite: false,
+    review: false,
+    hot: false
+  }
+  ,
+  // Targeted test entries
+  {
+    round: 'technical',
+    question: 'Stress test: very long question and answer to test UI rendering and database storage limits',
+    // Keep under 10000 chars (schema max). Use smaller repeats to test long-text handling safely.
+    answer: 'A'.repeat(2000) + '\n\n' + 'B'.repeat(2000),
+    code: '',
+    tags: ['long-text', 'stress-test'],
+    difficulty: 'hard',
+    favorite: false,
+    review: true,
+    hot: false
+  },
+  {
+    round: 'coding',
+    question: 'Large tag set to test tag UI performance',
+    answer: 'This question has a large number of tags to ensure the frontend handles tag lists and filtering performance.',
+    tags: Array.from({ length: 25 }, (_, i) => `tag-${i + 1}`),
+    difficulty: 'medium',
+    favorite: false,
+    review: false,
+    hot: false
+  },
+  {
+    round: 'technical',
+    question: 'Image heavy question to test upload/display',
+    answer: 'Contains multiple images of varying sizes (placeholders).',
+    images: [
+      { name: 'img1.png', data: 'iVBORw0KGgoAAAANSUhEUgAAAAUA', size: 120, mimeType: 'image/png' },
+      { name: 'img2.jpg', data: ' /9j/4AAQSkZJRgABAQAAAQABAAD', size: 2048, mimeType: 'image/jpeg' }
+    ],
+    tags: ['image', 'upload', 'ui'],
+    difficulty: 'easy',
+    favorite: false,
+    review: false,
+    hot: false
+  },
+  {
+    round: 'technical',
+    question: 'Code block search: find the phrase inside backticks',
+    answer: 'This answer contains a fenced code block with backticks and markdown-like content.',
+    code: "```js\n// Example with backticks and markdown-style code\nconst greeting = `Hello, ${name}`;\nconsole.log(greeting);\n```",
+    tags: ['code', 'markdown', 'search'],
+    difficulty: 'medium',
+    favorite: false,
+    review: true,
+    hot: false
+  },
+  {
+    round: 'hr',
+    question: 'Duplicate and mixed-case tags test',
+    answer: 'Tags include duplicates and varying cases to test normalization and deduplication in backend and frontend.',
+    tags: ['React', 'react', 'REACT', 'frontend', 'FrontEnd'],
+    difficulty: 'easy',
+    favorite: false,
+    review: false,
+    hot: false
+  },
+  {
+    round: 'behavioral',
+    question: '国际化测试 — non-ASCII characters',
+    answer: '这是一个包含非 ASCII 字符的问题，用于测试数据库与前端对 Unicode 文本的支持。',
+    tags: ['i18n', 'unicode', '测试'],
+    difficulty: 'easy',
+    favorite: false,
+    review: false,
+    hot: false
   }
 ];
 
@@ -276,6 +425,8 @@ export const migrateLocalStorageData = async (localStorageData) => {
   }
 };
 
+console.lo
+
 // Main execution
 const main = async () => {
   try {
@@ -289,8 +440,10 @@ const main = async () => {
   }
 };
 
-// Run if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Run main when the script is executed directly
+// Some Windows/node setups make the import.meta.url vs process.argv[1] check unreliable,
+// so call main() unconditionally when this file is executed.
+if (process.argv[1] && process.argv[1].endsWith('seedData.js')) {
   main();
 }
 
