@@ -10,7 +10,7 @@ import {
   Trash2, 
   MoreVertical
 } from 'lucide-react';
-import { updateQuestionAsync, deleteQuestionAsync, toggleQuestionStatusAsync } from '../../store/slices/questionsSlice';
+import { deleteQuestionAsync, toggleQuestionStatusAsync } from '../../store/slices/questionsSlice';
 import { setImageModal, setEditingQuestion, setExpandedQuestionId } from '../../store/slices/uiSlice';
 import CodeBlock from '../ui/CodeBlock';
 import { extractCodeBlocks } from '../../utils/codeUtils';

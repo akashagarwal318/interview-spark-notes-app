@@ -1,31 +1,38 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Modal, Box, IconButton } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
 import { setImageModal } from '../../store/slices/uiSlice';
 
 const ImageModal = () => {
   const dispatch = useDispatch();
   const { imageModal } = useSelector((state) => state.ui);
 
-  const handleClose = () => {
-    dispatch(setImageModal({ isOpen: false, imageSrc: '' }));
-  };
-
-  // Zoom & Pan state
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [fitMode, setFitMode] = useState(true); // true = contain; false = original (scroll)
+  const [fitMode, setFitMode] = useState(true); // fit (contain) vs original (scroll)
   const [isPanning, setIsPanning] = useState(false);
   const panStart = useRef({ x: 0, y: 0 });
   const imgContainerRef = useRef(null);
 
+  const showImage = !!imageModal?.imageSrc;
+
+  const handleClose = () => {
+    dispatch(setImageModal({ isOpen: false, imageSrc: '' }));
+  };
+
+  // Reset state when a new image opens
+  useEffect(() => {
+    if (imageModal.isOpen) {
+      setScale(1);
+      setPosition({ x: 0, y: 0 });
+      setFitMode(true);
+    }
+  }, [imageModal.isOpen, imageModal.imageSrc]);
+
   const clampScale = (s) => Math.min(5, Math.max(0.2, s));
 
   const handleWheel = useCallback((e) => {
-    if (!fitMode) return; // in original size mode we let native scrolling happen
-    // Zoom when Ctrl / Meta held; otherwise pan vertically when zoomed
+    if (!fitMode) return; // allow normal scroll in original mode
     const zoomGesture = e.ctrlKey || e.metaKey;
     if (zoomGesture) {
       e.preventDefault();
@@ -34,159 +41,87 @@ const ImageModal = () => {
       const cursorY = e.clientY - (rect?.top || 0);
       const delta = e.deltaY > 0 ? -0.12 : 0.12;
       setScale(prev => {
-        const newScale = clampScale(prev + delta);
-        const factor = newScale / prev - 1;
+        const next = clampScale(prev + delta);
+        const factor = next / prev - 1;
         setPosition(p => ({ x: p.x - cursorX * factor, y: p.y - cursorY * factor }));
-        return newScale;
+        return next;
       });
     } else if (scale > 1) {
-      e.preventDefault();
-      setPosition(p => ({ x: p.x - (e.shiftKey ? e.deltaY : 0), y: p.y - e.deltaY }));
+      // vertical pan with wheel when zoomed
+      setPosition(p => ({ ...p, y: p.y - e.deltaY * 0.5 }));
     }
   }, [fitMode, scale]);
 
   const startPan = (e) => {
+    if (!fitMode || scale === 1) return;
     e.preventDefault();
     setIsPanning(true);
     panStart.current = { x: e.clientX - position.x, y: e.clientY - position.y };
   };
+
   const onPan = (e) => {
     if (!isPanning) return;
     setPosition({ x: e.clientX - panStart.current.x, y: e.clientY - panStart.current.y });
   };
+
   const endPan = () => setIsPanning(false);
 
-  const zoomIn = () => { if (fitMode) setScale(s => clampScale(s + 0.25)); };
-  const zoomOut = () => { if (fitMode) setScale(s => clampScale(s - 0.25)); };
+  const zoomIn = () => setScale(s => clampScale(s + 0.25));
+  const zoomOut = () => setScale(s => clampScale(s - 0.25));
   const resetView = () => { setScale(1); setPosition({ x: 0, y: 0 }); };
-  const toggleFitMode = () => {
-    if (fitMode) {
-      // switching to original size -> reset transforms
-      resetView();
-      setFitMode(false);
-    } else {
-      setFitMode(true);
-    }
-  };
+  const toggleFitMode = () => { setFitMode(f => !f); resetView(); };
 
-  const showImage = Boolean(imageModal.imageSrc);
-
-  // Reset view whenever a new image opens or modal re-opens
-  useEffect(() => {
-    if (imageModal.isOpen && imageModal.imageSrc) {
-      setScale(1);
-      setPosition({ x: 0, y: 0 });
-      setFitMode(true);
-    }
-  }, [imageModal.isOpen, imageModal.imageSrc]);
+  if (!imageModal.isOpen) return null;
 
   return (
-    <Modal
-      open={imageModal.isOpen}
-      onClose={handleClose}
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: 'rgba(0, 0, 0, 0.9)'
-      }}
-    >
-      <Box sx={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh', width: '90vw', height: '90vh', display: 'flex', flexDirection: 'column' }}>
-        <IconButton
-          onClick={handleClose}
-          sx={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            color: 'white',
-            bgcolor: 'rgba(0, 0, 0, 0.5)',
-            '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.7)' },
-            zIndex: 1
-          }}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90" role="dialog" aria-modal="true">
+      <button
+        onClick={handleClose}
+        aria-label="Close image viewer"
+        className="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/70 rounded p-2 transition-colors"
+      >
+        ✕
+      </button>
+      {showImage && (
+        <div className="absolute left-4 top-4 z-10 flex gap-2">
+          <button onClick={toggleFitMode} className="text-white text-xs bg-black/50 hover:bg-black/70 px-2 py-1 rounded">{fitMode ? 'Original' : 'Fit'}</button>
+          {fitMode && <button onClick={zoomOut} className="text-white bg-black/50 hover:bg-black/70 px-2 py-1 rounded" aria-label="Zoom out">-</button>}
+          {fitMode && <button onClick={zoomIn} className="text-white bg-black/50 hover:bg-black/70 px-2 py-1 rounded" aria-label="Zoom in">+</button>}
+          {fitMode && <button onClick={resetView} className="text-white text-xs bg-black/50 hover:bg-black/70 px-2 py-1 rounded" aria-label="Reset zoom">100%</button>}
+        </div>
+      )}
+      {showImage && fitMode && (
+        <div
+          ref={imgContainerRef}
+          onWheel={handleWheel}
+          onMouseDown={startPan}
+          onMouseMove={onPan}
+          onMouseLeave={endPan}
+          onMouseUp={endPan}
+          className={`relative max-w-[90vw] max-h-[90vh] w-[90vw] h-[90vh] overflow-hidden flex items-center justify-center select-none ${isPanning ? 'cursor-grabbing' : scale !== 1 ? 'cursor-grab' : 'cursor-default'}`}
         >
-          <CloseIcon />
-        </IconButton>
-        {/* Toolbar */}
-        {showImage && (
-          <Box sx={{ position: 'absolute', left: 16, top: 8, zIndex: 1, display: 'flex', gap: 1 }}>
-            <IconButton size="small" onClick={toggleFitMode} sx={{ bgcolor: 'rgba(0,0,0,0.5)', color: 'white', fontSize: 11, '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' } }}>
-              {fitMode ? 'Original' : 'Fit'}
-            </IconButton>
-            {fitMode && <IconButton size="small" onClick={zoomOut} sx={{ bgcolor: 'rgba(0,0,0,0.5)', color: 'white', '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' } }}>-</IconButton>}
-            {fitMode && <IconButton size="small" onClick={zoomIn} sx={{ bgcolor: 'rgba(0,0,0,0.5)', color: 'white', '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' } }}>+</IconButton>}
-            {fitMode && <IconButton size="small" onClick={resetView} sx={{ bgcolor: 'rgba(0,0,0,0.5)', color: 'white', fontSize: 12, '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' } }}>100%</IconButton>}
-          </Box>
-        )}
-        {showImage && fitMode && (
-          <Box
-            ref={imgContainerRef}
-            onWheel={handleWheel}
-            onMouseDown={startPan}
-            onMouseMove={onPan}
-            onMouseLeave={endPan}
-            onMouseUp={endPan}
-            sx={{
-              flex: 1,
-              overflow: 'hidden',
-              cursor: isPanning ? 'grabbing' : scale !== 1 ? 'grab' : 'default',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              userSelect: 'none'
-            }}
-          >
-            <Box
-              component="img"
-              src={imageModal.imageSrc}
-              alt="Full size"
-              draggable={false}
-              sx={{
-                transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-                transition: isPanning ? 'none' : 'transform 0.12s ease-out',
-                maxWidth: '100%',
-                maxHeight: '100%',
-                objectFit: 'contain',
-                borderRadius: 1,
-                pointerEvents: 'none'
-              }}
-            />
-            {/* Hint */}
-            <Box sx={{ position: 'absolute', bottom: 8, left: 8, color: 'white', fontSize: 11, opacity: 0.7 }}>
-              Ctrl+Wheel = Zoom | Wheel = Pan | Drag = Pan
-            </Box>
-          </Box>
-        )}
-        {showImage && !fitMode && (
-          <Box
-            sx={{
-              flex: 1,
-              overflow: 'auto',
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'flex-start',
-              position: 'relative'
-            }}
-          >
-            <Box
-              component="img"
-              src={imageModal.imageSrc}
-              alt="Full size"
-              draggable={false}
-              sx={{
-                display: 'block',
-                margin: '0 auto',
-                objectFit: 'unset',
-                borderRadius: 1
-              }}
-            />
-            <Box sx={{ position: 'absolute', bottom: 8, left: 8, color: 'white', fontSize: 11, opacity: 0.7 }}>
-              Scroll to view | Switch back with Fit button
-            </Box>
-          </Box>
-        )}
-      </Box>
-    </Modal>
+          <img
+            src={imageModal.imageSrc}
+            alt="Full size"
+            draggable={false}
+            className="max-w-full max-h-full object-contain pointer-events-none rounded"
+            style={{ transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`, transition: isPanning ? 'none' : 'transform 0.12s ease-out' }}
+          />
+          <div className="absolute bottom-2 left-2 text-white text-[11px] opacity-70">Ctrl+Wheel = Zoom | Wheel = Pan | Drag = Pan</div>
+        </div>
+      )}
+      {showImage && !fitMode && (
+        <div className="relative max-w-[90vw] max-h-[90vh] w-[90vw] h-[90vh] overflow-auto">
+          <img
+            src={imageModal.imageSrc}
+            alt="Full size"
+            draggable={false}
+            className="block mx-auto rounded"
+          />
+          <div className="absolute bottom-2 left-2 text-white text-[11px] opacity-70">Scroll to view | Switch back with Fit</div>
+        </div>
+      )}
+    </div>
   );
 };
 

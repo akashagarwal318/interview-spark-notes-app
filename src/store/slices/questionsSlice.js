@@ -84,8 +84,7 @@ export const toggleQuestionStatusAsync = createAsyncThunk(
 );
 
 const initialState = {
-  items: [],
-  filteredItems: [],
+  items: [], // raw questions fetched from backend
   // Central list of interview rounds (string keys stored on each question)
   rounds: ['technical','hr','telephonic','introduction','behavioral','system-design','coding'],
   pagination: {
@@ -101,7 +100,6 @@ const initialState = {
   searchTerm: '',
   searchScope: 'all', // 'all', 'question', 'answer', 'code'
   questionsPerPage: 10,
-  sortBy: 'newest',
   filters: {
     favorite: false,
     review: false,
@@ -121,29 +119,6 @@ const questionsSlice = createSlice({
       state.currentRound = action.payload;
       state.pagination.currentPage = 1;
     },
-    addCustomRound: (state, action) => {
-      const raw = (action.payload || '').trim();
-      if (!raw) return;
-      const slug = raw
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
-      if (!slug) return;
-      if (!state.rounds.includes(slug)) {
-        state.rounds.push(slug);
-      }
-    },
-    deleteCustomRound: (state, action) => {
-      const round = action.payload;
-      const protectedRounds = ['technical','hr','telephonic','introduction','behavioral','system-design','coding'];
-      if (protectedRounds.includes(round)) return; // don't remove default
-      state.rounds = state.rounds.filter(r => r !== round);
-      // If currently viewing deleted round, reset to 'all'
-      if (state.currentRound === round) state.currentRound = 'all';
-      // Optionally reassign questions of deleted round to 'technical'
-      state.items = state.items.map(q => q.round === round ? { ...q, round: 'technical' } : q);
-    },
     setSearchTerm: (state, action) => {
       state.searchTerm = action.payload;
       state.pagination.currentPage = 1;
@@ -158,9 +133,6 @@ const questionsSlice = createSlice({
     setQuestionsPerPage: (state, action) => {
       state.questionsPerPage = action.payload;
       state.pagination.currentPage = 1;
-    },
-    setSortBy: (state, action) => {
-      state.sortBy = action.payload;
     },
     setFilters: (state, action) => {
       state.filters = { ...state.filters, ...action.payload };
@@ -471,7 +443,6 @@ export const {
   setSearchScope,
   setCurrentPage,
   setQuestionsPerPage,
-  setSortBy,
   setFilters,
   setSelectedTags,
   resetFilters,
@@ -480,8 +451,6 @@ export const {
   addQuestionLocal,
   updateQuestionLocal,
   deleteQuestionLocal,
-  addCustomRound,
-  deleteCustomRound
 } = questionsSlice.actions;
 
 export default questionsSlice.reducer;

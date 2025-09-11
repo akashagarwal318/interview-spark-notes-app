@@ -4,7 +4,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
-import morgan from 'morgan';
 import dotenv from 'dotenv';
 
 // Route imports
@@ -17,7 +16,8 @@ import roundsRoutes from './routes/rounds.js';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const BASE_PORT = parseInt(process.env.PORT, 10) || 5000;
+let currentPort = BASE_PORT;
 
 // Security middleware
 app.use(helmet());
@@ -42,12 +42,7 @@ app.use(compression());
 app.use(express.json({ limit: '50mb' })); // Increased limit for base64 images
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Logging middleware
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-} else {
-  app.use(morgan('combined'));
-}
+// (Removed morgan logging to reduce dependencies; lightweight console logging can be added if needed)
 
 // Database connection with fallback logic
 const connectDB = async () => {
@@ -81,20 +76,6 @@ const connectDB = async () => {
     process.exit(1);
   }
 };
-
-// Start server only after DB connection (or after fallback succeeds)
-const startServer = async () => {
-  await connectDB();
-  if (!app.listening) {
-    app.listen(PORT, () => {
-      app.listening = true; // custom flag to avoid double start
-      console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-      console.log(`📊 API Documentation: http://localhost:${PORT}/api/health`);
-    });
-  }
-};
-
-startServer();
 
 // Routes
 app.use('/api/questions', questionRoutes);
@@ -131,21 +112,55 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Shutting down gracefully...');
-  mongoose.connection.close(() => {
-    console.log('MongoDB connection closed.');
-    process.exit(0);
+// Start server only after DB connection (or after fallback succeeds)
+async function startServer(retries = 5) {
+  await connectDB();
+  if (app.listening) return; // already started
+  const attempt = () => new Promise((resolve, reject) => {
+    const server = app.listen(currentPort, () => {
+      app.listening = true;
+      console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${currentPort}`);
+      console.log(`📊 Health: http://localhost:${currentPort}/api/health`);
+      resolve();
+    });
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        if (retries > 0) {
+          console.warn(`Port ${currentPort} in use. Trying next port...`);
+          currentPort += 1;
+          setTimeout(() => startServer(retries - 1).then(resolve).catch(reject), 300);
+        } else {
+          reject(new Error(`No available ports after retries starting at ${BASE_PORT}`));
+        }
+      } else {
+        reject(err);
+      }
+    });
   });
+  return attempt();
+}
+
+startServer().catch(err => {
+  console.error('Failed to start server:', err.message);
+  process.exit(1);
 });
 
-process.on('SIGINT', () => {
-  console.log('SIGINT received. Shutting down gracefully...');
-  mongoose.connection.close(() => {
-    console.log('MongoDB connection closed.');
+// Graceful shutdown
+async function gracefulShutdown(signal) {
+  console.log(`${signal} received. Shutting down gracefully...`);
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await mongoose.disconnect();
+      console.log('MongoDB connection closed.');
+    }
+  } catch (err) {
+    console.error('Error during disconnect:', err.message);
+  } finally {
     process.exit(0);
-  });
-});
+  }
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // (Removed immediate listen; handled in startServer())

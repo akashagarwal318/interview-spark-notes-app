@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setFilters, resetFilters, selectQuestionStats } from '../../store/slices/questionsSlice.js';
-import StatsService from '../../services/statsService.js';
 
 const QuickStats = () => {
   const dispatch = useDispatch();

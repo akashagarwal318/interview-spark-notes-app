@@ -29,7 +29,6 @@ const InterviewAssistant = () => {
     searchTerm,
     searchScope,
     questionsPerPage,
-    sortBy,
     filters,
     selectedTags,
     isOnline
@@ -71,7 +70,7 @@ const InterviewAssistant = () => {
       dispatch(collapseAllQuestions());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentRound, searchTerm, searchScope, filters.favorite, filters.review, filters.hot, selectedTags, pagination.currentPage, questionsPerPage, sortBy]);
+  }, [currentRound, searchTerm, searchScope, filters.favorite, filters.review, filters.hot, selectedTags, pagination.currentPage, questionsPerPage]);
 
   // Collapse on outside click or Escape key
   useEffect(() => {
@@ -105,8 +104,7 @@ const InterviewAssistant = () => {
     // The 'search' parameter is removed to prevent API-side filtering conflicts.
     const params = {
       page: 1,
-      limit: 1000, // Fetch a large set for client-side filtering
-      sortBy
+      limit: 1000 // Fetch a large set for client-side filtering
     };
 
     dispatch(fetchQuestions(params));

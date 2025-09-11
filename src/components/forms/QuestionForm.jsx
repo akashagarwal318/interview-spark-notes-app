@@ -21,7 +21,7 @@ import { setFormVisible } from '../../store/slices/uiSlice';
 const QuestionForm = () => {
   const dispatch = useDispatch();
   const { isFormVisible, editingQuestion } = useSelector((state) => state.ui);
-  const { currentRound, rounds } = useSelector((state) => state.questions);
+  const { currentRound, rounds, items } = useSelector((state) => state.questions);
   const [customRoundInput, setCustomRoundInput] = useState('');
 
   const [formData, setFormData] = useState({
@@ -197,16 +197,31 @@ const QuestionForm = () => {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const addTag = () => {
-    if (tagInput.trim()) {
-      const currentTags = Array.isArray(formData.tags)
-        ? formData.tags
-        : (formData.tags || '').split(',').map(t => t.trim());
-      if (!currentTags.includes(tagInput.trim())) {
-        setFormData(prev => ({ ...prev, tags: [...currentTags, tagInput.trim()] }));
-      }
-      setTagInput('');
-    }
+  // All existing tags with counts from current questions (memoized)
+  const existingTags = React.useMemo(() => {
+    const map = new Map();
+    (items || []).forEach(q => (q.tags || []).forEach(t => {
+      if (!t) return;
+      const name = typeof t === 'string' ? t : (t.name || '').trim();
+      if (!name) return;
+      const key = name.toLowerCase();
+      if (!map.has(key)) map.set(key, { name, count: 0 });
+      map.get(key).count++;
+    }));
+    return Array.from(map.values()).sort((a,b)=> a.name.localeCompare(b.name));
+  }, [items]);
+
+  // Simplified tag adder (removes earlier event/object detection & extra normalization)
+  const addTag = (tagName) => {
+    const value = (typeof tagName === 'string' ? tagName : tagInput).trim();
+    if (!value) return;
+    setFormData(prev => {
+      const current = Array.isArray(prev.tags) ? prev.tags : [];
+      const exists = current.some(t => ((typeof t === 'string' ? t : t.name || '').toLowerCase()) === value.toLowerCase());
+      if (exists) return prev;
+      return { ...prev, tags: [...current, value] };
+    });
+    if (typeof tagName !== 'string') setTagInput('');
   };
 
   const removeTag = (tagToRemove) => {
@@ -299,10 +314,31 @@ const QuestionForm = () => {
                   onKeyPress={handleKeyPress}
                   className="flex-1"
                 />
-                <Button type="button" onClick={addTag} size="sm">
+                <Button type="button" onClick={() => addTag()} size="sm">
                   Add
                 </Button>
               </div>
+              {existingTags.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2 max-h-28 overflow-auto border border-border rounded-md p-2 bg-muted/30">
+                  {existingTags.map(t => {
+                    const already = (Array.isArray(formData.tags) ? formData.tags : [])
+                      .some(x => ((typeof x === 'string' ? x : x.name) || '').toLowerCase() === t.name.toLowerCase());
+                    return (
+                      <button
+                        type="button"
+                        key={t.name}
+                        onClick={() => addTag(t.name)}
+                        className={`text-xs px-2 py-1 rounded-full border flex items-center gap-1 transition-colors ${already ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300 border-gray-300 cursor-not-allowed' : 'bg-background hover:bg-accent border-border'} `}
+                        title={already ? 'Already added' : 'Add tag'}
+                        disabled={already}
+                      >
+                        <span>{t.name}</span>
+                        <span className={`text-[10px] px-1 rounded-full ${already ? 'bg-white/20' : 'bg-black/10 dark:bg-white/10'}`}>{t.count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               {tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {tags.map((tag, index) => (

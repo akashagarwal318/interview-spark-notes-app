@@ -1,473 +1,352 @@
+# 🚀 Interview Assistant - MERN Stack Application
 
-# 🚀 Interview Assistant - Complete Documentation
-
-A modern, feature-rich interview preparation application built with React, Redux, Material-UI, and JavaScript. This application helps candidates organize, practice, and master their interview questions across different rounds and categories.
+A modern, comprehensive interview preparation application built with React, Redux Toolkit, and Express.js. Features a MongoDB backend for persistent data storage, advanced question management, and intelligent search capabilities.
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Technology Stack](#technology-stack)
-- [Project Structure](#project-structure)
-- [Features](#features)
-- [Installation & Setup](#installation--setup)
-- [Folder & File Structure](#folder--file-structure)
-- [Component Documentation](#component-documentation)
-- [State Management](#state-management)
-- [Usage Guide](#usage-guide)
-- [Development Guidelines](#development-guidelines)
-- [Contributing](#contributing)
+- [Features](#-features)
+- [Technology Stack](#-technology-stack)
+- [Quick Start](#-quick-start)
+- [Project Structure](#-project-structure)
+- [API Documentation](#-api-documentation)
+- [Development Guide](#-development-guide)
+- [Component Library](#-component-library)
 
-## 🔍 Overview
+## ✨ Features
 
-Interview Assistant is a comprehensive web application designed for interview preparation. It provides an intuitive interface for managing interview questions, organizing them by categories, and tracking preparation progress. The application supports advanced filtering, search capabilities, and includes features like favorites, review lists, and hot topics.
+### 🎯 Question Management
+- **Create & Edit**: Add comprehensive interview questions with rich text formatting
+- **Code Snippets**: Syntax-highlighted code blocks with language selection
+- **Image Support**: Upload and display images with questions (base64 storage)
+- **Tags System**: Organize questions with colorful, searchable tags
+- **Status Tracking**: Mark questions as favorites, for review, or hot topics
+- **Round Organization**: Categorize by interview rounds (technical, behavioral, etc.)
 
-### Key Highlights
-- **Modern Architecture**: Built with React 18, Redux Toolkit, and Material-UI
-- **Responsive Design**: Mobile-first approach with seamless desktop experience
-- **Advanced Filtering**: Multi-dimensional search and filtering capabilities
-- **Local Storage**: Persistent data storage without backend requirements
-- **Theme Support**: Light and dark mode with system preference detection
-- **Export/Import**: Backup and restore functionality
+### 🔍 Advanced Search & Filtering
+- **Full-Text Search**: Search across questions, answers, code, and tags
+- **Smart Filters**: Multi-dimensional filtering by round, tags, status, difficulty
+- **Real-time Results**: Instant search with debounced input
+- **Custom Rounds**: Create and manage custom interview round categories
+- **Clear Filters**: One-click filter reset with visual indicators
+
+### 📊 Analytics & Statistics
+- **Real-time Stats**: Dashboard with comprehensive metrics
+- **Progress Tracking**: Monitor preparation progress over time
+- **Tag Analytics**: Most used tags and categorization insights
+- **Round Distribution**: Visual breakdown of questions by interview rounds
+
+### 🎨 User Experience
+- **Dark/Light Theme**: System preference detection with manual toggle
+- **Responsive Design**: Mobile-first approach, works on all devices
+- **Auto-Save**: Automatic form persistence during editing
+- **Keyboard Shortcuts**: Efficient navigation and form handling
+- **Loading States**: Smooth loading indicators for all operations
+
+### 🚀 Performance Features
+- **Pagination**: Efficient data loading with customizable page sizes
+- **Lazy Loading**: Images and content loaded on demand
+- **Debounced Search**: Optimized search performance
+- **Redux State Management**: Centralized state with automatic updates
 
 ## 🛠️ Technology Stack
 
-### Core Technologies
-- **React 18**: Modern React with hooks and functional components
-- **JavaScript (ES6+)**: Latest JavaScript features and syntax
-- **Redux Toolkit**: Simplified Redux for state management
-- **React Redux**: Official React bindings for Redux
-- **Material-UI (MUI) v5**: Comprehensive React component library
-- **React Router**: Declarative routing for React applications
+### Frontend
+- **React 18** - Modern React with hooks and concurrent features
+- **JavaScript (ES6+)** - Latest JavaScript features, no TypeScript
+- **Redux Toolkit** - Simplified state management with RTK Query
+- **Tailwind CSS** - Utility-first CSS framework for styling
+- **Radix UI Components** - Accessible, customizable UI primitives
+- **Lucide React** - Beautiful, customizable icons
+- **Vite** - Fast build tool and development server
+
+### Backend
+- **Node.js 18+** - JavaScript runtime environment
+- **Express.js** - Web application framework
+- **MongoDB** - NoSQL database with Mongoose ODM
+- **Joi** - Data validation and sanitization
+- **Helmet** - Security middleware for Express
+- **CORS** - Cross-origin resource sharing
+- **Compression** - Response compression middleware
 
 ### Development Tools
-- **Vite**: Fast build tool and development server
-- **ESLint**: Code linting for consistent code quality
-- **Less**: CSS preprocessor for enhanced styling capabilities
+- **ESLint** - Code linting and style enforcement
+- **PostCSS** - CSS post-processing with Tailwind
+- **Nodemon** - Automatic server restart during development
+- **Docker** - Containerization support (optional)
 
-### Browser APIs
-- **Local Storage**: Client-side data persistence
-- **Clipboard API**: Copy-to-clipboard functionality
-- **File Reader API**: Image upload and processing
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ and npm/yarn
+- MongoDB (local installation or MongoDB Atlas)
+- Git
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd interview-spark-notes-app
+   ```
+
+2. **Install dependencies**
+   ```bash
+   # Install frontend dependencies
+   npm install
+   
+   # Install backend dependencies
+   cd backend
+   npm install
+   cd ..
+   ```
+
+3. **Environment setup**
+   ```bash
+   # Copy environment template
+   cp .env.example .env
+   
+   # Configure your environment variables
+   # Edit .env file with your settings
+   ```
+
+4. **Database setup**
+   ```bash
+   # Start MongoDB (if running locally)
+   mongod
+   
+   # Seed the database with sample data
+   cd backend
+   npm run seed
+   cd ..
+   ```
+
+5. **Start the application**
+   ```bash
+   # Terminal 1: Start backend server
+   cd backend
+   npm run dev
+   
+   # Terminal 2: Start frontend development server
+   npm run dev
+   ```
+
+6. **Access the application**
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:5000
+   - Database: MongoDB on port 27017
 
 ## 📁 Project Structure
 
 ```
-src/
-├── components/              # Reusable UI components
-│   ├── layout/             # Layout-related components
-│   │   └── Header.js       # Application header with navigation
-│   ├── stats/              # Statistics and metrics components
-│   │   └── QuickStats.js   # Quick statistics display
-│   ├── filters/            # Search and filtering components
-│   │   └── SearchFilters.js # Advanced search and filter interface
-│   ├── forms/              # Form components
-│   │   └── QuestionForm.js # Question creation/editing form
-│   ├── questions/          # Question-related components
-│   │   └── QuestionCard.js # Individual question display card
-│   ├── modals/             # Modal components
-│   │   └── ImageModal.js   # Image viewer modal
-│   └── pagination/         # Pagination components
-│       └── PaginationControls.js # Pagination controls
-├── store/                  # Redux store and state management
-│   ├── index.js           # Store configuration
-│   └── slices/            # Redux slices
-│       ├── questionsSlice.js # Questions state management
-│       └── uiSlice.js     # UI state management
-├── theme/                  # Theming and styling
-│   └── theme.js           # Material-UI theme configuration
-├── hooks/                  # Custom React hooks
-│   ├── useLocalStorage.js # Local storage hook
-│   └── useDebounce.js     # Debounce hook for search
-├── pages/                  # Page components
-│   └── InterviewAssistant.js # Main application page
-├── App.js                  # Root application component
-├── main.jsx               # Application entry point
-└── index.css              # Global styles
+interview-spark-notes-app/
+├── 📁 backend/                    # Express.js API server
+│   ├── 📁 middleware/            # Custom middleware
+│   ├── 📁 models/                # Mongoose schemas
+│   ├── 📁 routes/                # API route handlers
+│   ├── 📁 scripts/               # Database utilities
+│   ├── package.json              # Backend dependencies
+│   └── server.js                 # Express server entry
+├── 📁 src/                       # React frontend source
+│   ├── 📁 components/            # React components
+│   │   ├── 📁 filters/          # Search and filter components
+│   │   ├── 📁 forms/            # Form components
+│   │   ├── 📁 layout/           # Layout components
+│   │   ├── 📁 modals/           # Modal components
+│   │   ├── 📁 pagination/       # Pagination controls
+│   │   ├── 📁 questions/        # Question-related components
+│   │   ├── 📁 stats/            # Statistics components
+│   │   └── 📁 ui/               # Reusable UI components
+│   ├── 📁 hooks/                 # Custom React hooks
+│   ├── 📁 lib/                   # Utility libraries
+│   ├── 📁 pages/                 # Page components
+│   ├── 📁 services/              # API service layers
+│   ├── 📁 store/                 # Redux store configuration
+│   │   └── 📁 slices/           # Redux slices
+│   ├── 📁 theme/                 # Theme configuration
+│   └── 📁 utils/                 # Utility functions
+├── 📁 public/                    # Static assets
+├── package.json                  # Frontend dependencies
+├── vite.config.ts               # Vite configuration
+├── tailwind.config.ts           # Tailwind CSS configuration
+└── README.md                    # Project documentation
 ```
 
-## ✨ Features
+## 🔌 API Documentation
 
-### Core Features
+### Base URL
+```
+http://localhost:5000/api
+```
 
-#### 1. Question Management
-- **Create Questions**: Add new questions with comprehensive details
-- **Edit Questions**: Inline editing of all question fields
-- **Delete Questions**: Safe deletion with confirmation dialogs
-- **Duplicate Questions**: Quick duplication with automatic naming
-- **Status Management**: Mark questions as favorites, for review, or hot topics
+### Questions Endpoints
 
-#### 2. Advanced Search & Filtering
-- **Full-Text Search**: Search across questions, answers, code, and tags
-- **Search Types**: Focused search on specific content types
-- **Round Filters**: Filter by interview rounds (Technical, HR, Behavioral, etc.)
-- **Status Filters**: Filter by question status (Favorites, Review, Hot List)
-- **Tag Filters**: Dynamic tag-based filtering with visual chips
-- **Active Filter Display**: Clear visualization of applied filters
+#### Get Questions
+```http
+GET /questions?page=1&limit=10&search=react&round=technical&tags=javascript,react
+```
 
-#### 3. Content Types Support
-- **Rich Text**: Formatted answers with proper line breaks
-- **Code Snippets**: Syntax-highlighted code blocks with monospace font
-- **Tags**: Categorization with custom tags and chip display
-- **Images**: Visual attachments with thumbnail gallery and modal viewing
-- **Round Classification**: Categorize by interview round types
+#### Create Question
+```http
+POST /questions
+Content-Type: application/json
 
-#### 4. User Experience
-- **Responsive Design**: Mobile-first approach with breakpoint optimization
-- **Theme Support**: Light and dark modes with smooth transitions
-- **Pagination**: Customizable items per page with navigation controls
-- **Copy Functionality**: Copy answers, code, or full questions to clipboard
-- **Loading States**: Smooth loading indicators and transitions
+{
+  "round": "technical",
+  "question": "What is React?",
+  "answer": "React is a JavaScript library...",
+  "code": "const App = () => <div>Hello</div>",
+  "codeLanguage": "javascript",
+  "tags": ["react", "javascript"],
+  "difficulty": "easy",
+  "company": "Google",
+  "position": "Frontend Developer"
+}
+```
 
-### Advanced Features
+#### Update Question
+```http
+PUT /questions/:id
+Content-Type: application/json
 
-#### 1. State Management
-- **Redux Integration**: Centralized state management with Redux Toolkit
-- **Persistent Storage**: Automatic local storage synchronization
-- **Optimistic Updates**: Immediate UI feedback for better UX
-- **Error Handling**: Comprehensive error states and recovery
+{
+  "question": "Updated question text",
+  "answer": "Updated answer",
+  "favorite": true
+}
+```
 
-#### 2. Performance Optimization
-- **Debounced Search**: Optimized search with 300ms debounce
-- **Memoization**: Optimized re-renders with React optimization techniques
-- **Lazy Loading**: On-demand component loading
-- **Efficient Filtering**: Client-side filtering with minimal re-computation
+#### Delete Question
+```http
+DELETE /questions/:id
+```
 
-## 🚀 Installation & Setup
+### Tags Endpoints
 
-### Prerequisites
-- Node.js 16.0 or higher
-- npm 8.0 or higher
-- Modern web browser (Chrome, Firefox, Safari, Edge)
+#### Get All Tags
+```http
+GET /tags
+```
 
-### Installation Steps
+#### Get Tag Usage Statistics
+```http
+GET /tags/stats
+```
 
-1. **Clone the Repository**
+### Statistics Endpoints
+
+#### Get Dashboard Statistics
+```http
+GET /stats/dashboard
+```
+
+#### Get Round Distribution
+```http
+GET /stats/rounds
+```
+
+## 🛠️ Development Guide
+
+### Frontend Development
+
+#### Available Scripts
 ```bash
-git clone <repository-url>
-cd interview-assistant
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
 ```
 
-2. **Install Dependencies**
+#### Adding New Components
+1. Create component file in appropriate `src/components/` subdirectory
+2. Use functional components with hooks
+3. Include TypeScript-style JSDoc comments for props
+4. Export component as default export
+
+#### State Management
+- Use Redux Toolkit for global state
+- Create slices in `src/store/slices/`
+- Use createAsyncThunk for API calls
+- Follow the established patterns in questionsSlice.js
+
+#### Styling Guidelines
+- Use Tailwind CSS utility classes
+- Create reusable components in `src/components/ui/`
+- Follow the established design system
+- Use CSS custom properties for theme variables
+
+### Backend Development
+
+#### Available Scripts
 ```bash
-npm install
+npm start            # Start production server
+npm run dev          # Start development server with nodemon
+npm run seed         # Seed database with sample data
 ```
 
-3. **Start Development Server**
-```bash
-npm run dev
-```
+#### API Development
+1. Create routes in `backend/routes/`
+2. Use Joi for request validation
+3. Follow RESTful conventions
+4. Include proper error handling
+5. Add JSDoc comments for endpoints
 
-4. **Build for Production**
-```bash
-npm run build
-```
+#### Database Schema
+- Questions: Core interview question data
+- Tags: Reusable categorization system
+- Indexes: Optimized for search and filtering
 
-5. **Preview Production Build**
-```bash
-npm run preview
-```
+## 🎨 Component Library
 
-### Environment Setup
-The application uses Vite for development and build processes. No additional environment configuration is required for basic usage.
+### UI Components
+Our custom UI component library built on Radix UI primitives:
 
-## 📂 Folder & File Structure Explanation
+#### Core Components
+- **Button** - Various styles and sizes
+- **Input** - Form input with validation states
+- **Textarea** - Multi-line text input
+- **Select** - Dropdown selection component
+- **Card** - Content container with header/body
+- **Badge** - Status and tag indicators
+- **DropdownMenu** - Contextual action menus
 
-### `/src/components/`
-Contains all reusable UI components organized by functionality:
+#### Specialized Components
+- **AdvancedCodeEditor** - Syntax-highlighted code editor with fullscreen mode
+- **CodeBlock** - Read-only syntax-highlighted code display
+- **QuestionCard** - Complete question display with all features
+- **SearchFilters** - Advanced filtering interface
+- **PaginationControls** - Data navigation controls
 
-#### `/layout/`
-- **Header.js**: Main application header with navigation buttons, theme toggle, and responsive design
+### Theme System
+- CSS custom properties for consistent theming
+- Dark/light mode with system preference detection
+- Accessible color contrasts
+- Consistent spacing and typography scales
 
-#### `/stats/`
-- **QuickStats.js**: Displays key statistics (total questions, favorites, review items, hot list) in a responsive grid
+## 📝 Contributing
 
-#### `/filters/`
-- **SearchFilters.js**: Comprehensive filtering interface with search, round filters, status filters, and tag management
-
-#### `/forms/`
-- **QuestionForm.js**: Form component for creating and editing questions with validation and file upload support
-
-#### `/questions/`
-- **QuestionCard.js**: Individual question display with expandable content, inline editing, and action buttons
-
-#### `/modals/`
-- **ImageModal.js**: Full-screen image viewer with overlay and close functionality
-
-#### `/pagination/`
-- **PaginationControls.js**: Pagination interface with customizable items per page and page navigation
-
-### `/src/store/`
-Redux store configuration and state management:
-
-#### `index.js`
-- Store configuration with Redux Toolkit
-- Middleware setup for serialization handling
-- Root reducer combination
-
-#### `/slices/`
-- **questionsSlice.js**: Questions state management with CRUD operations, filtering, and async localStorage operations
-- **uiSlice.js**: UI state management for theme, modals, expanded states, and form visibility
-
-### `/src/theme/`
-- **theme.js**: Material-UI theme configuration with light and dark themes, typography scales, and color palettes
-
-### `/src/hooks/`
-Custom React hooks for reusable logic:
-- **useLocalStorage.js**: Hook for localStorage integration with error handling
-- **useDebounce.js**: Debounce hook for optimizing search performance
-
-### `/src/pages/`
-- **InterviewAssistant.js**: Main application page that orchestrates all components and manages global effects
-
-## 📚 Component Documentation
-
-### Header Component
-**Location**: `src/components/layout/Header.js`
-**Purpose**: Application header with navigation and primary actions
-
-**Features**:
-- Add new question button
-- Show all questions (reset filters) button
-- Theme toggle with appropriate icons
-- Responsive design with proper spacing
-- Material-UI AppBar implementation
-
-### QuickStats Component
-**Location**: `src/components/stats/QuickStats.js`
-**Purpose**: Display key statistics about the question collection
-
-**Features**:
-- Real-time statistics calculation from Redux state
-- Responsive grid layout (2 columns on mobile, 4 on desktop)
-- Color-coded statistics with meaningful visual design
-- Card-based design with proper elevation
-
-### SearchFilters Component
-**Location**: `src/components/filters/SearchFilters.js`
-**Purpose**: Comprehensive filtering and search interface
-
-**Features**:
-- Real-time search with debouncing (300ms delay)
-- Multiple search types (question, answer, code, tags)
-- Round filtering with visual chip interface
-- Status filtering (all, favorites, review, hot list)
-- Dynamic tag filtering based on existing tags
-- Active filter summary with clear removal options
-- Responsive design with proper spacing
-
-### QuestionForm Component
-**Location**: `src/components/forms/QuestionForm.js`
-**Purpose**: Form for creating new questions
-
-**Features**:
-- Comprehensive form with all question fields
-- Form validation for required fields
-- File upload support for images with processing
-- Select dropdown for interview rounds
-- Textarea with proper sizing for answers and code
-- Form state management with Redux integration
-
-### QuestionCard Component
-**Location**: `src/components/questions/QuestionCard.js`
-**Purpose**: Individual question display and interaction
-
-**Features**:
-- Expandable/collapsible design with smooth animations
-- Inline editing for all fields (question, answer, code, tags, round)
-- Status toggle buttons (favorite, review, hot) with visual feedback
-- Action buttons (edit, duplicate, delete) with proper icons
-- Image gallery with thumbnail display and modal viewing
-- Copy-to-clipboard functionality for different content types
-- Tag display with chip components
-- Code syntax highlighting with monospace font
-- Round badge with color coding
-
-## 🔄 State Management
-
-### Redux Store Structure
-
-#### Questions Slice (`questionsSlice.js`)
-**State Properties**:
-- `items`: Array of all questions
-- `filteredItems`: Filtered questions based on current filters
-- `loading`: Loading state for async operations
-- `error`: Error state for error handling
-- `searchTerm`: Current search query
-- `searchType`: Type of search (question, answer, code, tags)
-- `currentRound`: Selected round filter
-- `activeTagFilter`: Selected tag filter
-- `activeStatusFilter`: Selected status filter
-- `currentPage`: Current pagination page
-- `questionsPerPage`: Number of questions per page
-
-**Actions**:
-- `addQuestion`: Add new question to collection
-- `updateQuestion`: Update existing question
-- `deleteQuestion`: Remove question from collection
-- `duplicateQuestion`: Create copy of existing question
-- `setSearchTerm`: Update search term
-- `setSearchType`: Update search type
-- `setCurrentRound`: Update round filter
-- `setActiveTagFilter`: Update tag filter
-- `setActiveStatusFilter`: Update status filter
-- `setCurrentPage`: Update current page
-- `setQuestionsPerPage`: Update items per page
-- `applyFilters`: Apply all active filters
-- `resetFilters`: Clear all filters
-
-**Async Thunks**:
-- `loadQuestions`: Load questions from localStorage
-- `saveQuestions`: Save questions to localStorage
-
-#### UI Slice (`uiSlice.js`)
-**State Properties**:
-- `theme`: Current theme (light/dark)
-- `isFormVisible`: Question form visibility
-- `expandedQuestions`: Set of expanded question IDs
-- `editingQuestions`: Set of questions in edit mode
-- `imageModal`: Image modal state with src and visibility
-
-**Actions**:
-- `setTheme`: Set theme preference
-- `toggleTheme`: Toggle between light and dark themes
-- `setFormVisible`: Control form visibility
-- `toggleQuestionExpanded`: Toggle question expansion
-- `toggleQuestionEdit`: Toggle question edit mode
-- `setImageModal`: Control image modal state
-
-### Data Flow
-
-1. **Initialization**: Application loads questions from localStorage via `loadQuestions` thunk
-2. **User Interactions**: Components dispatch actions to update state
-3. **State Updates**: Redux slices update state immutably
-4. **Component Re-renders**: Components subscribe to state changes via `useSelector`
-5. **Persistence**: Questions are automatically saved to localStorage when modified
-
-## 📖 Usage Guide
-
-### Getting Started
-
-1. **First Launch**: Application loads with sample questions
-2. **Theme Selection**: Toggle between light and dark modes using the theme button
-3. **Navigation**: Use the header buttons to add questions or reset filters
-
-### Managing Questions
-
-#### Creating Questions
-1. Click "Add New Question" button in header
-2. Fill in required fields (Question and Answer)
-3. Optionally add code snippets, tags, and images
-4. Select appropriate interview round
-5. Click "Save Question"
-
-#### Editing Questions
-1. Expand question card by clicking expand button
-2. Click edit button to enable edit mode
-3. Click on any field to edit inline
-4. Press Enter to save or Escape to cancel
-5. Exit edit mode by clicking edit button again
-
-#### Managing Status
-- **Favorites**: Click star icon to mark important questions
-- **Review**: Click bookmark icon for questions needing review
-- **Hot List**: Click fire icon for frequently asked questions
-
-### Search and Filtering
-
-#### Text Search
-1. Enter search term in search box
-2. Select search type (Question, Answer, Code, Tags)
-3. Results update automatically with 300ms debounce
-
-#### Round Filtering
-- Click round chips to filter by interview round
-- Multiple rounds can be selected
-- Click "All Rounds" to clear round filters
-
-#### Status Filtering
-- Use status chips to filter by question status
-- Options: All, Favorites, Review, Hot List
-
-#### Tag Filtering
-- Click tag chips to filter by specific tags
-- Tags are dynamically generated from existing questions
-
-### Pagination
-- Use pagination controls at bottom of question list
-- Customize items per page (5, 10, 15, 20, 25, 50)
-- Navigate between pages using pagination buttons
-
-### Copy Functionality
-- **Copy Answer**: Copy just the answer text
-- **Copy Code**: Copy code snippet only
-- **Copy All**: Copy complete question with answer, code, and tags
-
-## 🔧 Development Guidelines
-
-### Code Organization
-- **Component Separation**: Each component has a single responsibility
-- **File Naming**: Use descriptive names with proper extensions
-- **Import Organization**: Group imports by type (React, libraries, local)
-- **Export Patterns**: Use default exports for components, named exports for utilities
-
-### State Management Patterns
-- **Immutable Updates**: All state updates use Redux Toolkit's Immer
-- **Action Creators**: Use Redux Toolkit's createSlice for action generation
-- **Async Operations**: Use createAsyncThunk for localStorage operations
-- **Selector Usage**: Use useSelector for state access in components
-
-### Styling Guidelines
-- **Material-UI Integration**: Use MUI components and theming system
-- **Responsive Design**: Use MUI's breakpoint system and responsive props
-- **Theme Consistency**: Follow theme color palette and typography scales
-- **Component Styling**: Use sx prop for component-specific styles
-
-### Performance Considerations
-- **Debounced Search**: Prevent excessive filtering operations during typing
-- **Memoization**: Use React.memo for expensive components when needed
-- **Efficient Filtering**: Filter operations run client-side for immediate feedback
-- **State Normalization**: Keep derived state to minimum, compute when needed
-
-### Error Handling
-- **LocalStorage Errors**: Graceful fallback to default data
-- **Form Validation**: Client-side validation with user feedback
-- **Async Operation Errors**: Error states in Redux slices
-- **User Confirmations**: Confirmation dialogs for destructive actions
-
-## 🤝 Contributing
-
-### Development Setup
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes following the development guidelines
+3. Make your changes following our coding standards
 4. Test your changes thoroughly
 5. Commit your changes (`git commit -m 'Add amazing feature'`)
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
 
-### Code Standards
-- Follow existing code formatting and naming conventions
-- Add comments for complex logic
-- Update documentation for new features
-- Ensure responsive design principles
-- Test across different browsers and devices
-
-### Bug Reports
-Please use GitHub issues to report bugs. Include:
-- Browser and version information
-- Steps to reproduce the issue
-- Expected vs actual behavior
-- Screenshots if applicable
-- Console error messages
+### Coding Standards
+- Use meaningful variable and function names
+- Write comprehensive JSDoc comments
+- Follow the established file structure
+- Include proper error handling
+- Write tests for new features
 
 ## 📄 License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🤝 Support
+
+For support, please open an issue on GitHub or contact the development team.
 
 ---
 
-**Built with ❤️ using React, Redux, Material-UI, and modern JavaScript**
-
-This application demonstrates modern web development practices with a focus on user experience, performance, and maintainability. The modular architecture ensures scalability and makes it easy to add new features or modify existing functionality.
-
-The comprehensive state management with Redux provides predictable application behavior, while Material-UI ensures a consistent and professional user interface across all devices and platforms.
+**Built with ❤️ by the Interview Assistant Team**

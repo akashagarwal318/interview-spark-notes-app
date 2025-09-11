@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Search, Download, FileText, FileDown, X } from 'lucide-react';
 import { Input } from '../ui/input';
@@ -17,15 +17,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
-import { setCurrentRound, setSearchTerm, setSearchScope, setFilters, setSelectedTags, resetFilters, fetchRounds, createRoundAsync, deleteRoundAsync } from '../../store/slices/questionsSlice';
+import { setCurrentRound, setSearchTerm, setSearchScope, setFilters, setSelectedTags, resetFilters, fetchRounds, createRoundAsync, deleteRoundAsync, selectFilteredQuestions } from '../../store/slices/questionsSlice';
 import { exportToWord, exportToPDF } from '../../utils/exportUtils';
 import { useDebounce } from '../../hooks/useDebounce';
-import { extractCodeBlocks } from '../../utils/codeUtils';
 
 const SearchFilters = () => {
   const dispatch = useDispatch();
   const [localSearchTerm, setLocalSearchTerm] = useState('');
   const { currentRound, searchTerm, searchScope, filters, items, selectedTags, rounds } = useSelector((state) => state.questions);
+  // Use centralized memoized selector instead of duplicating filtering logic locally
+  const filteredItems = useSelector(selectFilteredQuestions);
   const [showRoundInput, setShowRoundInput] = useState(false);
   const [newRoundName, setNewRoundName] = useState('');
   
@@ -58,54 +59,30 @@ const SearchFilters = () => {
     }
   }, [debouncedSearchTerm, localSearchTerm, searchTerm, dispatch]);
   
-  // Compute filtered items client-side for export functionality
-  const filteredItems = useMemo(() => {
-    const lowerSearch = searchTerm.toLowerCase().trim();
-    const hasSearch = lowerSearch.length > 0;
-    return items.filter(item => {
-      // Scope specific check
-      const q = (item.question || '').toLowerCase();
-      const a = (item.answer || '').toLowerCase();
-      const codeField = (item.code || '').toLowerCase();
-      const codeBlocks = item.answer ? extractCodeBlocks(item.answer).map(b => b.code.toLowerCase()) : [];
-      const matchCode = codeField.includes(lowerSearch) || codeBlocks.some(c => c.includes(lowerSearch));
+  // (Filtering logic centralized in selector selectFilteredQuestions)
 
-      if (hasSearch) {
-        switch (searchScope) {
-          case 'question':
-            if (!q.includes(lowerSearch)) return false;
-            break;
-          case 'answer':
-            if (!a.includes(lowerSearch)) return false;
-            break;
-          case 'code':
-            if (!matchCode) return false;
-            break;
-          case 'all':
-          default:
-            if (!(q.includes(lowerSearch) || a.includes(lowerSearch) || matchCode)) return false;
+  // Build unique tag list with dynamic question usage counts (case-insensitive)
+  const allTags = React.useMemo(() => {
+    const map = new Map(); // key: lower tag name -> { _id, name, color, count }
+    items.forEach(q => {
+      const seenInQuestion = new Set(); // avoid counting same tag twice within one question
+      (q.tags || []).forEach(raw => {
+        if (!raw) return;
+        const name = typeof raw === 'string' ? raw : (raw.name || '');
+        const clean = name.trim();
+        if (!clean) return;
+        const key = clean.toLowerCase();
+        if (!map.has(key)) {
+          map.set(key, { _id: key, name: clean, color: '#6B7280', count: 0 });
         }
-      }
-
-      if (currentRound !== 'all' && item.round !== currentRound) return false;
-      if (filters.favorite && !item.favorite) return false;
-      if (filters.review && !item.review) return false;
-      if (filters.hot && !item.hot) return false;
-      if (selectedTags.length) {
-        const itemTags = (item.tags || []).map(t => (typeof t === 'string' ? t : t._id));
-        if (!selectedTags.some(t => itemTags.includes(t))) return false;
-      }
-      return true;
+        if (!seenInQuestion.has(key)) {
+          map.get(key).count += 1;
+          seenInQuestion.add(key);
+        }
+      });
     });
-  }, [items, searchTerm, searchScope, currentRound, filters.favorite, filters.review, filters.hot, selectedTags]);
-
-  // Get all unique tags from questions
-  const allTags = [...new Map(
-    items.flatMap(q => q.tags || [])
-      .filter(Boolean)
-      .map(tag => typeof tag === 'string' ? { _id: tag, name: tag, color: '#6B7280' } : tag)
-      .map(tag => [tag._id, tag])
-  ).values()].sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(map.values()).sort((a,b)=> a.name.localeCompare(b.name));
+  }, [items]);
 
   const handleSearchChange = useCallback((e) => {
     setLocalSearchTerm(e.target.value);
@@ -358,19 +335,25 @@ const TagSelector = ({ allTags, selectedTags, onToggle, onClear }) => {
   const VISIBLE_COUNT = 10; // tags to show when collapsed
   const visibleTags = expanded ? allTags : allTags.slice(0, VISIBLE_COUNT);
   const hiddenCount = allTags.length - VISIBLE_COUNT;
+  // Pre-compute total counts if tags carry a count property; fallback to 1
+  const totalTagCount = allTags.reduce((sum, t) => sum + (t.count || 0), 0) || allTags.length;
+
+  // Derive per-tag count display (prefer provided count)
+  const getTagCount = (tag) => tag.count ?? 0; // backend seed inserts count
 
   return (
     <div className="w-full">
       <div className="flex flex-wrap gap-2 mb-2">
         <button
           onClick={onClear}
-          className={`px-3 py-1 rounded-full text-xs transition-colors ${
+          className={`pl-3 pr-2 py-1 rounded-full text-xs flex items-center transition-colors ${
             selectedTags.length === 0
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
           }`}
         >
-          All Tags
+          <span className="mr-1">All Tags</span>
+          <span className={`text-[10px] px-2 py-0.5 rounded-full ${selectedTags.length === 0 ? 'bg-white/20' : 'bg-black/10 dark:bg-white/10'}`}>{totalTagCount}</span>
         </button>
         {visibleTags.map(tag => (
           <button
@@ -380,13 +363,14 @@ const TagSelector = ({ allTags, selectedTags, onToggle, onClear }) => {
               backgroundColor: selectedTags.includes(tag._id) ? tag.color : undefined,
               color: selectedTags.includes(tag._id) ? 'white' : undefined 
             }}
-            className={`px-3 py-1 rounded-full text-xs transition-colors ${
+            className={`pl-3 pr-2 py-1 rounded-full text-xs flex items-center transition-colors ${
               selectedTags.includes(tag._id)
                 ? 'text-white'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
           >
-            {tag.name}
+            <span className="mr-1">{tag.name}</span>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full ${selectedTags.includes(tag._id) ? 'bg-white/20' : 'bg-black/10 dark:bg-white/10'}`}>{getTagCount(tag)}</span>
           </button>
         ))}
         {!expanded && hiddenCount > 0 && (

@@ -1,7 +1,6 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import path from "path";
-import { componentTagger } from "lovable-tagger";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+// (Removed path/url usage; no aliases needed)
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -10,16 +9,8 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     strictPort: false, // Allow Vite to use alternative ports if 8080 is busy
   },
-  plugins: [
-    react(),
-    mode === 'development' &&
-    componentTagger(),
-  ].filter(Boolean),
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
+  plugins: [react()],
+  // (No custom resolve aliases configured)
   esbuild: {
     loader: "jsx",
     include: /src\/.*\.[jt]sx?$/,
