@@ -10,9 +10,11 @@ class ApiService {
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
     
+    const token = localStorage.getItem('ia_token');
     const config = {
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers,
       },
       ...options,
@@ -31,6 +33,11 @@ class ApiService {
       }
       return payload;
     } catch (error) {
+      if (error.status === 401) {
+        // auto logout on unauthorized
+        localStorage.removeItem('ia_token');
+        localStorage.removeItem('ia_user');
+      }
       if (error.name === 'TypeError' && /Failed to fetch/i.test(error.message)) {
         error.message = 'Cannot reach server. Is backend running?';
       }

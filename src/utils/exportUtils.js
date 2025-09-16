@@ -28,6 +28,68 @@ export const exportToPDF = async (questions) => {
   }, 500);
 };
 
+// Advanced export with grouping, sorting and inclusion options
+export const exportAdvanced = async (questions, options = {}) => {
+  const { format='doc', groupBy='none', sortBy='newest', include = { answer:true, code:true, tags:true, images:true, meta:true } } = options;
+  const sorter = (a,b) => {
+    if (sortBy==='oldest') return new Date(a.createdAt)-new Date(b.createdAt);
+    if (sortBy==='alphabetical') return (a.question||'').localeCompare(b.question||'');
+    if (sortBy==='difficulty') return ['easy','medium','hard'].indexOf(a.difficulty||'medium') - ['easy','medium','hard'].indexOf(b.difficulty||'medium');
+    return new Date(b.createdAt)-new Date(a.createdAt);
+  };
+  const grouped = (() => {
+    if (groupBy==='none') return { All: [...questions].sort(sorter) };
+    const map = {};
+    const push = (k,q)=>{ (map[k]=map[k]||[]).push(q) };
+    questions.forEach(q=>{
+      if (groupBy==='round') push(q.round||'other', q);
+      else if (groupBy==='difficulty') push(q.difficulty||'medium', q);
+      else if (groupBy==='tag') {
+        const tags = Array.isArray(q.tags) ? q.tags : [];
+        if (tags.length===0) push('untagged', q);
+        else tags.forEach(t=> push(typeof t==='string'? t : (t.name||'tag'), q));
+      }
+    });
+    Object.keys(map).forEach(k=> map[k].sort(sorter));
+    return map;
+  })();
+
+  const sectionHTML = (q) => `
+    <div style="margin-bottom: 30px; page-break-inside: avoid;">
+      <h3 style="color: #2563eb; margin-bottom: 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px;">${q.question}</h3>
+      ${include.meta ? `<p style="margin: 5px 0; font-size: 12px; color: #6b7280;">
+        <strong>Round:</strong> ${q.round?.replace('-', ' ').toUpperCase()} | 
+        <strong>Difficulty:</strong> ${(q.difficulty||'medium').toUpperCase()} |
+        <strong>Date:</strong> ${new Date(q.createdAt).toLocaleDateString()}
+      </p>`: ''}
+      ${include.answer ? `<div style="margin: 15px 0;"><h4 style=\"color:#374151;margin-bottom:8px;\">Answer:</h4><div style=\"line-height:1.6;color:#4b5563;\">${q.answer}</div></div>`:''}
+      ${include.code && q.code ? `<div style=\"margin:15px 0;\"><h4 style=\"color:#374151;margin-bottom:8px;\">Code:</h4><pre style=\"background:#f9fafb;padding:15px;border-radius:6px;border:1px solid #e5e7eb;overflow-x:auto;font-size:12px;\"><code>${q.code}</code></pre></div>`:''}
+      ${include.tags && q.tags?.length ? `<div style=\"margin:15px 0;\"><h4 style=\"color:#374151;margin-bottom:8px;\">Tags:</h4><p style=\"color:#6b7280;\">${q.tags.map(t=> typeof t==='string'? t : (t.name||'')).join(', ')}</p></div>`:''}
+    </div>`;
+
+  const html = `
+  <html><head><meta charset="utf-8"><title>Export</title></head><body style="font-family:Arial,sans-serif;line-height:1.6;margin:40px;">
+    <div class="header"><h1>Export</h1><p>${new Date().toLocaleString()}</p></div>
+    ${Object.entries(grouped).map(([group,qs])=> `
+      <h2 style="color:#1f2937;border-bottom:2px solid #e5e7eb;padding-bottom:6px;">${group}</h2>
+      ${qs.map(sectionHTML).join('')}
+    `).join('')}
+  </body></html>`;
+
+  if (format==='pdf') {
+    const w = window.open('', '_blank');
+    w.document.write(html); w.document.close(); setTimeout(()=>w.print(), 400);
+  } else if (format==='html') {
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='export.html'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  } else {
+    const blob = new Blob([html], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='export.doc'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+};
+
 const generateHTMLContent = (questions) => {
   const questionsHTML = questions.map(q => `
     <div style="margin-bottom: 30px; page-break-inside: avoid;">
