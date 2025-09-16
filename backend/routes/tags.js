@@ -46,6 +46,7 @@ router.get('/', async (req, res) => {
         sort = { count: -1 };
     }
     
+    filter.user = req.user?._id;
     const tags = await Tag.find(filter)
       .sort(sort)
       .limit(parseInt(limit));
@@ -70,7 +71,7 @@ router.get('/popular', async (req, res) => {
   try {
     const { limit = 20 } = req.query;
     
-    const tags = await Tag.find({ isActive: true, count: { $gt: 0 } })
+    const tags = await Tag.find({ user: req.user?._id, isActive: true, count: { $gt: 0 } })
       .sort({ count: -1 })
       .limit(parseInt(limit));
     
@@ -93,7 +94,7 @@ router.get('/popular', async (req, res) => {
 router.get('/categories', async (req, res) => {
   try {
     const categories = await Tag.aggregate([
-      { $match: { isActive: true } },
+      { $match: { user: req.user?._id, isActive: true } },
       {
         $group: {
           _id: '$category',
@@ -122,7 +123,7 @@ router.get('/categories', async (req, res) => {
 // GET /api/tags/:name - Get specific tag
 router.get('/:name', async (req, res) => {
   try {
-    const tag = await Tag.findOne({ name: req.params.name.toLowerCase() });
+    const tag = await Tag.findOne({ user: req.user?._id, name: req.params.name.toLowerCase() });
     
     if (!tag) {
       return res.status(404).json({
@@ -132,7 +133,7 @@ router.get('/:name', async (req, res) => {
     }
     
     // Get questions with this tag
-    const questions = await Question.find({ tags: tag.name })
+    const questions = await Question.find({ user: req.user?._id, tags: tag.name })
       .sort({ createdAt: -1 })
       .limit(10);
     
@@ -163,7 +164,7 @@ router.post('/', async (req, res) => {
       });
     }
     
-    const existingTag = await Tag.findOne({ name: name.toLowerCase() });
+  const existingTag = await Tag.findOne({ user: req.user?._id, name: name.toLowerCase() });
     
     if (existingTag) {
       return res.status(409).json({
@@ -173,6 +174,7 @@ router.post('/', async (req, res) => {
     }
     
     const tag = new Tag({
+      user: req.user?._id,
       name: name.toLowerCase(),
       category,
       color,
@@ -203,7 +205,7 @@ router.put('/:name', async (req, res) => {
     const { category, color, description, isActive } = req.body;
     
     const tag = await Tag.findOneAndUpdate(
-      { name: req.params.name.toLowerCase() },
+      { user: req.user?._id, name: req.params.name.toLowerCase() },
       { category, color, description, isActive },
       { new: true, runValidators: true }
     );
@@ -237,7 +239,7 @@ router.delete('/:name', async (req, res) => {
     const tagName = req.params.name.toLowerCase();
     
     // Check if tag is being used
-    const questionsUsingTag = await Question.countDocuments({ tags: tagName });
+  const questionsUsingTag = await Question.countDocuments({ user: req.user?._id, tags: tagName });
     
     if (questionsUsingTag > 0) {
       return res.status(400).json({
@@ -246,7 +248,7 @@ router.delete('/:name', async (req, res) => {
       });
     }
     
-    const tag = await Tag.findOneAndDelete({ name: tagName });
+  const tag = await Tag.findOneAndDelete({ user: req.user?._id, name: tagName });
     
     if (!tag) {
       return res.status(404).json({
@@ -274,7 +276,7 @@ router.delete('/:name', async (req, res) => {
 router.post('/sync', async (req, res) => {
   try {
     // Get all unique tags from questions
-    const allTags = await Question.distinct('tags');
+    const allTags = await Question.distinct('tags', { user: req.user?._id });
     
     let created = 0;
     let updated = 0;
@@ -282,13 +284,13 @@ router.post('/sync', async (req, res) => {
     for (const tagName of allTags) {
       if (!tagName) continue;
       
-      const count = await Question.countDocuments({ tags: tagName });
+  const count = await Question.countDocuments({ user: req.user?._id, tags: tagName });
       
       const result = await Tag.findOneAndUpdate(
-        { name: tagName },
+        { user: req.user?._id, name: tagName },
         { 
           $set: { count },
-          $setOnInsert: { name: tagName }
+          $setOnInsert: { user: req.user?._id, name: tagName }
         },
         { upsert: true, new: true }
       );

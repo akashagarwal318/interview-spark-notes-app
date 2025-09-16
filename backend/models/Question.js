@@ -21,6 +21,12 @@ const imageSchema = new mongoose.Schema({
 }, { _id: false });
 
 const questionSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    index: true,
+    required: false // will be required after migration; route layer will enforce
+  },
   round: {
     type: String,
     required: true,
@@ -109,6 +115,7 @@ questionSchema.index({ favorite: 1 });
 questionSchema.index({ review: 1 });
 questionSchema.index({ hot: 1 });
 questionSchema.index({ createdAt: -1 });
+questionSchema.index({ user: 1, createdAt: -1 });
 questionSchema.index({ 
   question: 'text', 
   answer: 'text', 

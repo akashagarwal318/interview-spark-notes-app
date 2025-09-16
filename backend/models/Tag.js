@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const tagSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true, required: false },
   name: {
     type: String,
     required: true,
@@ -45,6 +46,7 @@ const tagSchema = new mongoose.Schema({
 tagSchema.index({ count: -1 });
 tagSchema.index({ category: 1 });
 tagSchema.index({ isActive: 1 });
+tagSchema.index({ user: 1, name: 1 });
 
 // Virtual for popularity level
 tagSchema.virtual('popularity').get(function() {

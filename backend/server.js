@@ -11,6 +11,11 @@ import questionRoutes from './routes/questions.js';
 import tagRoutes from './routes/tags.js';
 import statsRoutes from './routes/stats.js';
 import roundsRoutes from './routes/rounds.js';
+import authRoutes from './routes/auth.js';
+import adminRoutes from './routes/admin.js';
+import { authRequired } from './middleware/auth.js';
+import User from './models/User.js';
+import bcrypt from 'bcryptjs';
 
 // Load environment variables
 dotenv.config();
@@ -78,10 +83,13 @@ const connectDB = async () => {
 };
 
 // Routes
-app.use('/api/questions', questionRoutes);
-app.use('/api/tags', tagRoutes);
-app.use('/api/stats', statsRoutes);
-app.use('/api/rounds', roundsRoutes);
+app.use('/api/auth', authRoutes);
+// protected API
+app.use('/api/questions', authRequired, questionRoutes);
+app.use('/api/tags', authRequired, tagRoutes);
+app.use('/api/stats', authRequired, statsRoutes);
+app.use('/api/rounds', authRequired, roundsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -115,6 +123,26 @@ app.use((err, req, res, next) => {
 // Start server only after DB connection (or after fallback succeeds)
 async function startServer(retries = 5) {
   await connectDB();
+  // Bootstrap default admin if no users exist
+  const email = process.env.ADMIN_EMAIL || 'admin@example.com';
+  const password = process.env.ADMIN_PASSWORD || 'change-me-now';
+  let admin = await User.findOne({ email });
+  if (!admin) {
+    const passwordHash = await bcrypt.hash(password, 10);
+    admin = await User.create({ name: 'Admin', email, passwordHash, role: 'admin', status: 'active' });
+    console.log(`👑 Default admin created -> email: ${email} password: ${password}`);
+  }
+  // Backfill user for existing docs without user
+  try {
+    const { default: Question } = await import('./models/Question.js');
+    const { default: Tag } = await import('./models/Tag.js');
+    const { default: Round } = await import('./models/Round.js');
+    await Question.updateMany({ $or: [{ user: { $exists: false } }, { user: null }] }, { $set: { user: admin._id } });
+    await Tag.updateMany({ $or: [{ user: { $exists: false } }, { user: null }] }, { $set: { user: admin._id } });
+    await Round.updateMany({ $or: [{ user: { $exists: false } }, { user: null }] }, { $set: { user: admin._id } });
+  } catch (e) {
+    console.warn('Backfill warning:', e.message);
+  }
   if (app.listening) return; // already started
   const attempt = () => new Promise((resolve, reject) => {
     const server = app.listen(currentPort, () => {

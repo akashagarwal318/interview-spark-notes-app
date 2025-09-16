@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
     } = req.query;
 
     // Build filter object
-    const filter = {};
+  const filter = { user: req.user?._id };
     
     if (round !== 'all') {
       filter.round = round;
@@ -57,14 +57,7 @@ router.get('/', async (req, res) => {
     
     if (tags) {
       const tagArray = Array.isArray(tags) ? tags : tags.split(',');
-      const objectIdTags = tagArray.map(id => {
-        try {
-          return new mongoose.Types.ObjectId(id);
-        } catch {
-          return id;
-        }
-      });
-      filter.tags = { $in: objectIdTags };
+      filter.tags = { $in: tagArray.map(t => String(t).toLowerCase()) };
     }
     
     // Text search
@@ -102,7 +95,6 @@ router.get('/', async (req, res) => {
     
     // Execute query
     const questions = await Question.find(filter)
-      .populate('tags', 'name color')
       .sort(sort)
       .skip(skip)
       .limit(limitNum);
@@ -137,7 +129,7 @@ router.get('/', async (req, res) => {
 // GET /api/questions/:id - Get specific question
 router.get('/:id', async (req, res) => {
   try {
-    const question = await Question.findById(req.params.id).populate('tags', 'name color');
+    const question = await Question.findOne({ _id: req.params.id, user: req.user?._id });
     
     if (!question) {
       return res.status(404).json({
@@ -164,12 +156,12 @@ router.get('/:id', async (req, res) => {
 // POST /api/questions - Create new question
 router.post('/', validateQuestion, async (req, res) => {
   try {
-    const question = new Question(req.body);
+    const question = new Question({ ...req.body, user: req.user?._id });
     await question.save();
     
     // Update tag counts
     if (question.tags && question.tags.length > 0) {
-      await updateTagCounts(question.tags, 1);
+      await updateTagCounts(req.user?._id, question.tags, 1);
     }
     
     res.status(201).json({
@@ -191,7 +183,7 @@ router.post('/', validateQuestion, async (req, res) => {
 // PUT /api/questions/:id - Update question
 router.put('/:id', validateQuestionUpdate, async (req, res) => {
   try {
-    const oldQuestion = await Question.findById(req.params.id);
+    const oldQuestion = await Question.findOne({ _id: req.params.id, user: req.user?._id });
     
     if (!oldQuestion) {
       return res.status(404).json({
@@ -200,7 +192,7 @@ router.put('/:id', validateQuestionUpdate, async (req, res) => {
       });
     }
     
-    const oldTags = oldQuestion.tags || [];
+  const oldTags = oldQuestion.tags || [];
     const newTags = req.body.tags || [];
     
     // Normalize images to ensure mimeType present (findByIdAndUpdate skips pre-save middleware)
@@ -215,14 +207,14 @@ router.put('/:id', validateQuestionUpdate, async (req, res) => {
       });
     }
 
-    const question = await Question.findByIdAndUpdate(
-      req.params.id,
+    const question = await Question.findOneAndUpdate(
+      { _id: req.params.id, user: req.user?._id },
       req.body,
       { new: true, runValidators: true }
     );
     
-    // Update tag counts
-    await updateTagCountsOnEdit(oldTags, newTags);
+  // Update tag counts
+  await updateTagCountsOnEdit(req.user?._id, oldTags, newTags);
     
     res.json({
       status: 'success',
@@ -243,7 +235,7 @@ router.put('/:id', validateQuestionUpdate, async (req, res) => {
 // DELETE /api/questions/:id - Delete question
 router.delete('/:id', async (req, res) => {
   try {
-    const question = await Question.findById(req.params.id);
+    const question = await Question.findOne({ _id: req.params.id, user: req.user?._id });
     
     if (!question) {
       return res.status(404).json({
@@ -257,7 +249,7 @@ router.delete('/:id', async (req, res) => {
     
     // Update tag counts
     if (tags.length > 0) {
-      await updateTagCounts(tags, -1);
+      await updateTagCounts(req.user?._id, tags, -1);
     }
     
     res.json({
@@ -287,7 +279,7 @@ router.patch('/:id/toggle/:field', async (req, res) => {
       });
     }
     
-    const question = await Question.findById(id);
+  const question = await Question.findOne({ _id: id, user: req.user?._id });
     
     if (!question) {
       return res.status(404).json({
@@ -316,13 +308,13 @@ router.patch('/:id/toggle/:field', async (req, res) => {
 });
 
 // Helper function to update tag counts
-async function updateTagCounts(tags, increment) {
+async function updateTagCounts(userId, tags, increment) {
   for (const tagName of tags) {
     await Tag.findOneAndUpdate(
-      { name: tagName },
+      { user: userId, name: tagName },
       { 
         $inc: { count: increment },
-        $setOnInsert: { name: tagName }
+        $setOnInsert: { user: userId, name: tagName }
       },
       { upsert: true }
     );
@@ -330,16 +322,16 @@ async function updateTagCounts(tags, increment) {
 }
 
 // Helper function to update tag counts when editing
-async function updateTagCountsOnEdit(oldTags, newTags) {
+async function updateTagCountsOnEdit(userId, oldTags, newTags) {
   const addedTags = newTags.filter(tag => !oldTags.includes(tag));
   const removedTags = oldTags.filter(tag => !newTags.includes(tag));
   
   if (addedTags.length > 0) {
-    await updateTagCounts(addedTags, 1);
+    await updateTagCounts(userId, addedTags, 1);
   }
   
   if (removedTags.length > 0) {
-    await updateTagCounts(removedTags, -1);
+    await updateTagCounts(userId, removedTags, -1);
   }
 }
 

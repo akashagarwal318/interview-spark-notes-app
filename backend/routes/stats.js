@@ -8,13 +8,15 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     // Basic counts
-    const totalQuestions = await Question.countDocuments();
-    const favoritesCount = await Question.countDocuments({ favorite: true });
-    const reviewCount = await Question.countDocuments({ review: true });
-    const hotCount = await Question.countDocuments({ hot: true });
+    const userFilter = { user: req.user?._id };
+    const totalQuestions = await Question.countDocuments(userFilter);
+    const favoritesCount = await Question.countDocuments({ ...userFilter, favorite: true });
+    const reviewCount = await Question.countDocuments({ ...userFilter, review: true });
+    const hotCount = await Question.countDocuments({ ...userFilter, hot: true });
     
     // Round statistics
     const roundStats = await Question.aggregate([
+      { $match: userFilter },
       {
         $group: {
           _id: '$round',
@@ -29,6 +31,7 @@ router.get('/', async (req, res) => {
     
     // Difficulty statistics
     const difficultyStats = await Question.aggregate([
+      { $match: userFilter },
       {
         $group: {
           _id: '$difficulty',
@@ -39,7 +42,7 @@ router.get('/', async (req, res) => {
     ]);
     
     // Tag statistics
-    const tagStats = await Tag.find({ isActive: true, count: { $gt: 0 } })
+    const tagStats = await Tag.find({ user: req.user?._id, isActive: true, count: { $gt: 0 } })
       .sort({ count: -1 })
       .limit(10);
     
@@ -48,18 +51,13 @@ router.get('/', async (req, res) => {
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
     
     const recentQuestions = await Question.countDocuments({
+      ...userFilter,
       createdAt: { $gte: oneWeekAgo }
     });
     
     // Monthly statistics (last 12 months)
     const monthlyStats = await Question.aggregate([
-      {
-        $match: {
-          createdAt: {
-            $gte: new Date(new Date().getFullYear(), new Date().getMonth() - 11, 1)
-          }
-        }
-      },
+      { $match: { ...userFilter, createdAt: { $gte: new Date(new Date().getFullYear(), new Date().getMonth() - 11, 1) } } },
       {
         $group: {
           _id: {
@@ -74,7 +72,7 @@ router.get('/', async (req, res) => {
     
     // Company and position stats
     const companyStats = await Question.aggregate([
-      { $match: { company: { $ne: '' } } },
+      { $match: { ...userFilter, company: { $ne: '' } } },
       {
         $group: {
           _id: '$company',
@@ -86,7 +84,7 @@ router.get('/', async (req, res) => {
     ]);
     
     const positionStats = await Question.aggregate([
-      { $match: { position: { $ne: '' } } },
+      { $match: { ...userFilter, position: { $ne: '' } } },
       {
         $group: {
           _id: '$position',
@@ -129,10 +127,11 @@ router.get('/', async (req, res) => {
 // GET /api/stats/dashboard - Get dashboard-specific stats
 router.get('/dashboard', async (req, res) => {
   try {
-    const totalQuestions = await Question.countDocuments();
-    const favoritesCount = await Question.countDocuments({ favorite: true });
-    const reviewCount = await Question.countDocuments({ review: true });
-    const hotCount = await Question.countDocuments({ hot: true });
+    const userFilter = { user: req.user?._id };
+    const totalQuestions = await Question.countDocuments(userFilter);
+    const favoritesCount = await Question.countDocuments({ ...userFilter, favorite: true });
+    const reviewCount = await Question.countDocuments({ ...userFilter, review: true });
+    const hotCount = await Question.countDocuments({ ...userFilter, hot: true });
     
     res.json({
       status: 'success',
@@ -166,6 +165,7 @@ router.get('/trends', async (req, res) => {
     const dailyTrend = await Question.aggregate([
       {
         $match: {
+          user: req.user?._id,
           createdAt: { $gte: startDate }
         }
       },
@@ -187,6 +187,7 @@ router.get('/trends', async (req, res) => {
     const roundTrends = await Question.aggregate([
       {
         $match: {
+          user: req.user?._id,
           createdAt: { $gte: startDate }
         }
       },
