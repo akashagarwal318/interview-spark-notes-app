@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Search, Download, FileText, FileDown, X } from 'lucide-react';
+import { Search, Download, X } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { 
@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from '../ui/select';
 import { setCurrentRound, setSearchTerm, setSearchScope, setFilters, setSelectedTags, resetFilters, fetchRounds, createRoundAsync, deleteRoundAsync, selectFilteredQuestions } from '../../store/slices/questionsSlice';
-import { exportToWord, exportToPDF } from '../../utils/exportUtils';
+import ExportBuilder from '../modals/ExportBuilder.jsx';
 import { useDebounce } from '../../hooks/useDebounce';
 
 const SearchFilters = () => {
@@ -126,21 +126,9 @@ const SearchFilters = () => {
     dispatch(resetFilters());
   };
 
-  const handleExportWord = () => {
-    if (filteredItems.length === 0) {
-      alert('No questions to export');
-      return;
-    }
-    exportToWord(filteredItems);
-  };
+  const [showExport, setShowExport] = useState(false);
 
-  const handleExportPDF = () => {
-    if (filteredItems.length === 0) {
-      alert('No questions to export');
-      return;
-    }
-    exportToPDF(filteredItems);
-  };
+  // Legacy direct export removed; unified builder for consistency
 
   return (
     <div className="space-y-4 mb-6">
@@ -193,27 +181,15 @@ const SearchFilters = () => {
           </Select>
         </div>
         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="px-4 py-2 h-10 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-popover border border-border z-50">
-            <DropdownMenuItem onClick={handleExportWord} className="flex items-center px-4 py-2 hover:bg-accent">
-              <FileText className="h-4 w-4 mr-2" />
-              Export as Word
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleExportPDF} className="flex items-center px-4 py-2 hover:bg-accent">
-              <FileDown className="h-4 w-4 mr-2" />
-              Export as PDF
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button
+          variant="outline"
+          className="px-4 py-2 h-10 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+          onClick={()=>setShowExport(true)}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Export
+        </Button>
+        <ExportBuilder open={showExport} onClose={()=>setShowExport(false)} />
         
       </div>
 

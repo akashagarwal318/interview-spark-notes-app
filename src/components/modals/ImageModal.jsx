@@ -47,6 +47,8 @@ const ImageModal = () => {
         return next;
       });
     } else if (scale > 1) {
+      //vetical scroll
+      e.preventDefault();
       // vertical pan with wheel when zoomed
       setPosition(p => ({ ...p, y: p.y - e.deltaY * 0.5 }));
     }
