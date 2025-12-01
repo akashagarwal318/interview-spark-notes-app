@@ -1,20 +1,20 @@
 
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { 
-  Star, 
-  Bookmark, 
-  Flame, 
-  ChevronDown, 
-  Edit, 
-  Trash2, 
+import {
+  Star,
+  Bookmark,
+  Flame,
+  ChevronDown,
+  Edit,
+  Trash2,
   MoreVertical
 } from 'lucide-react';
 import { deleteQuestionAsync, toggleQuestionStatusAsync } from '../../store/slices/questionsSlice';
 import { setImageModal, setEditingQuestion, setExpandedQuestionId } from '../../store/slices/uiSlice';
 import CodeBlock from '../ui/CodeBlock';
 import { extractCodeBlocks } from '../../utils/codeUtils';
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -60,10 +60,10 @@ const QuestionCard = ({ question }) => {
       if (!dateString) return 'Recently added';
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return 'Recently added';
-      return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
       });
     } catch (error) {
       return 'Recently added';
@@ -72,15 +72,15 @@ const QuestionCard = ({ question }) => {
 
   // Extract code blocks from answer markdown if they exist
   const codeBlocks = extractCodeBlocks(question.answer || '');
-  
+
   // Helper to highlight matching text
   const highlightMatches = (text, searchText) => {
     if (!searchText || !text) return text;
-    
+
     const parts = [];
     let lastIndex = 0;
     const lowerText = text.toLowerCase();
-    
+
     while (lastIndex < text.length) {
       const indexOf = lowerText.indexOf(searchText, lastIndex);
       if (indexOf === -1) break;
@@ -94,85 +94,82 @@ const QuestionCard = ({ question }) => {
 
   return (
     <div
-      className="bg-card border border-border rounded-lg mb-4 transition-all hover:shadow-md hover:border-primary/20 cursor-pointer"
+      className="bg-card border border-border rounded-lg mb-1 transition-all hover:shadow-md hover:border-primary/20 cursor-pointer"
       onClick={handleCardClick}
       data-question-card
       data-expanded={expanded ? 'true' : 'false'}
     >
       {/* Header */}
-      <div className="flex items-start justify-between p-4 border-b border-border">
+      <div className="flex items-start justify-between px-3 py-2 border-b border-border">
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-medium text-card-foreground mb-1 leading-snug hover:text-primary transition-colors">
+          <h3 className="text-lg font-medium text-card-foreground mb-0.5 leading-snug hover:text-primary transition-colors">
             {lowerSearch && searchScope !== 'code' && searchScope !== 'answer' ? (
               <>{highlightMatches(question.question, lowerSearch)}</>
             ) : (
               <>{question.question}</>
             )}
           </h3>
-          <div className="flex items-center text-sm text-muted-foreground space-x-4">
+          <div className="flex items-center text-xs sm:text-sm text-muted-foreground space-x-3">
             <span className="capitalize">{question.round?.replace('-', ' ') || 'General'}</span>
             <span>{formatDate(question.createdAt)}</span>
           </div>
         </div>
-        
-        <div className="flex items-center space-x-1 ml-4 flex-shrink-0">
+
+        <div className="flex items-center space-x-0.5 ml-2 flex-shrink-0">
           <button
-            onClick={(e) => {e.stopPropagation(); handleToggle('favorite');}}
-            className={`p-2 rounded-md transition-all hover:scale-110 ${
-              question.favorite 
-                ? 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20' 
+            onClick={(e) => { e.stopPropagation(); handleToggle('favorite'); }}
+            className={`p-1.5 rounded-md transition-all hover:scale-110 ${question.favorite
+                ? 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20'
                 : 'text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
-            }`}
+              }`}
           >
-            <Star className={`h-4 w-4 ${question.favorite ? 'fill-current' : ''}`} />
-          </button>
-          
-          <button
-            onClick={(e) => {e.stopPropagation(); handleToggle('review');}}
-            className={`p-2 rounded-md transition-all hover:scale-110 ${
-              question.review 
-                ? 'text-green-600 bg-green-50 dark:bg-green-900/20' 
-                : 'text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
-            }`}
-          >
-            <Bookmark className={`h-4 w-4 ${question.review ? 'fill-current' : ''}`} />
-          </button>
-          
-          <button
-            onClick={(e) => {e.stopPropagation(); handleToggle('hot');}}
-            className={`p-2 rounded-md transition-all hover:scale-110 ${
-              question.hot 
-                ? 'text-red-600 bg-red-50 dark:bg-red-900/20' 
-                : 'text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20'
-            }`}
-          >
-            <Flame className={`h-4 w-4 ${question.hot ? 'fill-current' : ''}`} />
+            <Star className={`h-3.5 w-3.5 ${question.favorite ? 'fill-current' : ''}`} />
           </button>
 
           <button
-            onClick={(e) => {e.stopPropagation(); handleEdit();}}
-            className="p-2 rounded-md text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all hover:scale-110"
+            onClick={(e) => { e.stopPropagation(); handleToggle('review'); }}
+            className={`p-1.5 rounded-md transition-all hover:scale-110 ${question.review
+                ? 'text-green-600 bg-green-50 dark:bg-green-900/20'
+                : 'text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
+              }`}
+          >
+            <Bookmark className={`h-3.5 w-3.5 ${question.review ? 'fill-current' : ''}`} />
+          </button>
+
+          <button
+            onClick={(e) => { e.stopPropagation(); handleToggle('hot'); }}
+            className={`p-1.5 rounded-md transition-all hover:scale-110 ${question.hot
+                ? 'text-red-600 bg-red-50 dark:bg-red-900/20'
+                : 'text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20'
+              }`}
+          >
+            <Flame className={`h-3.5 w-3.5 ${question.hot ? 'fill-current' : ''}`} />
+          </button>
+
+          <button
+            onClick={(e) => { e.stopPropagation(); handleEdit(); }}
+            className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all hover:scale-110"
             title="Edit question"
           >
-            <Edit className="h-4 w-4" />
+            <Edit className="h-3.5 w-3.5" />
           </button>
 
           <button
-            onClick={(e) => {e.stopPropagation(); handleDelete();}}
-            className="p-2 rounded-md text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all hover:scale-110"
+            onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+            className="p-1.5 rounded-md text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all hover:scale-110"
             title="Delete question"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
 
       {/* Expanded Content */}
       {expanded && (
-        <div className="p-4 space-y-4 bg-muted/50 animate-accordion-down">
+        <div className="px-3 py-2 space-y-2 bg-muted/50 animate-accordion-down">
           <div>
-            <h4 className="font-medium text-card-foreground mb-2 text-sm">Answer</h4>
-            <div className="text-card-foreground/80 text-sm leading-relaxed whitespace-pre-wrap break-words font-sans max-h-96 overflow-y-auto border border-gray-100 dark:border-gray-800 rounded-md p-4">
+            <h4 className="font-medium text-card-foreground mb-1 text-xs sm:text-sm">Answer</h4>
+            <div className="text-card-foreground/80 text-sm leading-relaxed whitespace-pre-wrap break-words font-sans max-h-96 overflow-y-auto border border-gray-100 dark:border-gray-800 rounded-md p-3">
               {lowerSearch && (searchScope === 'all' || searchScope === 'answer') ? (
                 <>{highlightMatches(question.answer, lowerSearch)}</>
               ) : (
@@ -183,9 +180,9 @@ const QuestionCard = ({ question }) => {
 
           {question.code && (
             <div>
-              <h4 className="font-medium text-card-foreground mb-2 text-sm">Code</h4>
-              <CodeBlock 
-                code={question.code} 
+              <h4 className="font-medium text-card-foreground mb-1 text-xs sm:text-sm">Code</h4>
+              <CodeBlock
+                code={question.code}
                 language={question.codeLanguage || 'javascript'}
                 isMatch={lowerSearch && (searchScope === 'all' || searchScope === 'code') && question.code.toLowerCase().includes(lowerSearch)}
               />
@@ -195,13 +192,13 @@ const QuestionCard = ({ question }) => {
 
           {question.images && question.images.length > 0 && (
             <div>
-              <h4 className="font-medium text-card-foreground mb-2 text-sm">Images</h4>
+              <h4 className="font-medium text-card-foreground mb-1 text-xs sm:text-sm">Images</h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {question.images.map((image, index) => (
                   <div
                     key={index}
                     className="relative group cursor-pointer"
-                    onClick={(e) => {e.stopPropagation(); handleImageClick(image.data);}}
+                    onClick={(e) => { e.stopPropagation(); handleImageClick(image.data); }}
                   >
                     <div className="aspect-video rounded-md overflow-hidden border border-border shadow-sm hover:shadow-md transition-all bg-muted">
                       <img
@@ -225,7 +222,7 @@ const QuestionCard = ({ question }) => {
 
           {question.tags && question.tags.length > 0 && (
             <div>
-              <h4 className="font-medium text-card-foreground mb-2 text-sm">Tags</h4>
+              <h4 className="font-medium text-card-foreground mb-1 text-xs sm:text-sm">Tags</h4>
               <div className="flex flex-wrap gap-1">
                 {question.tags.map((tag) => (
                   <span
