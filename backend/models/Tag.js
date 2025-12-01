@@ -40,14 +40,14 @@ const tagSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Indexes
-// Note: name field already has unique: true, so no need for separate index
+// Indexes for better query performance
+// Note: name field has unique: true which creates its own index
 tagSchema.index({ count: -1 });
 tagSchema.index({ category: 1 });
 tagSchema.index({ isActive: 1 });
 
 // Virtual for popularity level
-tagSchema.virtual('popularity').get(function() {
+tagSchema.virtual('popularity').get(function () {
   if (this.count >= 20) return 'high';
   if (this.count >= 10) return 'medium';
   if (this.count >= 5) return 'low';

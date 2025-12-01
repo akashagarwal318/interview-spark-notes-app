@@ -44,36 +44,54 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // (Removed morgan logging to reduce dependencies; lightweight console logging can be added if needed)
 
-// Database connection with fallback logic
+// Database connection to MongoDB Atlas only
 const connectDB = async () => {
-  const primaryURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/interview-assistant';
-  const fallbackURI = 'mongodb://127.0.0.1:27017/interview-assistant';
+  const mongoURI = process.env.MONGODB_URI;
 
-  const tryConnect = async (uri, label) => {
-    console.log(`Attempting MongoDB connection (${label}): ${uri}`);
-    const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000
-    });
-    console.log(`✅ MongoDB Connected (${label}): host=${conn.connection.host} db=${conn.connection.name}`);
-    return conn;
-  };
+  if (!mongoURI) {
+    console.error('❌ ERROR: MONGODB_URI is not defined in environment variables!');
+    console.error('   Please check your backend/.env file');
+    throw new Error('Missing MONGODB_URI environment variable');
+  }
 
   try {
-    try {
-      await tryConnect(primaryURI, 'primary');
-    } catch (primaryErr) {
-      console.warn(`Primary MongoDB connection failed: ${primaryErr.message}`);
-      if (primaryURI.includes('mongo') || primaryURI.includes('mongodb://mongo')) {
-        console.log('Detected docker hostname "mongo" – attempting localhost fallback...');
-      } else {
-        console.log('Attempting localhost fallback...');
-      }
-      await tryConnect(fallbackURI, 'fallback');
+    console.log(`🔗 Connecting to MongoDB Atlas...`);
+    console.log(`   URI: ${mongoURI.substring(0, 50)}...`);
+
+    const conn = await mongoose.connect(mongoURI, {
+      serverSelectionTimeoutMS: 10000
+    });
+
+    console.log(`✅ MongoDB Connected Successfully!`);
+    console.log(`   Host: ${conn.connection.host}`);
+    console.log(`   Database: ${conn.connection.name}`);
+    console.log(`   Ready to accept requests!\n`);
+
+    return conn;
+  } catch (error) {
+    console.error('\n❌ MongoDB Atlas Connection FAILED!');
+    console.error('━'.repeat(60));
+    console.error(`Error Message: ${error.message}`);
+    console.error('━'.repeat(60));
+
+    if (error.message.includes('ENOTFOUND')) {
+      console.error('💡 Possible causes:');
+      console.error('   - Check your cluster URL in MONGODB_URI');
+      console.error('   - Verify internet connection');
+    } else if (error.message.includes('authentication failed')) {
+      console.error('💡 Possible causes:');
+      console.error('   - Wrong username or password');
+      console.error('   - Check database user credentials in MongoDB Atlas');
+    } else if (error.message.includes('IP') || error.message.includes('whitelist')) {
+      console.error('💡 Possible causes:');
+      console.error('   - IP address not whitelisted in MongoDB Atlas');
+      console.error('   - Go to Network Access and add 0.0.0.0/0');
     }
-  } catch (finalErr) {
-    console.error('❌ All MongoDB connection attempts failed. Exiting.');
-    console.error(finalErr);
-    process.exit(1);
+
+    console.error('\n🛑 Application cannot start without database connection');
+    console.error('   Please fix the issue and try again.\n');
+
+    throw error; // Re-throw to stop the application
   }
 };
 
@@ -104,7 +122,7 @@ app.use('*', (req, res) => {
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err);
-  
+
   res.status(err.status || 500).json({
     status: 'error',
     message: err.message || 'Internal server error',
