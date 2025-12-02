@@ -235,6 +235,8 @@ router.put('/:id', validateQuestionUpdate, async (req, res) => {
 
     const oldTags = oldQuestion.tags || [];
     const newTags = req.body.tags || [];
+    const oldRound = oldQuestion.round;
+    const newRound = req.body.round;
 
     // Normalize images to ensure mimeType present (findByIdAndUpdate skips pre-save middleware)
     if (Array.isArray(req.body.images)) {
@@ -256,6 +258,15 @@ router.put('/:id', validateQuestionUpdate, async (req, res) => {
 
     // Update tag counts
     await updateTagCountsOnEdit(oldTags, newTags);
+
+    // Check if old round is still in use, delete if not
+    if (oldRound && oldRound !== newRound) {
+      const remainingQuestionsWithOldRound = await Question.countDocuments({ round: oldRound });
+      if (remainingQuestionsWithOldRound === 0) {
+        await Round.deleteOne({ name: oldRound });
+        console.log(`🗑️  Auto-deleted unused round: "${oldRound}"`);
+      }
+    }
 
     res.json({
       status: 'success',
@@ -286,11 +297,22 @@ router.delete('/:id', async (req, res) => {
     }
 
     const tags = question.tags || [];
+    const round = question.round;
+
     await Question.findByIdAndDelete(req.params.id);
 
     // Update tag counts
     if (tags.length > 0) {
       await updateTagCounts(tags, -1);
+    }
+
+    // Check if round is still in use, delete if not
+    if (round) {
+      const remainingQuestionsWithRound = await Question.countDocuments({ round });
+      if (remainingQuestionsWithRound === 0) {
+        await Round.deleteOne({ name: round });
+        console.log(`🗑️  Auto-deleted unused round: "${round}"`);
+      }
     }
 
     res.json({
@@ -351,14 +373,20 @@ router.patch('/:id/toggle/:field', async (req, res) => {
 // Helper function to update tag counts
 async function updateTagCounts(tags, increment) {
   for (const tagName of tags) {
-    await Tag.findOneAndUpdate(
+    const result = await Tag.findOneAndUpdate(
       { name: tagName },
       {
         $inc: { count: increment },
         $setOnInsert: { name: tagName }
       },
-      { upsert: true }
+      { upsert: true, new: true }
     );
+
+    // Auto-delete tag if count reaches 0 or below
+    if (result && result.count <= 0) {
+      await Tag.deleteOne({ _id: result._id });
+      console.log(`🗑️  Auto-deleted unused tag: "${tagName}"`);
+    }
   }
 }
 

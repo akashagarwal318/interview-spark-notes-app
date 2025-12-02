@@ -224,7 +224,7 @@ const SearchFilters = () => {
         setNewRoundName={setNewRoundName}
         onCreateRound={(slug) => {
           dispatch(createRoundAsync(newRoundName.trim()));
-          dispatch(setCurrentRound(slug));
+          // dispatch(setCurrentRound(slug));
         }}
       />
 
