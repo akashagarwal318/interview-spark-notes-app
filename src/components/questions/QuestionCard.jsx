@@ -99,68 +99,84 @@ const QuestionCard = ({ question }) => {
       data-question-card
       data-expanded={expanded ? 'true' : 'false'}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between px-3 py-2 border-b border-border">
+      {/* Header - Responsive layout */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between px-3 py-2 border-b border-border gap-1 sm:gap-0">
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-medium text-card-foreground mb-0.5 leading-snug hover:text-primary transition-colors">
+          {/* Question title with 2-line clamp on mobile ONLY when collapsed */}
+          <h3 className={`text-sm sm:text-lg font-medium text-card-foreground mb-0.5 leading-snug hover:text-primary transition-colors ${!expanded ? 'line-clamp-2 sm:line-clamp-none' : ''}`}>
             {lowerSearch && searchScope !== 'code' && searchScope !== 'answer' ? (
               <>{highlightMatches(question.question, lowerSearch)}</>
             ) : (
               <>{question.question}</>
             )}
           </h3>
-          <div className="flex items-center text-xs sm:text-sm text-muted-foreground space-x-3">
+          {/* Metadata - stack on mobile */}
+          <div className="flex flex-wrap items-center text-[10px] sm:text-sm text-muted-foreground gap-1 sm:gap-3">
             <span className="capitalize">{question.round?.replace('-', ' ') || 'General'}</span>
-            <span>{formatDate(question.createdAt)}</span>
+            {question.subject && (
+              <>
+                <span className="opacity-40 hidden sm:inline">•</span>
+                <span className="capitalize">{question.subject}</span>
+              </>
+            )}
+            <span className="opacity-40 hidden sm:inline">•</span>
+            <span className="hidden sm:inline">{formatDate(question.createdAt)}</span>
           </div>
         </div>
 
-        <div className="flex items-center space-x-0.5 ml-2 flex-shrink-0">
-          <button
-            onClick={(e) => { e.stopPropagation(); handleToggle('favorite'); }}
-            className={`p-1.5 rounded-md transition-all hover:scale-110 ${question.favorite
+        {/* Action buttons - responsive */}
+        <div className="flex items-center justify-between sm:justify-end mt-1 sm:mt-0">
+          {/* Mobile date */}
+          <span className="text-[10px] text-muted-foreground sm:hidden">{formatDate(question.createdAt)}</span>
+
+          {/* Action icons */}
+          <div className="flex items-center space-x-0.5 sm:space-x-1 flex-shrink-0">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleToggle('favorite'); }}
+              className={`p-1 sm:p-1.5 rounded-md transition-all hover:scale-110 ${question.favorite
                 ? 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20'
                 : 'text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
-              }`}
-          >
-            <Star className={`h-3.5 w-3.5 ${question.favorite ? 'fill-current' : ''}`} />
-          </button>
+                }`}
+            >
+              <Star className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${question.favorite ? 'fill-current' : ''}`} />
+            </button>
 
-          <button
-            onClick={(e) => { e.stopPropagation(); handleToggle('review'); }}
-            className={`p-1.5 rounded-md transition-all hover:scale-110 ${question.review
+            <button
+              onClick={(e) => { e.stopPropagation(); handleToggle('review'); }}
+              className={`p-1 sm:p-1.5 rounded-md transition-all hover:scale-110 ${question.review
                 ? 'text-green-600 bg-green-50 dark:bg-green-900/20'
                 : 'text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
-              }`}
-          >
-            <Bookmark className={`h-3.5 w-3.5 ${question.review ? 'fill-current' : ''}`} />
-          </button>
+                }`}
+            >
+              <Bookmark className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${question.review ? 'fill-current' : ''}`} />
+            </button>
 
-          <button
-            onClick={(e) => { e.stopPropagation(); handleToggle('hot'); }}
-            className={`p-1.5 rounded-md transition-all hover:scale-110 ${question.hot
+            <button
+              onClick={(e) => { e.stopPropagation(); handleToggle('hot'); }}
+              className={`p-1 sm:p-1.5 rounded-md transition-all hover:scale-110 ${question.hot
                 ? 'text-red-600 bg-red-50 dark:bg-red-900/20'
                 : 'text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20'
-              }`}
-          >
-            <Flame className={`h-3.5 w-3.5 ${question.hot ? 'fill-current' : ''}`} />
-          </button>
+                }`}
+            >
+              <Flame className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${question.hot ? 'fill-current' : ''}`} />
+            </button>
 
-          <button
-            onClick={(e) => { e.stopPropagation(); handleEdit(); }}
-            className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all hover:scale-110"
-            title="Edit question"
-          >
-            <Edit className="h-3.5 w-3.5" />
-          </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleEdit(); }}
+              className="p-1 sm:p-1.5 rounded-md text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all hover:scale-110"
+              title="Edit question"
+            >
+              <Edit className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            </button>
 
-          <button
-            onClick={(e) => { e.stopPropagation(); handleDelete(); }}
-            className="p-1.5 rounded-md text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all hover:scale-110"
-            title="Delete question"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+              className="p-1 sm:p-1.5 rounded-md text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all hover:scale-110"
+              title="Delete question"
+            >
+              <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -169,7 +185,7 @@ const QuestionCard = ({ question }) => {
         <div className="px-3 py-2 space-y-2 bg-muted/50 animate-accordion-down">
           <div>
             <h4 className="font-medium text-card-foreground mb-1 text-xs sm:text-sm">Answer</h4>
-            <div className="text-card-foreground/80 text-sm leading-relaxed whitespace-pre-wrap break-words font-sans max-h-96 overflow-y-auto border border-gray-100 dark:border-gray-800 rounded-md p-3">
+            <div className="text-card-foreground/80 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words font-sans max-h-60 sm:max-h-96 overflow-y-auto border border-gray-100 dark:border-gray-800 rounded-md p-2 sm:p-3">
               {lowerSearch && (searchScope === 'all' || searchScope === 'answer') ? (
                 <>{highlightMatches(question.answer, lowerSearch)}</>
               ) : (
@@ -181,11 +197,13 @@ const QuestionCard = ({ question }) => {
           {question.code && (
             <div>
               <h4 className="font-medium text-card-foreground mb-1 text-xs sm:text-sm">Code</h4>
-              <CodeBlock
-                code={question.code}
-                language={question.codeLanguage || 'javascript'}
-                isMatch={lowerSearch && (searchScope === 'all' || searchScope === 'code') && question.code.toLowerCase().includes(lowerSearch)}
-              />
+              <div className="overflow-x-auto">
+                <CodeBlock
+                  code={question.code}
+                  language={question.codeLanguage || 'javascript'}
+                  isMatch={lowerSearch && (searchScope === 'all' || searchScope === 'code') && question.code.toLowerCase().includes(lowerSearch)}
+                />
+              </div>
             </div>
           )}
 
@@ -227,7 +245,7 @@ const QuestionCard = ({ question }) => {
                 {question.tags.map((tag) => (
                   <span
                     key={tag._id || tag.name || tag}
-                    className="px-2 py-1 bg-primary/10 text-primary text-xs rounded border border-primary/20"
+                    className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-primary/10 text-primary text-[10px] sm:text-xs rounded border border-primary/20"
                     style={tag.color ? { backgroundColor: `${tag.color}20`, borderColor: `${tag.color}40`, color: tag.color } : {}}
                   >
                     {tag.name || tag}

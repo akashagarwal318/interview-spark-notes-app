@@ -1,9 +1,10 @@
 
 import React, { useEffect, useMemo, Suspense, lazy } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { 
-  fetchQuestions, 
+import {
+  fetchQuestions,
   fetchRounds,
+  fetchSubjects,
   setOnlineStatus,
   setCurrentPage,
   selectFilteredQuestions
@@ -20,7 +21,7 @@ const PaginationControls = lazy(() => import('../components/pagination/Paginatio
 
 const InterviewAssistant = () => {
   const dispatch = useDispatch();
-  const { 
+  const {
     items,
     pagination,
     loading,
@@ -34,10 +35,10 @@ const InterviewAssistant = () => {
     isOnline
   } = useSelector((state) => state.questions);
   const { expandedQuestionId } = useSelector(state => state.ui);
-  
+
   // Get filtered questions using selector
   const filteredItems = useSelector(selectFilteredQuestions);
-  
+
   // Debounce search term to avoid excessive re-renders, but API calls are not triggered by it.
   const debouncedSearchTerm = useDebounce(searchTerm, 50);
 
@@ -46,18 +47,19 @@ const InterviewAssistant = () => {
     // Set online status
     const handleOnline = () => dispatch(setOnlineStatus(true));
     const handleOffline = () => dispatch(setOnlineStatus(false));
-    
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
+
     // Load saved theme
     const savedTheme = localStorage.getItem('interviewAssistantTheme') || 'light';
     dispatch(setTheme(savedTheme));
-    
-  // Initial data fetch
+
+    // Initial data fetch
     fetchQuestionsData();
-  dispatch(fetchRounds());
-    
+    dispatch(fetchRounds());
+    dispatch(fetchSubjects());
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -176,7 +178,7 @@ const InterviewAssistant = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Offline indicator */}
         {!isOnline && (
@@ -231,7 +233,7 @@ const InterviewAssistant = () => {
                   <QuestionCard key={question._id || question.id} question={question} />
                 ))}
               </Suspense>
-              
+
               {loading && (
                 <div className="text-center py-4">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
@@ -242,7 +244,7 @@ const InterviewAssistant = () => {
         </div>
 
         <Suspense fallback={<div className="text-sm text-muted-foreground">Loading pagination...</div>}>
-          <PaginationControls 
+          <PaginationControls
             pagination={paginationInfo}
             onPageChange={handlePageChange}
           />

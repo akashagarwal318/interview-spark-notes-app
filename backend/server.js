@@ -11,6 +11,7 @@ import questionRoutes from './routes/questions.js';
 import tagRoutes from './routes/tags.js';
 import statsRoutes from './routes/stats.js';
 import roundsRoutes from './routes/rounds.js';
+import subjectsRoutes from './routes/subjects.js';
 
 // Load environment variables
 dotenv.config();
@@ -100,6 +101,7 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/rounds', roundsRoutes);
+app.use('/api/subjects', subjectsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

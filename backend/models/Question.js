@@ -29,6 +29,12 @@ const questionSchema = new mongoose.Schema({
     // Accept predefined or custom slug (validated in middleware already)
     match: /^[a-z0-9-]{2,40}$/
   },
+  subject: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    default: 'unnamed' // Default fallback for unclassified questions
+  },
   question: {
     type: String,
     required: true,
@@ -109,26 +115,26 @@ questionSchema.index({ favorite: 1 });
 questionSchema.index({ review: 1 });
 questionSchema.index({ hot: 1 });
 questionSchema.index({ createdAt: -1 });
-questionSchema.index({ 
-  question: 'text', 
-  answer: 'text', 
+questionSchema.index({
+  question: 'text',
+  answer: 'text',
   tags: 'text',
   company: 'text',
   position: 'text'
 });
 
 // Virtual for formatted creation date
-questionSchema.virtual('formattedDate').get(function() {
+questionSchema.virtual('formattedDate').get(function () {
   return this.createdAt.toLocaleDateString();
 });
 
 // Virtual for search text
-questionSchema.virtual('searchText').get(function() {
+questionSchema.virtual('searchText').get(function () {
   return `${this.question} ${this.answer} ${this.tags.join(' ')} ${this.company} ${this.position}`.toLowerCase();
 });
 
 // Middleware to clean tags before saving
-questionSchema.pre('save', function(next) {
+questionSchema.pre('save', function (next) {
   if (this.round) {
     this.round = this.round.toLowerCase().trim();
   }
@@ -141,7 +147,7 @@ questionSchema.pre('save', function(next) {
   if (this.images) {
     this.images = this.images.map(img => ({
       ...img,
-  mimeType: img.mimeType || (img.data?.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/)?.[1] || 'image/png')
+      mimeType: img.mimeType || (img.data?.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/)?.[1] || 'image/png')
     }));
   }
   next();

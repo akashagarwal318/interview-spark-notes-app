@@ -7,30 +7,33 @@ import { Textarea } from '../ui/textarea';
 import { Label } from '../ui/label';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '../ui/select';
 const AdvancedCodeEditor = lazy(() => import('../ui/AdvancedCodeEditor'));
-import { createQuestionAsync, updateQuestionAsync, createRoundAsync } from '../../store/slices/questionsSlice';
+import { createQuestionAsync, updateQuestionAsync, createRoundAsync, createSubjectAsync } from '../../store/slices/questionsSlice';
 import { setFormVisible } from '../../store/slices/uiSlice';
 
 const QuestionForm = () => {
   const dispatch = useDispatch();
   const { isFormVisible, editingQuestion } = useSelector((state) => state.ui);
-  const { currentRound, rounds, items } = useSelector((state) => state.questions);
+  const { currentRound, rounds, subjects, items, selectedSubject, selectedTags } = useSelector((state) => state.questions);
   const [customRoundInput, setCustomRoundInput] = useState('');
+  const [customSubjectInput, setCustomSubjectInput] = useState('');
+  const [showCustomSubjectInput, setShowCustomSubjectInput] = useState(false);
 
   const [formData, setFormData] = useState({
-    round: currentRound === 'all' ? 'technical' : currentRound,
+    round: currentRound === 'all' ? (rounds[0] || 'unnamed') : currentRound,
+    subject: 'other', // For technical round questions
     question: '',
     answer: '',
     code: '',
-  tags: [],
-  codeLanguage: 'javascript'
+    tags: [],
+    codeLanguage: 'javascript'
   });
   const [images, setImages] = useState([]);
   const [tagInput, setTagInput] = useState('');
@@ -39,23 +42,46 @@ const QuestionForm = () => {
   const dropRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Initialize form when editing
+  // Initialize form when editing or pre-select from active filters when creating new
   useEffect(() => {
     if (editingQuestion && typeof editingQuestion === 'object') {
+      // Editing mode - load existing question data
       setFormData({
         round: editingQuestion.round || 'technical',
+        subject: editingQuestion.subject || 'unnamed',
         question: editingQuestion.question || '',
         answer: editingQuestion.answer || '',
         code: editingQuestion.code || '',
-  tags: Array.isArray(editingQuestion.tags) ? editingQuestion.tags : [],
-  codeLanguage: editingQuestion.codeLanguage || 'javascript'
+        tags: Array.isArray(editingQuestion.tags) ? editingQuestion.tags : [],
+        codeLanguage: editingQuestion.codeLanguage || 'javascript'
       });
-  setImages(Array.isArray(editingQuestion.images) ? editingQuestion.images : []);
-  setSelectedLanguage(editingQuestion.codeLanguage || 'javascript');
-    } else {
-      resetForm();
+      setImages(Array.isArray(editingQuestion.images) ? editingQuestion.images : []);
+      setSelectedLanguage(editingQuestion.codeLanguage || 'javascript');
+    } else if (isFormVisible) {
+      // New question mode - pre-select from active filters
+      const preSelectedTags = selectedTags.length > 0
+        ? items.flatMap(q => q.tags || [])
+          .filter(tag => {
+            const tagName = typeof tag === 'string' ? tag : (tag.name || '');
+            return selectedTags.includes(tagName.toLowerCase());
+          })
+          .slice(0, 5) // Limit to 5 tags
+        : [];
+
+      setFormData({
+        round: currentRound === 'all' ? (rounds[0] || 'unnamed') : currentRound,
+        subject: selectedSubject !== 'all' ? selectedSubject : 'unnamed',
+        question: '',
+        answer: '',
+        code: '',
+        tags: [...new Set(preSelectedTags.map(t => typeof t === 'string' ? t : t.name))],
+        codeLanguage: 'javascript'
+      });
+      setImages([]);
+      setTagInput('');
+      setSelectedLanguage('javascript');
     }
-  }, [editingQuestion, currentRound]);
+  }, [editingQuestion, isFormVisible, currentRound, selectedSubject, selectedTags]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,11 +94,11 @@ const QuestionForm = () => {
       return;
     }
     // Ensure tags is always an array
-  const tagsArr = Array.isArray(formData.tags)
-    ? formData.tags
-      .filter(tag => tag && (typeof tag === 'string' ? tag.trim() : tag.name && tag.name.trim()))
-      .map(tag => (typeof tag === 'string' ? tag.trim() : tag.name.trim()))
-    : (formData.tags || '').split(',').map(tag => tag.trim()).filter(tag => tag);
+    const tagsArr = Array.isArray(formData.tags)
+      ? formData.tags
+        .filter(tag => tag && (typeof tag === 'string' ? tag.trim() : tag.name && tag.name.trim()))
+        .map(tag => (typeof tag === 'string' ? tag.trim() : tag.name.trim()))
+      : (formData.tags || '').split(',').map(tag => tag.trim()).filter(tag => tag);
 
     // Process images to base64
     const processedImages = await Promise.all(
@@ -104,11 +130,12 @@ const QuestionForm = () => {
 
     const questionData = {
       round: formData.round,
+      subject: formData.subject || 'unnamed', // Include subject for all rounds
       question: formData.question.trim(),
       answer: formData.answer.trim(),
       code: formData.code,
       codeLanguage: formData.codeLanguage,
-      tags: tagsArr,
+      tags: tagsArr.length > 0 ? tagsArr : ['unnamed'], // Auto-assign 'unnamed' tag if no tags
       images: processedImages,
       createdAt: editingQuestion?.createdAt || new Date().toISOString()
     };
@@ -130,12 +157,13 @@ const QuestionForm = () => {
 
   const resetForm = () => {
     setFormData({
-      round: currentRound === 'all' ? 'technical' : currentRound,
+      round: currentRound === 'all' ? (rounds[0] || 'unnamed') : currentRound,
+      subject: 'unnamed',
       question: '',
       answer: '',
       code: '',
-  tags: [],
-  codeLanguage: 'javascript'
+      tags: [],
+      codeLanguage: 'javascript'
     });
     setImages([]);
     setTagInput('');
@@ -160,7 +188,7 @@ const QuestionForm = () => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
       setImages(prev => [...prev, ...files]);
@@ -188,7 +216,7 @@ const QuestionForm = () => {
         handlePaste(e);
       }
     };
-    
+
     document.addEventListener('paste', handleGlobalPaste);
     return () => document.removeEventListener('paste', handleGlobalPaste);
   }, [isFormVisible]);
@@ -208,7 +236,7 @@ const QuestionForm = () => {
       if (!map.has(key)) map.set(key, { name, count: 0 });
       map.get(key).count++;
     }));
-    return Array.from(map.values()).sort((a,b)=> a.name.localeCompare(b.name));
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [items]);
 
   // Simplified tag adder (removes earlier event/object detection & extra normalization)
@@ -243,11 +271,11 @@ const QuestionForm = () => {
   const tags = Array.isArray(formData.tags) ? formData.tags : (formData.tags || '').split(',').map(t => t.trim()).filter(t => t);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex p-4 justify-center items-center overflow-y-auto">
-      <Card style={{ width: '100%', maxWidth: '75vw', height: '85vh' }} className="overflow-y-auto animate-fade-in animate-scale-in shadow-2xl" data-paste-area>
-        <CardHeader className="sticky top-0 bg-card z-10 border-b border-border">
+    <div className="fixed inset-0 z-50 bg-black/50 flex p-2 sm:p-4 justify-center items-center overflow-y-auto">
+      <Card className="w-full sm:max-w-[90vw] md:max-w-[75vw] h-[95vh] sm:h-[85vh] overflow-y-auto animate-fade-in animate-scale-in shadow-2xl" data-paste-area>
+        <CardHeader className="sticky top-0 bg-card z-10 border-b border-border px-3 sm:px-6 py-2 sm:py-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-xl font-semibold text-foreground">
+            <CardTitle className="text-base sm:text-xl font-semibold text-foreground">
               {editingQuestion ? 'Edit Question' : 'Add New Question'}
             </CardTitle>
             <Button variant="ghost" size="sm" onClick={handleCancel} className="hover:bg-accent hover:text-accent-foreground">
@@ -255,9 +283,9 @@ const QuestionForm = () => {
             </Button>
           </div>
         </CardHeader>
-        
-        <CardContent className="space-y-6 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <CardContent className="space-y-4 sm:space-y-6 p-3 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
               <Label htmlFor="round">Interview Round</Label>
               <Select
@@ -292,13 +320,74 @@ const QuestionForm = () => {
                     const name = customRoundInput.trim();
                     if (!name) return;
                     // generate slug similar to slice logic
-                    const slug = name.toLowerCase().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-');
+                    const slug = name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
                     if (!rounds.includes(slug)) {
                       dispatch(createRoundAsync(name));
                     }
                     setFormData(prev => ({ ...prev, round: slug }));
                     setCustomRoundInput('');
                   }}>Add</Button>
+                </div>
+              )}
+            </div>
+
+            {/* Subject Dropdown - Dynamic with custom add option */}
+            <div className="space-y-2">
+              <Label htmlFor="subject">Subject / Topic</Label>
+              {!showCustomSubjectInput ? (
+                <Select
+                  value={formData.subject}
+                  onValueChange={(value) => {
+                    if (value === '__custom__') {
+                      setShowCustomSubjectInput(true);
+                    } else {
+                      setFormData(prev => ({ ...prev, subject: value }));
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue>{formData.subject ? formData.subject.toUpperCase() : 'Select subject'}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unnamed">Unnamed (Default)</SelectItem>
+                    {/* Show ONLY subjects already used with the selected round */}
+                    {/* Show subjects if: 1. Used in current round OR 2. Not used in ANY other round (global orphan) */}
+                    {subjects.filter(subj => {
+                      const isUsedInCurrentRound = items.some(q => q.round === formData.round && q.subject === subj);
+                      if (isUsedInCurrentRound) return true;
+
+                      // Check if used in ANY OTHER round
+                      const isUsedElsewhere = items.some(q => q.round !== formData.round && q.subject === subj);
+                      return !isUsedElsewhere; // Show only if NOT used elsewhere (orphan)
+                    }).map(subj => (
+                      <SelectItem key={subj} value={subj}>{subj.toUpperCase()}</SelectItem>
+                    ))}
+                    <SelectItem value="__custom__">+ Add Custom Subject...</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    autoFocus
+                    placeholder="Enter subject name"
+                    value={customSubjectInput}
+                    onChange={(e) => setCustomSubjectInput(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button type="button" variant="secondary" onClick={() => {
+                    const name = customSubjectInput.trim().toLowerCase();
+                    if (!name) return;
+                    if (!subjects.includes(name)) {
+                      dispatch(createSubjectAsync(name));
+                    }
+                    setFormData(prev => ({ ...prev, subject: name }));
+                    setCustomSubjectInput('');
+                    setShowCustomSubjectInput(false);
+                  }}>Add</Button>
+                  <Button type="button" variant="ghost" onClick={() => {
+                    setShowCustomSubjectInput(false);
+                    setCustomSubjectInput('');
+                  }}>✕</Button>
                 </div>
               )}
             </div>
@@ -344,9 +433,9 @@ const QuestionForm = () => {
                   {tags.map((tag, index) => (
                     <Badge key={index} variant="secondary" className="gap-1">
                       {typeof tag === 'object' ? tag.name : tag}
-                      <X 
-                        className="h-3 w-3 cursor-pointer" 
-                        onClick={() => removeTag(tag)} 
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => removeTag(tag)}
                       />
                     </Badge>
                   ))}
@@ -395,13 +484,12 @@ const QuestionForm = () => {
 
           <div className="space-y-2">
             <Label htmlFor="images">Images (Optional)</Label>
-            <div 
+            <div
               ref={dropRef}
-              className={`border-2 border-dashed rounded-lg p-6 transition-colors ${
-                dragActive 
-                  ? 'border-primary bg-primary/10' 
-                  : 'border-border hover:border-primary/50'
-              }`}
+              className={`border-2 border-dashed rounded-lg p-6 transition-colors ${dragActive
+                ? 'border-primary bg-primary/10'
+                : 'border-border hover:border-primary/50'
+                }`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
@@ -432,10 +520,10 @@ const QuestionForm = () => {
                   <div key={index} className="relative group">
                     <div className="aspect-video rounded-lg overflow-hidden bg-muted border border-border">
                       {image.data ? (
-                        <img 
-                          src={image.data} 
-                          alt={image.name} 
-                          className="w-full h-full object-contain group-hover:scale-105 transition-transform" 
+                        <img
+                          src={image.data}
+                          alt={image.name}
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground p-2">

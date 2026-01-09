@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import RoundService from '../../services/roundService.js';
 import QuestionService from '../../services/questionService.js';
+import SubjectService from '../../services/subjectService.js';
 
 // Async thunks for API calls
 export const fetchRounds = createAsyncThunk('questions/fetchRounds', async () => {
@@ -8,6 +9,16 @@ export const fetchRounds = createAsyncThunk('questions/fetchRounds', async () =>
     const data = await RoundService.getRounds();
     return data;
   } catch (e) {
+    return [];
+  }
+});
+
+export const fetchSubjects = createAsyncThunk('questions/fetchSubjects', async () => {
+  try {
+    const data = await SubjectService.getSubjects();
+    return data;
+  } catch (e) {
+    console.error('Failed to fetch subjects:', e);
     return [];
   }
 });
@@ -25,13 +36,29 @@ export const fetchQuestions = createAsyncThunk(
 );
 
 export const createRoundAsync = createAsyncThunk('questions/createRound', async (label) => {
-  const slug = label.toLowerCase().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-');
+  const slug = label.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
   const round = await RoundService.createRound(slug, label);
   return round;
 });
 
-export const deleteRoundAsync = createAsyncThunk('questions/deleteRound', async (name) => {
+export const deleteRoundAsync = createAsyncThunk('questions/deleteRound', async (name, { dispatch }) => {
   await RoundService.deleteRound(name);
+  // Backend updates DB. Local state is updated in the reducer below.
+  // Only refetch rounds list (not questions - that would reload all data)
+  dispatch(fetchRounds());
+  return name;
+});
+
+export const createSubjectAsync = createAsyncThunk('questions/createSubject', async (name) => {
+  const subject = await SubjectService.createSubject(name, name.toUpperCase());
+  return subject;
+});
+
+export const deleteSubjectAsync = createAsyncThunk('questions/deleteSubject', async (name, { dispatch }) => {
+  await SubjectService.deleteSubject(name);
+  // Backend updates DB. Local state is updated in the reducer below.
+  // Only refetch subjects list (not questions - that would reload all data)
+  dispatch(fetchSubjects());
   return name;
 });
 
@@ -86,7 +113,9 @@ export const toggleQuestionStatusAsync = createAsyncThunk(
 const initialState = {
   items: [], // raw questions fetched from backend
   // Central list of interview rounds (string keys stored on each question)
-  rounds: ['technical','hr','telephonic','introduction','behavioral','system-design','coding'],
+  rounds: ['technical', 'hr', 'telephonic', 'introduction', 'behavioral', 'system-design', 'coding', 'unnamed'],
+  // Dynamic subjects/topics (user-defined, starts empty)
+  subjects: [],
   pagination: {
     currentPage: 1,
     totalPages: 1,
@@ -106,6 +135,7 @@ const initialState = {
     hot: false
   },
   selectedTags: [],
+  selectedSubject: 'all', // New field for subject filtering
   lastFetch: null,
   isOnline: navigator.onLine
 };
@@ -117,6 +147,11 @@ const questionsSlice = createSlice({
     // Local state management reducers
     setCurrentRound: (state, action) => {
       state.currentRound = action.payload;
+      state.selectedSubject = 'all'; // Reset subject when round changes
+      state.pagination.currentPage = 1;
+    },
+    setSelectedSubject: (state, action) => { // New reducer
+      state.selectedSubject = action.payload;
       state.pagination.currentPage = 1;
     },
     setSearchTerm: (state, action) => {
@@ -178,8 +213,8 @@ const questionsSlice = createSlice({
     updateQuestionLocal: (state, action) => {
       const index = state.items.findIndex(q => q.id === action.payload.id || q._id === action.payload.id);
       if (index !== -1) {
-        state.items[index] = { 
-          ...state.items[index], 
+        state.items[index] = {
+          ...state.items[index],
           ...action.payload,
           updatedAt: new Date().toISOString()
         };
@@ -219,7 +254,7 @@ const questionsSlice = createSlice({
       .addCase(createQuestionAsync.fulfilled, (state, action) => {
         state.loading = false;
         state.items.unshift(action.payload);
-  state.items = [...state.items]; // force reference change for selectors
+        state.items = [...state.items]; // force reference change for selectors
         state.pagination.totalQuestions += 1;
         // auto-register round if new
         if (action.payload?.round && !state.rounds.includes(action.payload.round)) {
@@ -238,9 +273,9 @@ const questionsSlice = createSlice({
         state.error = null;
       })
       .addCase(updateQuestionAsync.fulfilled, (state, action) => {
-        const index = state.items.findIndex(q => 
-          q.id === action.payload.id || 
-          q._id === action.payload._id || 
+        const index = state.items.findIndex(q =>
+          q.id === action.payload.id ||
+          q._id === action.payload._id ||
           q._id === action.payload.id
         );
         if (index !== -1) {
@@ -263,8 +298,8 @@ const questionsSlice = createSlice({
       })
       .addCase(deleteQuestionAsync.fulfilled, (state, action) => {
         const id = action.payload;
-        state.items = state.items.filter(q => 
-          q.id !== id && 
+        state.items = state.items.filter(q =>
+          q.id !== id &&
           q._id !== id
         );
         state.pagination.totalQuestions = Math.max(0, state.pagination.totalQuestions - 1);
@@ -291,9 +326,9 @@ const questionsSlice = createSlice({
         state.error = null;
       })
       .addCase(toggleQuestionStatusAsync.fulfilled, (state, action) => {
-        const index = state.items.findIndex(q => 
-          q.id === action.payload.id || 
-          q._id === action.payload._id || 
+        const index = state.items.findIndex(q =>
+          q.id === action.payload.id ||
+          q._id === action.payload._id ||
           q._id === action.payload.id
         );
         if (index !== -1) {
@@ -309,9 +344,9 @@ const questionsSlice = createSlice({
     // Rounds
     builder
       .addCase(fetchRounds.fulfilled, (state, action) => {
-        const protectedRounds = ['technical','hr','telephonic','introduction','behavioral','system-design','coding'];
+        const protectedRounds = [];
         const incoming = action.payload.map(r => r.name);
-        state.rounds = Array.from(new Set([...protectedRounds, ...incoming]));
+        state.rounds = Array.from(new Set([...protectedRounds, ...incoming, 'unnamed']));
       })
       .addCase(createRoundAsync.fulfilled, (state, action) => {
         if (action.payload?.name && !state.rounds.includes(action.payload.name)) {
@@ -320,33 +355,56 @@ const questionsSlice = createSlice({
       })
       .addCase(deleteRoundAsync.fulfilled, (state, action) => {
         const name = action.payload;
-        const protectedRounds = ['technical','hr','telephonic','introduction','behavioral','system-design','coding'];
+        const protectedRounds = [];
         if (!protectedRounds.includes(name)) {
           state.rounds = state.rounds.filter(r => r !== name);
-          state.items = state.items.map(q => q.round === name ? { ...q, round: 'technical' } : q);
+          // Move questions to 'unnamed' instead of 'technical'
+          state.items = state.items.map(q => q.round === name ? { ...q, round: 'unnamed' } : q);
           if (state.currentRound === name) state.currentRound = 'all';
+
+          // Ensure 'unnamed' exists in the list if we just moved items there
+          if (!state.rounds.includes('unnamed')) {
+            state.rounds.push('unnamed');
+          }
+        }
+      });
+
+    // Subjects
+    builder
+      .addCase(fetchSubjects.fulfilled, (state, action) => {
+        state.subjects = action.payload.map(s => s.name);
+      })
+      .addCase(createSubjectAsync.fulfilled, (state, action) => {
+        if (action.payload?.name && !state.subjects.includes(action.payload.name)) {
+          state.subjects.push(action.payload.name);
+        }
+      })
+      .addCase(deleteSubjectAsync.fulfilled, (state, action) => {
+        const name = action.payload;
+        state.subjects = state.subjects.filter(s => s !== name);
+        // Fallback to unnamed for deleted subjects
+        state.items = state.items.map(q => q.subject === name ? { ...q, subject: 'unnamed' } : q);
+        if (state.selectedSubject === name) state.selectedSubject = 'all';
+        // Ensure unnamed exists
+        if (!state.subjects.includes('unnamed') && state.items.some(q => q.subject === 'unnamed')) {
+          state.subjects.push('unnamed');
         }
       });
   }
 });
 
-// Selector functions for computed values
 export const selectFilteredQuestions = createSelector(
-  [(state) => state.questions.items,
-   (state) => state.questions.searchTerm,
-   (state) => state.questions.searchScope,
-   (state) => state.questions.currentRound,
-   (state) => state.questions.filters,
-   (state) => state.questions.selectedTags],
-  (items, searchTerm, searchScope, currentRound, filters, selectedTags) => {
-    // Normalize tags to always be objects with _id and name
-    const normalizeTags = (tags) =>
-      (tags || []).map(tag => typeof tag === 'string' ? { _id: tag, name: tag, color: '#6B7280' } : tag);
-
-    let filtered = items.map(item => ({
-      ...item,
-      tags: normalizeTags(item.tags)
-    }));
+  [
+    (state) => state.questions.items,
+    (state) => state.questions.searchTerm,
+    (state) => state.questions.searchScope,
+    (state) => state.questions.currentRound,
+    (state) => state.questions.filters,
+    (state) => state.questions.selectedTags,
+    (state) => state.questions.selectedSubject
+  ],
+  (items, searchTerm, searchScope, currentRound, filters, selectedTags, selectedSubject) => {
+    let filtered = [...items];
 
     // Apply search filter based on scope
     if (searchTerm && searchTerm.trim()) {
@@ -360,12 +418,14 @@ export const selectFilteredQuestions = createSelector(
         }
         return blocks.join('\n');
       };
+
       filtered = filtered.filter(item => {
         const q = item.question?.toLowerCase() || '';
         const a = item.answer?.toLowerCase() || '';
         const codeField = item.code?.toLowerCase() || '';
         const codeInAnswer = extractCodeBlocks(item.answer || '').toLowerCase();
         const tagString = (item.tags || []).map(t => t.name?.toLowerCase()).join(' ');
+
         switch (searchScope) {
           case 'question':
             return q.includes(lowerSearch);
@@ -391,7 +451,10 @@ export const selectFilteredQuestions = createSelector(
       filtered = filtered.filter(item => item.round === currentRound);
     }
 
-
+    // Apply subject filter (hierarchical: Round -> Subject) - Works for all rounds
+    if (currentRound !== 'all' && selectedSubject !== 'all') {
+      filtered = filtered.filter(item => item.subject === selectedSubject);
+    }
 
     // Apply status filters
     if (filters.favorite) {
@@ -409,7 +472,11 @@ export const selectFilteredQuestions = createSelector(
       filtered = filtered.filter(item => {
         if (!item.tags || item.tags.length === 0) return false;
         return selectedTags.some(tagId =>
-          item.tags.some(tag => tag._id === tagId)
+          item.tags.some(tag => {
+            // Tags can be strings or objects with .name property
+            const tagName = typeof tag === 'string' ? tag : (tag.name || '');
+            return tagName.toLowerCase() === tagId.toLowerCase();
+          })
         );
       });
     }
@@ -439,6 +506,7 @@ export const selectQuestionStats = createSelector(
 
 export const {
   setCurrentRound,
+  setSelectedSubject,
   setSearchTerm,
   setSearchScope,
   setCurrentPage,
