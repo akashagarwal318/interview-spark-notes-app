@@ -1,5 +1,6 @@
 // API Configuration with dynamic port discovery
-const DEFAULT_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const PRODUCTION_API_URL = 'https://interview-app-mtqo.onrender.com/api';
+const DEFAULT_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : PRODUCTION_API_URL);
 const PORT_RANGE = [5000, 5001, 5002, 5003, 5004, 5005];
 let discovering = null;
 
@@ -17,17 +18,22 @@ async function probePort(port, signal) {
 }
 
 async function discoverBaseURL(timeoutMs = 2500) {
-  // Force port 5000 for now as it is confirmed working
-  const url = 'http://localhost:5000/api';
-  console.log('🔌 API Service: Using Base URL:', url);
-  localStorage.setItem('api_base_url_cache', url);
-  return url;
+  // Returns configured URL or falls back to production URL
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) return envUrl;
+
+  // If in production, use the Render backend
+  if (!import.meta.env.DEV) {
+    return PRODUCTION_API_URL;
+  }
+
+  // Fallback for local development if VITE_API_URL not set
+  return 'http://localhost:5000/api';
 }
 
 class ApiService {
   constructor() {
-    // Force specific port to avoid zombie server issues with cache
-    this.baseURL = 'http://localhost:5000/api';
+    this.baseURL = DEFAULT_BASE;
     this.failedOnce = false;
   }
 

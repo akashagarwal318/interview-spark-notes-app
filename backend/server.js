@@ -13,6 +13,14 @@ import statsRoutes from './routes/stats.js';
 import roundsRoutes from './routes/rounds.js';
 import subjectsRoutes from './routes/subjects.js';
 
+// Native modules for file path handling in ES modules
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
 // Load environment variables
 dotenv.config();
 
@@ -114,12 +122,25 @@ app.get('/api/health', (req, res) => {
 });
 
 // 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    status: 'error',
-    message: `Route ${req.originalUrl} not found`
+// Serve static assets in production
+if (process.env.NODE_ENV === 'production') {
+  // Set static folder
+  app.use(express.static(path.join(__dirname, '../dist')));
+
+  // Any route that is not an API route will be handled by the React app
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../dist', 'index.html'));
   });
-});
+} else {
+  // 404 handler for development (or valid API 404s)
+  app.use('*', (req, res) => {
+    res.status(404).json({
+      status: 'error',
+      message: `Route ${req.originalUrl} not found`
+    });
+  });
+}
+
 
 // Global error handler
 app.use((err, req, res, next) => {
