@@ -549,7 +549,7 @@ const QuestionForm = () => {
             )}
           </div>
 
-          <div className="flex gap-3 pt-4 sticky bottom-0 bg-background border-t border-border -mx-6 px-6 py-4">
+          <div className="flex gap-3 pt-4 sticky bottom-0 bg-background border-t border-border -mx-6 px-6 py-4 z-20">
             <Button type="button" variant="outline" onClick={handleCancel} className="flex-1">
               Cancel
             </Button>

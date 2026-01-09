@@ -409,7 +409,7 @@ const SubjectFilters = ({ selectedSubject, onSelect, items, currentRound, subjec
   // Compute subjects from items in this round
   const subjectsFromItems = new Set();
   items.filter(q => q.round === currentRound).forEach(q => {
-    if (q.subject && q.subject.toLowerCase() !== 'unnamed') {
+    if (q.subject) {
       subjectsFromItems.add(q.subject.toLowerCase());
     }
   });
@@ -453,10 +453,10 @@ const SubjectFilters = ({ selectedSubject, onSelect, items, currentRound, subjec
             <button
               onClick={() => onSelect(subject)}
               className={`pl-2 sm:pl-3 pr-2 sm:pr-2.5 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm transition-colors flex items-center ${subject === 'all' && selectedSubject === 'all'
-                  ? 'bg-blue-600 text-white'  // Blue for "All Subjects" like "All Tags"
-                  : selectedSubject === subject
-                    ? 'bg-gray-500 dark:bg-gray-600 text-white dark:ring-2 dark:ring-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'bg-blue-600 text-white'  // Blue for "All Subjects" like "All Tags"
+                : selectedSubject === subject
+                  ? 'bg-gray-500 dark:bg-gray-600 text-white dark:ring-2 dark:ring-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
             >
               {subject === 'all' ? 'All Subjects' : subject.toUpperCase()}
@@ -464,7 +464,7 @@ const SubjectFilters = ({ selectedSubject, onSelect, items, currentRound, subjec
               <span className="ml-1.5 w-5 h-5 flex items-center justify-center relative">
                 {/* Counter: Hidden on desktop hover OR mobile delete mode */}
                 <span className={`text-[10px] sm:text-xs transition-opacity duration-200 ${subject !== 'all'
-                  ? (isMobile && isDeleteMode ? 'opacity-0' : 'group-hover:opacity-0')
+                  ? (isMobile && isDeleteMode ? 'opacity-0' : 'sm:group-hover:opacity-0')
                   : ''
                   }`}>{count}</span>
 
@@ -474,12 +474,13 @@ const SubjectFilters = ({ selectedSubject, onSelect, items, currentRound, subjec
                     role="button"
                     tabIndex={0}
                     onClick={(e) => {
+                      if (isMobile && !isDeleteMode) return;
                       e.stopPropagation();
                       if (window.confirm('Delete this subject? Questions will be moved to "unnamed".')) {
                         onDelete(subject);
                       }
                     }}
-                    className={`absolute inset-0 transition-opacity duration-200 cursor-pointer text-red-500 hover:text-red-600 hover:bg-red-100/50 rounded-full flex items-center justify-center ${isMobile && isDeleteMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                    className={`absolute inset-0 transition-opacity duration-200 cursor-pointer text-red-500 hover:text-red-600 hover:bg-red-100/50 rounded-full flex items-center justify-center ${isMobile && isDeleteMode ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none sm:group-hover:opacity-100 sm:group-hover:pointer-events-auto'
                       }`}
                     title="Delete subject"
                   >✕</span>
@@ -651,7 +652,7 @@ const RoundFilters = ({ rounds, currentRound, items, onChange, onDelete, showRou
               <span className="px-1.5 sm:px-2 py-0 sm:py-0.5 rounded-full w-5 h-5 flex items-center justify-center relative bg-black/10 dark:bg-white/10">
                 {/* Counter: Hidden on desktop hover OR mobile delete mode */}
                 <span className={`text-[10px] sm:text-xs transition-opacity duration-200 ${!isProtected
-                  ? (isMobile && isDeleteMode ? 'opacity-0' : 'group-hover:opacity-0') // Logic: Hide if mobile edit mode OR desktop hover
+                  ? (isMobile && isDeleteMode ? 'opacity-0' : 'sm:group-hover:opacity-0') // Logic: Hide if mobile edit mode OR desktop hover
                   : ''
                   }`}>{count}</span>
 
@@ -661,14 +662,15 @@ const RoundFilters = ({ rounds, currentRound, items, onChange, onDelete, showRou
                     role="button"
                     tabIndex={0}
                     onClick={(e) => {
+                      if (isMobile && !isDeleteMode) return;
                       e.stopPropagation();
                       // console.log('Delete clicked for:', r);
                       if (window.confirm('Delete this round? Questions will be moved to "unnamed".')) {
-                        dispatch(deleteRoundAsync(r));
+                        onDelete(r);
                       }
                     }}
                     onKeyDown={(e) => e.stopPropagation()}
-                    className={`absolute inset-0 transition-opacity duration-200 cursor-pointer text-red-500 hover:text-red-600 hover:bg-red-100/50 rounded-full flex items-center justify-center transform hover:scale-110 ${isMobile && isDeleteMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                    className={`absolute inset-0 transition-opacity duration-200 cursor-pointer text-red-500 hover:text-red-600 hover:bg-red-100/50 rounded-full flex items-center justify-center transform hover:scale-110 ${isMobile && isDeleteMode ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none sm:group-hover:opacity-100 sm:group-hover:pointer-events-auto'
                       }`}
                     title="Delete round"
                   >✕</span>
