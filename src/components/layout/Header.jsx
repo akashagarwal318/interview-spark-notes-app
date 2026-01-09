@@ -25,8 +25,7 @@ const Header = () => {
               <span className="text-white font-bold text-xs sm:text-sm">IA</span>
             </div>
             <h1 className="text-base sm:text-xl font-semibold text-gray-900 dark:text-white truncate">
-              <span className="sm:hidden">Interview</span>
-              <span className="hidden sm:inline">Interview Assistant</span>
+              Interview Assistant
             </h1>
           </div>
 
