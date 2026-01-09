@@ -119,16 +119,15 @@ const SearchFilters = () => {
     setLocalSearchTerm(value);
 
     // Autocomplete Logic
-    // Only fetch suggestions if scope is 'question' (or 'all' if desired, but user asked for specific behavior)
-    // User requested: "search functionality must only work after we select the question option"
-    // So if scope !== 'question', do NOT show suggestions.
-    if (searchScope === 'question' && value.trim().length > 1) {
+    // Show suggestions if scope is 'question' OR 'all' (default)
+    const isAutocompleteScope = searchScope === 'question' || searchScope === 'all';
+
+    if (isAutocompleteScope && value.trim().length > 1) {
       const lowerVal = value.toLowerCase();
-      // Filter existing questions (UNLIMITED, show all matches)
+      // Filter existing questions
       const matches = items
         .filter(q => q.question.toLowerCase().includes(lowerVal))
         .map(q => q.question);
-      // .slice(0, 6); // REMOVED limit per user request
 
       setSuggestions(matches);
       setShowSuggestions(matches.length > 0);
