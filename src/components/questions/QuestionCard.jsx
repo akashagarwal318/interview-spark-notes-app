@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import ReactMarkdown from 'react-markdown';
 import {
   Star,
   Bookmark,
@@ -185,12 +186,10 @@ const QuestionCard = ({ question }) => {
         <div className="px-3 py-2 space-y-2 bg-muted/50 animate-accordion-down">
           <div>
             <h4 className="font-medium text-card-foreground mb-1 text-xs sm:text-sm">Answer</h4>
-            <div className="text-card-foreground/80 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words font-sans max-h-60 sm:max-h-96 overflow-y-auto border border-gray-100 dark:border-gray-800 rounded-md p-2 sm:p-3">
-              {lowerSearch && (searchScope === 'all' || searchScope === 'answer') ? (
-                <>{highlightMatches(question.answer, lowerSearch)}</>
-              ) : (
-                <>{question.answer}</>
-              )}
+            <div className="text-card-foreground/80 text-xs sm:text-sm leading-relaxed break-words font-sans max-h-60 sm:max-h-96 overflow-y-auto border border-gray-100 dark:border-gray-800 rounded-md p-2 sm:p-3 prose prose-sm dark:prose-invert max-w-none prose-headings:text-card-foreground prose-p:text-card-foreground/80 prose-strong:text-card-foreground prose-ul:text-card-foreground/80 prose-ol:text-card-foreground/80 prose-li:text-card-foreground/80">
+              <ReactMarkdown>
+                {question.answer}
+              </ReactMarkdown>
             </div>
           </div>
 
