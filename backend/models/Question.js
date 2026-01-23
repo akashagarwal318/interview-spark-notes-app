@@ -125,12 +125,17 @@ questionSchema.index({
 
 // Virtual for formatted creation date
 questionSchema.virtual('formattedDate').get(function () {
-  return this.createdAt.toLocaleDateString();
+  return this.createdAt ? this.createdAt.toLocaleDateString() : new Date().toLocaleDateString();
 });
 
 // Virtual for search text
 questionSchema.virtual('searchText').get(function () {
-  return `${this.question} ${this.answer} ${this.tags.join(' ')} ${this.company} ${this.position}`.toLowerCase();
+  const q = this.question || '';
+  const a = this.answer || '';
+  const t = (this.tags || []).join(' ');
+  const c = this.company || '';
+  const p = this.position || '';
+  return `${q} ${a} ${t} ${c} ${p}`.toLowerCase();
 });
 
 // Middleware to clean tags before saving
