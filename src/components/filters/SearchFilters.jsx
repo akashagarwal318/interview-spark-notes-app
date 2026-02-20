@@ -543,7 +543,7 @@ const TagSelector = ({ allTags, selectedTags, onToggle, onClear }) => {
   const visibleTags = (shouldCollapse && !expanded) ? allTags.slice(0, VISIBLE_COUNT) : allTags;
   const hiddenCount = allTags.length - VISIBLE_COUNT;
   // Pre-compute total counts if tags carry a count property; fallback to 1
-  const totalTagCount = allTags.reduce((sum, t) => sum + (t.count || 0), 0) || allTags.length;
+  const totalTagCount = allTags.length;
 
   // Derive per-tag count display (prefer provided count)
   const getTagCount = (tag) => tag.count ?? 0; // backend seed inserts count

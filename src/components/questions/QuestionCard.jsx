@@ -58,16 +58,16 @@ const QuestionCard = ({ question }) => {
 
   const formatDate = (dateString) => {
     try {
-      if (!dateString) return 'Recently added';
+      if (!dateString) return 'No date';
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return 'Recently added';
+      if (isNaN(date.getTime())) return 'No date';
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
       });
     } catch (error) {
-      return 'Recently added';
+      return 'No date';
     }
   };
 
